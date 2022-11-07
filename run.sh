@@ -1,10 +1,9 @@
 #!/bin/bash
 
 make ispalindrom
-printf "<built project>\n\n\n"
+printf "−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−\n"
 
 ./ispalindrom
-printf "\n\n\n<executed project>\n"
 
-
+printf "−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−\n"
 make clean

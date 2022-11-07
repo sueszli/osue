@@ -1,20 +1,21 @@
-# ----- compiler config (see ./run.sh) ----- 
-DEFS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
-ASANA = -fsanitize=address
-COMPILER = gcc-12
-FLAGS = $(ASANA) -std=c99 -pedantic -Wall -Werror -Wextra -g3 $(DEFS)
-
-
-# ----- build + execution -----
 .PHONY: all clean
 
+
+# ----- compiler config ----- 
+COMPILER = gcc-12
+DEFS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
+DEFAULT_FLAGS = -std=c99 -pedantic -Wall -g $(DEFS)
+VERBOSE_FLAGS = -std=c99 -pedantic -Wall -Werror -Wextra -g3 $(DEFS)
+
+
+# ----- build -----
 all: ispalindrom
 
 ispalindrom: ispalindrom.o
-	$(CC) -o $@ $^
+	$(COMPILER) -o $@ $^
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(COMPILER) $(DEFAULT_FLAGS) -c -o $@ $<
 
 ispalindrom.o: ispalindrom.c
 
