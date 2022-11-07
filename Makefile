@@ -1,24 +1,24 @@
-CC = gcc
-DEFS = -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
-CFLAGS = -Wall -g -std=c99 -pedantic $(DEFS)
-OBJECTS = main.o
+# ----- compiler config (see ./run.sh) ----- 
+DEFS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
+ASANA = -fsanitize=address
+COMPILER = gcc-12
+FLAGS = $(ASANA) -std=c99 -pedantic -Wall -Werror -Wextra -g3 $(DEFS)
 
-.PHONY: all clean # these are not files but building and cleaning commands
 
-# run main binary
-all: main
+# ----- build + execution -----
+.PHONY: all clean
 
-hello: $(OBJECTS)
+all: ispalindrom
+
+ispalindrom: ispalindrom.o
 	$(CC) -o $@ $^
 
-# create object files for all .c files
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-# define dependencies
-main.o: main.c hello.h
-hello.o: hello.c hello.h
+ispalindrom.o: ispalindrom.c
 
-# remove all object files and remove ./main binary
+
+# ----- clean up -----
 clean:
-	rm -rf *.o main
+	rm -rf *.o ispalindrom
