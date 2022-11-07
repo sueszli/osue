@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <errno.h>
+#include <getopt.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -26,7 +27,7 @@
     fprintf(stderr, "\t%s\n", "ispalindrom [-s] [-i] [-o outfile] [file...]"); \
     exit(EXIT_FAILURE);
 
-char *trim(char *line) {
+static char *trim(char *line) {
     char *out = strdup(line);
 
     // copy valid chars to duplicate and end with '\0'
@@ -53,7 +54,7 @@ char *trim(char *line) {
     return out;
 }
 
-char *toLowerCase(char *line) {
+static char *toLowerCase(char *line) {
     char *out = strdup(line);
 
     char *p = out;
@@ -64,7 +65,7 @@ char *toLowerCase(char *line) {
     return out;
 }
 
-_Bool isPalindrom(char *line) {
+static _Bool isPalindrom(char *line) {
     const size_t length = strlen(line);
     const size_t halfLength = length >> 1;
 
@@ -82,7 +83,7 @@ _Bool isPalindrom(char *line) {
     return true;
 }
 
-void printArgs(int argc, char **argv) {
+static void printArgs(int argc, char **argv) {
     log("argc: %d", argc);
     log("%s", "argv:");
     char **ap = argv;
@@ -94,7 +95,7 @@ void printArgs(int argc, char **argv) {
     log("%s", "\n\n\n");
 }
 
-void testPalindrom(void) {
+static void testPalindrom(void) {
     char *input = "never odd or even";
     printf("\"%s\" ", input);
 
@@ -122,10 +123,17 @@ int main(int argc, char **argv) {
     uint8_t ignoreLetterCasing = 0;
     uint8_t ignoreWhitespaces = 0;
     uint8_t writeToFile = 0;
+    char *outputPath;
 
     int option;
-    char *outputPath = NULL;
-    while ((option = getopt(argc, argv, "sio:")) != -1) {
+    struct option config[] = {{"outfile", required_argument, 0, 'o'}};
+    while (true) {
+        int option_index = 0;
+        option = getopt_long(argc, argv, "sio:", config, &option_index);
+
+        if (option == -1) {
+            break;  // not in switch to avoid goto statement
+        }
         switch (option) {
             case 's':
                 ignoreWhitespaces++;
@@ -138,21 +146,22 @@ int main(int argc, char **argv) {
                 outputPath = optarg;
                 break;
             default: /* '?' */
-                argumentError("Wrong options were used.");
+                argumentError("Invalid option was used.");
         }
     }
+
+    // -------------------------
+
     if (ignoreLetterCasing > 1 || ignoreWhitespaces > 1 || writeToFile > 1) {
         argumentError("The same option was used twice or more.");
     }
 
-    // TODO: ALLOW USER TO TYPE OUT 'OUTFILE'
-
-    _Bool readFromFiles = (argc - optind != 0);
+    _Bool readFromFiles = optind < argc;
     if (readFromFiles) {
         // read input from files
-        log("%s", "read from the following files:");
-        for (int i = optind; i < argc; i++) {
-            log("\t%s", argv[i]);
+        log("%s", "input will be read from the following files:");
+        while (optind < argc) {
+            log("\t%s ", argv[optind++]);
         }
     } else {
         // let user enter input
@@ -170,13 +179,11 @@ int main(int argc, char **argv) {
     // do computation
 
     if (writeToFile) {
-        log("%s: \"%s\"",
-            "'o' option -> result will be written into output path",
+        log("%s: %s", "'o' option -> result will be written into output path",
             outputPath);
         // write output into 'outputPath'
     } else {
         // print output onto console
     }
-
     return EXIT_SUCCESS;
 }
