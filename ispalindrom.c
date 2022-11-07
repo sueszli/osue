@@ -118,8 +118,6 @@ static void testPalindrom(void) {
 }
 
 int main(int argc, char **argv) {
-    printArgs(argc, argv);
-
     uint8_t ignoreLetterCasing = 0;
     uint8_t ignoreWhitespaces = 0;
     uint8_t writeToFile = 0;
@@ -150,11 +148,11 @@ int main(int argc, char **argv) {
         }
     }
 
-    // -------------------------
-
     if (ignoreLetterCasing > 1 || ignoreWhitespaces > 1 || writeToFile > 1) {
         argumentError("The same option was used twice or more.");
     }
+
+    // -------------------------
 
     _Bool readFromFiles = optind < argc;
     if (readFromFiles) {
