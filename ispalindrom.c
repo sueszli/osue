@@ -84,13 +84,14 @@ _Bool isPalindrom(char *line) {
 
 void printArgs(int argc, char **argv) {
     log("argc: %d", argc);
+    log("%s", "argv:");
     char **ap = argv;
-    int i = 0;
+    uint8_t i = 0;
     while (*ap != NULL) {
-        log("[%d] %s", i++, *ap);
+        log("\t[%d]: %s", i++, *ap);
         ap++;
     }
-    log("\n\n\n");
+    log("%s", "\n\n\n");
 }
 
 void testPalindrom(void) {
@@ -136,24 +137,33 @@ int main(int argc, char **argv) {
                 writeToFile++;
                 outputPath = optarg;
                 break;
-            case '?':
+            default: /* '?' */
                 argumentError("Wrong options were used.");
-                break;
-            default:
-                error("Reached unreachable case");
         }
     }
-
     if (ignoreLetterCasing > 1 || ignoreWhitespaces > 1 || writeToFile > 1) {
         argumentError("The same option was used twice or more.");
     }
 
+    // TODO: ALLOW USER TO TYPE OUT 'OUTFILE'
+
+    _Bool readFromFiles = (argc - optind != 0);
+    if (readFromFiles) {
+        // read input from files
+        log("%s", "read from the following files:");
+        for (int i = optind; i < argc; i++) {
+            log("\t%s", argv[i]);
+        }
+    } else {
+        // let user enter input
+    }
+
     if (ignoreWhitespaces) {
-        log("'s' option -> whitespaces will be ignored");
+        log("%s", "'s' option -> whitespaces will be ignored");
         // apply function to input
     }
     if (ignoreLetterCasing) {
-        log("'i' option -> casing will be ignored");
+        log("%s", "'i' option -> casing will be ignored");
         // apply function to input
     }
 

@@ -3,7 +3,7 @@
 make ispalindrom
 printf "−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−\n"
 
-./ispalindrom -i -s -o aaaa
+./ispalindrom -s -i -outfile ./output.txt ./input1.txt ./input2.txt ./input3.txt
 
 printf "−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−\n"
 make clean

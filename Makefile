@@ -1,7 +1,7 @@
 .PHONY: all clean
 
 
-# ----- compiler config ----- 
+# compiler config 
 COMPILER = gcc-12
 DEFS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
 LOG_MODE = -DDEBUG
@@ -9,7 +9,7 @@ DEFAULT_FLAGS = $(LOG_MODE) -std=c99 -pedantic -Wall -g $(DEFS)
 VERBOSE_FLAGS = $(LOG_MODE) -std=c99 -pedantic -Wall -Werror -Wextra -g3 $(DEFS)
 
 
-# ----- build -----
+# build
 all: ispalindrom
 
 ispalindrom: ispalindrom.o
@@ -21,6 +21,6 @@ ispalindrom: ispalindrom.o
 ispalindrom.o: ispalindrom.c
 
 
-# ----- clean up -----
+# clean up
 clean:
 	rm -rf *.o ispalindrom
