@@ -6,46 +6,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-// region "macros"
+#ifdef DEBUG
+#define log(fmt, ...) \
+    fprintf(stderr, "[%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__);
+#else
+#define log(msg) /* NOP */
+#endif
+
 #define error(s)                                     \
     fprintf(stderr, "%s: %s\n", s, strerror(errno)); \
     exit(EXIT_FAILURE);
-// endregion
 
-// region "function prototypes"
-_Bool isPalindrom(char *line);
-char *trim(char *line);
-char *toLowerCase(char *line);
-// endregion
-
-int main(int argc, char **argv) {
-    char *input = "never odd or even";
-    printf("\"%s\" ", input);
-
-    _Bool ignoreLetterCasing = true;
-    _Bool ignoreWhitespaces = true;
-
-    if (ignoreLetterCasing) {
-        input = toLowerCase(input);
-    }
-    if (ignoreWhitespaces) {
-        input = trim(input);
-    }
-
-    if (isPalindrom(input)) {
-        printf("is a palindrom\n");
-    } else {
-        printf("is not a palindrom\n");
-    }
-
-    return EXIT_SUCCESS;
-}
+#define argumentError(s)                                                       \
+    fprintf(stderr, "%s\n", s);                                                \
+    fprintf(stderr, "%s\n", "---");                                            \
+    fprintf(stderr, "%s\n", "SYNOPSIS:");                                      \
+    fprintf(stderr, "\t%s\n", "ispalindrom [-s] [-i] [-o outfile] [file...]"); \
+    exit(EXIT_FAILURE);
 
 char *trim(char *line) {
     char *out = strdup(line);
 
-    // copy valid chars to duplicate and add '\0'
+    // copy valid chars to duplicate and end with '\0'
     char *op = out;
     char *ip = line;
     while (*ip != '\0') {
@@ -96,4 +80,93 @@ _Bool isPalindrom(char *line) {
         }
     }
     return true;
+}
+
+void printArgs(int argc, char **argv) {
+    log("argc: %d", argc);
+    char **ap = argv;
+    int i = 0;
+    while (*ap != NULL) {
+        log("[%d] %s", i++, *ap);
+        ap++;
+    }
+    log("\n\n\n");
+}
+
+void testPalindrom(void) {
+    char *input = "never odd or even";
+    printf("\"%s\" ", input);
+
+    _Bool ignoreLetterCasing = true;
+    _Bool ignoreWhitespaces = true;
+
+    if (ignoreLetterCasing) {
+        input = toLowerCase(input);
+    }
+    if (ignoreWhitespaces) {
+        input = trim(input);
+    }
+
+    if (isPalindrom(input)) {
+        printf("is a palindrom\n");
+    } else {
+        printf("is not a palindrom\n");
+    }
+    printf("\n\n\n");
+}
+
+int main(int argc, char **argv) {
+    printArgs(argc, argv);
+
+    uint8_t ignoreLetterCasing = 0;
+    uint8_t ignoreWhitespaces = 0;
+    uint8_t writeToFile = 0;
+
+    int option;
+    char *outputPath = NULL;
+    while ((option = getopt(argc, argv, "sio:")) != -1) {
+        switch (option) {
+            case 's':
+                ignoreWhitespaces++;
+                break;
+            case 'i':
+                ignoreLetterCasing++;
+                break;
+            case 'o':
+                writeToFile++;
+                outputPath = optarg;
+                break;
+            case '?':
+                argumentError("Wrong options were used.");
+                break;
+            default:
+                error("Reached unreachable case");
+        }
+    }
+
+    if (ignoreLetterCasing > 1 || ignoreWhitespaces > 1 || writeToFile > 1) {
+        argumentError("The same option was used twice or more.");
+    }
+
+    if (ignoreWhitespaces) {
+        log("'s' option -> whitespaces will be ignored");
+        // apply function to input
+    }
+    if (ignoreLetterCasing) {
+        log("'i' option -> casing will be ignored");
+        // apply function to input
+    }
+
+    // do computation
+
+    if (writeToFile) {
+        log("%s: \"%s\"",
+            "'o' option -> result will be written into output path",
+            outputPath);
+        // write output into 'outputPath'
+    } else {
+        // print output onto console
+    }
+
+    return EXIT_SUCCESS;
 }

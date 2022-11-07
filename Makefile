@@ -4,8 +4,9 @@
 # ----- compiler config ----- 
 COMPILER = gcc-12
 DEFS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
-DEFAULT_FLAGS = -std=c99 -pedantic -Wall -g $(DEFS)
-VERBOSE_FLAGS = -std=c99 -pedantic -Wall -Werror -Wextra -g3 $(DEFS)
+LOG_MODE = -DDEBUG
+DEFAULT_FLAGS = $(LOG_MODE) -std=c99 -pedantic -Wall -g $(DEFS)
+VERBOSE_FLAGS = $(LOG_MODE) -std=c99 -pedantic -Wall -Werror -Wextra -g3 $(DEFS)
 
 
 # ----- build -----
