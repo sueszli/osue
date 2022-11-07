@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -6,35 +7,66 @@
 #include <stdlib.h>
 #include <string.h>
 
-// function prototypes
-_Bool isPalindrom(char *line);
-char *trimWhitespace(char *line);
-char *toLowerCase(char *line);
+// region "macros"
+#define error(s)                                     \
+    fprintf(stderr, "%s: %s\n", s, strerror(errno)); \
+    exit(EXIT_FAILURE);
+// endregion
 
-int main(int argc, char *argv[]) {
-    char *line = " a a a a ";  // 5 whitespaces, 4 valid characters
-    printf("%s \"%s\" %s --> \"%s\"\n\n", "The line", line, "results in",
-           trimWhitespace(line));
+// region "function prototypes"
+_Bool isPalindrom(char *line);
+char *trim(char *line);
+char *toLowerCase(char *line);
+// endregion
+
+int main(int argc, char **argv) {
+    char *input = "never odd or even";
+    printf("\"%s\" ", input);
+
+    _Bool ignoreLetterCasing = true;
+    _Bool ignoreWhitespaces = true;
+
+    if (ignoreLetterCasing) {
+        input = toLowerCase(input);
+    }
+    if (ignoreWhitespaces) {
+        input = trim(input);
+    }
+
+    if (isPalindrom(input)) {
+        printf("is a palindrom\n");
+    } else {
+        printf("is not a palindrom\n");
+    }
 
     return EXIT_SUCCESS;
 }
 
-char *trimWhitespace(char *line) {
-    char *p = line;
-    int wcount = 0;
-    while (*p != '\0') {
-        if (isspace(*p)) {
-            wcount++;
+char *trim(char *line) {
+    char *out = strdup(line);
+
+    // copy valid chars to duplicate and add '\0'
+    char *op = out;
+    char *ip = line;
+    while (*ip != '\0') {
+        if (!isspace(*ip)) {
+            *op = *ip;
+            op++;
         }
-        p++;
+        ip++;
+    }
+    *op = '\0';
+
+    // free everything following the '\0' (optional)
+    // https://stackoverflow.com/questions/74350465/how-to-free-memory-following-a-0-placed-somewhere-in-a-string-in-c
+    char *newMemory = realloc(out, strlen(out) + 1);
+    if (newMemory) {
+        out = newMemory;
+    } else {
+        error("Realloc failed");
     }
 
-    printf("%s %ld\n\n", "size of line:", sizeof(p));
-    printf("%s %d\n\n", "found whitespaces:", wcount);
-
-    char *out = malloc(sizeof(line) - count);
-
-    return "out";
+    return out;
 }
 
 char *toLowerCase(char *line) {
