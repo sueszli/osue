@@ -100,25 +100,32 @@ static void processLine(char *line, uint8_t ignoreWhitespaces,
     line = tmp;
   }
 
-  // add message to line
-  char *msg = (isPalindrome(line) ? " is a palindrom" : " is not a palindrom");
-  // printf("\"%s\"%s\n", line, msg);
-
+  // concatenate msg to line
+  char *msg =
+      (isPalindrome(line) ? " is a palindrom\n" : " is not a palindrom\n");
   size_t newLen = sizeof(char) * (strlen(line) + strlen(msg)) + 1;
   char *tmp = (char *)realloc(line, newLen);
   if (tmp == NULL) {
     error("realloc failed");
   }
   line = tmp;
-
   line = strcat(line, msg);
-  // free(msg);
 
-  printf("%s\n", line);
   if (outputPath != NULL) {
+    // write to file
+    FILE *outputStream = fopen(outputPath, "w");
+    if (outputStream == NULL) {
+      error("fopen failed");
+    }
+
+    fclose(outputStream);
+
   } else {
+    // write to stdout
+    fprintf(stdout, "%s", line);
   }
-  // free(line);
+
+  free(line);
 }
 
 int main(int argc, char **argv) {
