@@ -95,7 +95,7 @@ static void writeUpdatedLine(char *line, uint8_t ignoreWhitespaces,
   line[strlen(line) - 1] = '\0';  // remove '\n' at the end
   char *out = strdup(line);
 
-  // change line based on options
+  // get msg
   if (ignoreWhitespaces) {
     char *tmp = trim(out);
     free(out);
@@ -106,21 +106,18 @@ static void writeUpdatedLine(char *line, uint8_t ignoreWhitespaces,
     free(out);
     out = tmp;
   }
-
-  // concatenate msg to line
   char *msg = isPalindrome(out) ? " is a palindrom\n" : " is not a palindrom\n";
+
+  // out = line + msg
   size_t newLen = sizeof(char) * (strlen(out) + strlen(msg)) + 1;
   char *tmp = (char *)realloc(out, newLen);
   if (tmp == NULL) {
     error("realloc failed");
   }
   out = tmp;
-  out = strcat(line, msg);
+  out = strcat(line, msg);  // don't free out -> it not points to line
 
-  // write to stream
   fprintf(outputStream, "%s", out);
-
-  // TODO: free(out)
 }
 
 int main(int argc, char **argv) {
