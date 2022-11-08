@@ -47,12 +47,12 @@ static char *trim(char *line) {
   }
   *op = '\0';
 
-  char *newMemory = realloc(out, strlen(out) + 1);
-  if (newMemory) {
-    out = newMemory;
-  } else {
-    error("Realloc failed");
+  size_t newLen = sizeof(char) * (strlen(out) + 1);
+  char *tmp = (char *)realloc(out, newLen);
+  if (tmp == NULL) {
+    error("realloc failed");
   }
+  out = tmp;
 
   return out;
 }
@@ -86,63 +86,42 @@ static _Bool isPalindrome(char *line) {
   return true;
 }
 
-static void printArgs(int argc, char **argv) {
-  log("argc: %d", argc);
-  log("%s", "argv:");
-  char **ap = argv;
-  uint8_t i = 0;
-  while (*ap != NULL) {
-    log("\t[%d]: %s", i++, *ap);
-    ap++;
-  }
-  log("%s", "\n\n\n");
-}
-
-static void testPalindrome(void) {
-  char *input = "never odd or even";
-  printf("\"%s\" ", input);
-
-  _Bool ignoreLetterCasing = true;
-  _Bool ignoreWhitespaces = true;
-
-  if (ignoreLetterCasing) {
-    input = toLowerCase(input);
-  }
+static void processLine(char *line, uint8_t ignoreWhitespaces,
+                        uint8_t ignoreLetterCasing, char *outputPath) {
+  // change line based on options
   if (ignoreWhitespaces) {
-    input = trim(input);
-  }
-
-  if (isPalindrome(input)) {
-    printf("is a palindrom\n");
-  } else {
-    printf("is not a palindrom\n");
-  }
-  printf("\n\n\n");
-}
-
-static void processInputfile(char *inputPath, uint8_t ignoreWhitespaces,
-                             uint8_t ignoreLetterCasing, const *outputPath) {
-  log("%s: %s", "reading content of:", inputPath);
-
-  // either use fgets or getline
-  if (ignoreWhitespaces) {
+    char *tmp = trim(line);
+    free(line);
+    line = tmp;
   }
   if (ignoreLetterCasing) {
+    char *tmp = toLowerCase(line);
+    free(line);
+    line = tmp;
   }
 
-  // do computation
+  // add message to line
+  char *msg = (isPalindrome(line) ? " is a palindrom" : " is not a palindrom");
+  // printf("\"%s\"%s\n", line, msg);
 
+  size_t newLen = sizeof(char) * (strlen(line) + strlen(msg)) + 1;
+  char *tmp = (char *)realloc(line, newLen);
+  if (tmp == NULL) {
+    error("realloc failed");
+  }
+  line = tmp;
+
+  line = strcat(line, msg);
+  // free(msg);
+
+  printf("%s\n", line);
   if (outputPath != NULL) {
   } else {
   }
+  // free(line);
 }
 
-static void processUserInput(uint8_t ignoreWhitespaces,
-                             uint8_t ignoreLetterCasing, const *outputPath) {
-  // https://www.programiz.com/c-programming/c-file-input-output
-}
-
-int actualMain(int argc, char **argv) {
+int main(int argc, char **argv) {
   uint8_t ignoreLetterCasing = 0;
   uint8_t ignoreWhitespaces = 0;
   uint8_t writeToFile = 0;
@@ -163,8 +142,8 @@ int actualMain(int argc, char **argv) {
         ignoreWhitespaces++;
         break;
       case 'i':
-        ignoreLetterCasing++;
         log("%s", "option i: ignore letter casing");
+        ignoreLetterCasing++;
         break;
       case 'o':
         log("%s", "option o: write output to file");
@@ -184,40 +163,31 @@ int actualMain(int argc, char **argv) {
   log("%s %d", "num of input files:", numInputFiles);
 
   if (numInputFiles > 0) {
+    // read files
     while (argc > optind) {
-      const *inputPath = argv[optind++];
-      processInputfile(inputPath, ignoreWhitespaces, ignoreLetterCasing,
-                       outputPath);
+      char *inputPath = argv[optind++];
+      log("%s: %s", "reading content of", inputPath);
+      FILE *inputStream = fopen(inputPath, "r");
+      if (inputStream == NULL) {
+        error("fopen failed");
+      }
+      char *line = NULL;
+      size_t len = 0;
+      while (getline(&line, &len, inputStream) != -1) {
+        processLine(line, ignoreWhitespaces, ignoreLetterCasing, outputPath);
+      }
+      fclose(inputStream);
     }
+
   } else {
-    processUserInput(ignoreWhitespaces, ignoreLetterCasing, outputPath);
+    // read user input
+    char *line = NULL;
+    size_t len = 0;
+    if (getline(&line, &len, stdin) == -1) {
+      error("reading from stdin with getline failed");
+    }
+    processLine(line, ignoreWhitespaces, ignoreLetterCasing, outputPath);
   }
-
-  return EXIT_SUCCESS;
-}
-
-char *flatMapStrings(char **elems) {
-  // https://en.m.wikipedia.org/wiki/C_string_handling
-  // strcat for string concatenation
-
-  return "flatted out string array";
-}
-
-int main(int argc, char **argv) {
-  FILE *inputStream = fopen("./input.txt", "r");
-  if (inputStream == NULL) {
-    error("fopen failed for given input file: <???>");
-  }
-
-  char *line = NULL;
-  size_t len = 0;
-
-  while (getline(&line, &len, inputStream) != -1) {
-    printf("%s", line);
-  }
-
-  free(line);
-  fclose(inputStream);
 
   return EXIT_SUCCESS;
 }
