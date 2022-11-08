@@ -1,3 +1,7 @@
+// functions have as little side effects as possible - but lower performance,
+// because the input gets duplicated (dynamic memory allocation).
+// Don't forget to free() the output of every function that returns a string.
+
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
@@ -32,10 +36,6 @@
   exit(EXIT_FAILURE);
 // endregion
 
-// functions have as little side effects as possible - but lower performance,
-// because the input gets duplicated (dynamic memory allocation).
-// Don't forget to free() the output of every function that returns a string.
-
 static char *trim(char *line) {
   // https://stackoverflow.com/questions/74350465/how-to-free-memory-following-a-0-placed-somewhere-in-a-string-in-c
   char *out = strdup(line);
@@ -57,7 +57,6 @@ static char *trim(char *line) {
     error("realloc failed");
   }
   out = tmp;
-
   return out;
 }
 
@@ -168,11 +167,10 @@ int main(int argc, char **argv) {
     outputStream = stdout;
   }
 
-  // read input
   const int numInputFiles = argc - optind;
   log("%s %d", "num of input files:", numInputFiles);
   if (numInputFiles > 0) {
-    // read from file
+    // iterate through files
     while (argc > optind) {
       char *inputPath = argv[optind++];
       log("%s: %s", "reading content of", inputPath);
@@ -190,7 +188,7 @@ int main(int argc, char **argv) {
       fclose(inputStream);
     }
   } else {
-    // read from stdin
+    // get user input from stdin
     char *line = NULL;
     size_t len = 0;
     if (getline(&line, &len, stdin) == -1) {
