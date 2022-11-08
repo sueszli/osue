@@ -32,6 +32,10 @@
   exit(EXIT_FAILURE);
 // endregion
 
+// functions have as little side effects as possible - but lower performance,
+// because the input gets duplicated (dynamic memory allocation).
+// Don't forget to free() the output of every function that returns a string.
+
 static char *trim(char *line) {
   // https://stackoverflow.com/questions/74350465/how-to-free-memory-following-a-0-placed-somewhere-in-a-string-in-c
   char *out = strdup(line);
@@ -86,46 +90,37 @@ static _Bool isPalindrome(char *line) {
   return true;
 }
 
-static void processLine(char *line, uint8_t ignoreWhitespaces,
-                        uint8_t ignoreLetterCasing, char *outputPath) {
+static void writeUpdatedLine(char *line, uint8_t ignoreWhitespaces,
+                             uint8_t ignoreLetterCasing, FILE *outputStream) {
+  line[strlen(line) - 1] = '\0';  // remove '\n' at the end
+  char *out = strdup(line);
+
   // change line based on options
   if (ignoreWhitespaces) {
-    char *tmp = trim(line);
-    free(line);
-    line = tmp;
+    char *tmp = trim(out);
+    free(out);
+    out = tmp;
   }
   if (ignoreLetterCasing) {
-    char *tmp = toLowerCase(line);
-    free(line);
-    line = tmp;
+    char *tmp = toLowerCase(out);
+    free(out);
+    out = tmp;
   }
 
   // concatenate msg to line
-  char *msg =
-      (isPalindrome(line) ? " is a palindrom\n" : " is not a palindrom\n");
-  size_t newLen = sizeof(char) * (strlen(line) + strlen(msg)) + 1;
-  char *tmp = (char *)realloc(line, newLen);
+  char *msg = isPalindrome(out) ? " is a palindrom\n" : " is not a palindrom\n";
+  size_t newLen = sizeof(char) * (strlen(out) + strlen(msg)) + 1;
+  char *tmp = (char *)realloc(out, newLen);
   if (tmp == NULL) {
     error("realloc failed");
   }
-  line = tmp;
-  line = strcat(line, msg);
+  out = tmp;
+  out = strcat(line, msg);
 
-  if (outputPath != NULL) {
-    // write to file
-    FILE *outputStream = fopen(outputPath, "w");
-    if (outputStream == NULL) {
-      error("fopen failed");
-    }
+  // write to stream
+  fprintf(outputStream, "%s", out);
 
-    fclose(outputStream);
-
-  } else {
-    // write to stdout
-    fprintf(stdout, "%s", line);
-  }
-
-  free(line);
+  // TODO: free(out)
 }
 
 int main(int argc, char **argv) {
@@ -161,16 +156,26 @@ int main(int argc, char **argv) {
         argumentError("Invalid option was used.");
     }
   }
-
   if (ignoreLetterCasing > 1 || ignoreWhitespaces > 1 || writeToFile > 1) {
     argumentError("The same option was used twice or more often.");
   }
 
+  // set output
+  FILE *outputStream;
+  if (outputPath != NULL) {
+    outputStream = fopen(outputPath, "w");
+    if (outputStream == NULL) {
+      error("fopen failed");
+    }
+  } else {
+    outputStream = stdout;
+  }
+
+  // read input
   const int numInputFiles = argc - optind;
   log("%s %d", "num of input files:", numInputFiles);
-
   if (numInputFiles > 0) {
-    // read files
+    // read from file
     while (argc > optind) {
       char *inputPath = argv[optind++];
       log("%s: %s", "reading content of", inputPath);
@@ -181,20 +186,23 @@ int main(int argc, char **argv) {
       char *line = NULL;
       size_t len = 0;
       while (getline(&line, &len, inputStream) != -1) {
-        processLine(line, ignoreWhitespaces, ignoreLetterCasing, outputPath);
+        writeUpdatedLine(line, ignoreWhitespaces, ignoreLetterCasing,
+                         outputStream);
       }
+      free(line);
       fclose(inputStream);
     }
-
   } else {
-    // read user input
+    // read from stdin
     char *line = NULL;
     size_t len = 0;
     if (getline(&line, &len, stdin) == -1) {
       error("reading from stdin with getline failed");
     }
-    processLine(line, ignoreWhitespaces, ignoreLetterCasing, outputPath);
+    writeUpdatedLine(line, ignoreWhitespaces, ignoreLetterCasing, outputStream);
+    free(line);
   }
 
+  fclose(outputStream);
   return EXIT_SUCCESS;
 }
