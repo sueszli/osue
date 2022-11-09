@@ -1,7 +1,3 @@
-// functions have as little side effects as possible - but lower performance,
-// because the input gets duplicated (dynamic memory allocation).
-// Don't forget to free() the output of every function that returns a string.
-
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
@@ -13,7 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 
-// region "print formatting"
+// region "print macros"
 #ifdef DEBUG
 #define log(fmt, ...) \
   fprintf(stderr, "[%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__);
@@ -36,39 +32,43 @@
   exit(EXIT_FAILURE);
 // endregion
 
-static char *trim(char *line) {
+/**
+ * input gets reallocated (must be freed)
+ */
+static void trim(char *line) {
   // https://stackoverflow.com/questions/74350465/how-to-free-memory-following-a-0-placed-somewhere-in-a-string-in-c
-  char *out = strdup(line);
 
-  char *op = out;
-  char *ip = line;
-  while (*ip != '\0') {
-    if (!isspace(*ip)) {
-      *op = *ip;
-      op++;
+  int8_t newLength = 0;
+  char *readerp = line;
+  char *writerp = line;
+
+  while (*readerp != '\0') {
+    if (!isspace(*readerp)) {
+      *writerp = *readerp;
+      writerp++;
+      newLength++;
     }
-    ip++;
+    readerp++;
   }
-  *op = '\0';
+  *writerp = '\0';
 
-  size_t newLen = sizeof(char) * (strlen(out) + 1);
-  char *tmp = (char *)realloc(out, newLen);
-  if (tmp == NULL) {
-    error("realloc failed");
+  // delete memory following '\0'
+  size_t size = sizeof(char) * newLength;
+  char *shorterLine = (char *)malloc(size);
+  if (shorterLine == NULL) {
+    error("malloc failed");
   }
-  out = tmp;
-  return out;
+  strncpy(shorterLine, line, newLength);
+  line = shorterLine;
+  free(line);
 }
 
-static char *toLowerCase(char *line) {
-  char *out = strdup(line);
-
-  char *p = out;
+static void toLowerCase(char *line) {
+  char *p = line;
   while (*p != '\0') {
     *p = tolower(*p);
     p++;
   }
-  return out;
 }
 
 static _Bool isPalindrome(char *line) {
@@ -89,41 +89,53 @@ static _Bool isPalindrome(char *line) {
   return true;
 }
 
+/**
+ * returns new string
+ * output = str1 + str2
+ */
+static char *strConcat(char *str1, char *str2) {
+  size_t size = sizeof(char) * (strlen(str1) + strlen(str2)) + 1;
+  char *output = (char *)malloc(size);
+  if (output == NULL) {
+    error("malloc failed");
+  }
+
+  strncpy(output, str1, strlen(str1));
+  char *endOfCopy = output + strlen(str1);
+  strncpy(endOfCopy, str2, strlen(str2));
+  *(endOfCopy + strlen(str2)) = '\0';
+  return output;
+}
+
 static void writeUpdatedLine(char *line, uint8_t ignoreWhitespaces,
                              uint8_t ignoreLetterCasing, FILE *outputStream) {
   line[strlen(line) - 1] = '\0';  // remove '\n' at the end
-  char *out = strdup(line);
 
   // get msg
+  char *copy = strdup(line);
   if (ignoreWhitespaces) {
-    char *tmp = trim(out);
-    free(out);
-    out = tmp;
+    trim(copy);
   }
   if (ignoreLetterCasing) {
-    char *tmp = toLowerCase(out);
-    free(out);
-    out = tmp;
+    toLowerCase(copy);
   }
-  char *msg = isPalindrome(out) ? " is a palindrom\n" : " is not a palindrom\n";
+  char *msg =
+      isPalindrome(copy) ? " is a palindrom\n" : " is not a palindrom\n";
+  free(copy);
 
-  // out = line + msg
-  size_t newLen = sizeof(char) * (strlen(out) + strlen(msg)) + 1;
-  char *tmp = (char *)realloc(out, newLen);
-  if (tmp == NULL) {
-    error("realloc failed");
-  }
-  out = tmp;
-  out = strcat(line, msg);  // don't free out -> it not points to line
+  // output = line + msg
+  char *output = strConcat(line, msg);
 
-  fprintf(outputStream, "%s", out);
+  // write
+  fprintf(outputStream, "%s", output);
+  free(output);
 }
 
 int main(int argc, char **argv) {
   uint8_t ignoreLetterCasing = 0;
   uint8_t ignoreWhitespaces = 0;
   uint8_t writeToFile = 0;
-  char *outputPath;
+  char *outputPath = NULL;
 
   int option;
   struct option config[] = {{"outfile", required_argument, 0, 'o'}};
@@ -183,13 +195,13 @@ int main(int argc, char **argv) {
       while (getline(&line, &len, inputStream) != -1) {
         writeUpdatedLine(line, ignoreWhitespaces, ignoreLetterCasing,
                          outputStream);
+        free(line);
       }
-      free(line);
       fclose(inputStream);
     }
   } else {
     // get user input from stdin
-    char *line = NULL;
+    char *line = NULL;  // -> gets free'd in writeUpdatedLine
     size_t len = 0;
     if (getline(&line, &len, stdin) == -1) {
       error("reading from stdin with getline failed");
