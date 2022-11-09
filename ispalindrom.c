@@ -34,7 +34,7 @@
 
 // region "safe stuff (no dynamic memory allocation)"
 static void trim(char *line) {
-  int8_t newLength = 0;
+  size_t newLength = 0;
   char *readerp = line;
   char *writerp = line;
 
