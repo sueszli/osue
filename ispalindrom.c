@@ -32,12 +32,8 @@
   exit(EXIT_FAILURE);
 // endregion
 
-/**
- * input gets reallocated (must be freed)
- */
+// region "safe stuff (no dynamic memory allocation)"
 static void trim(char *line) {
-  // https://stackoverflow.com/questions/74350465/how-to-free-memory-following-a-0-placed-somewhere-in-a-string-in-c
-
   int8_t newLength = 0;
   char *readerp = line;
   char *writerp = line;
@@ -51,16 +47,6 @@ static void trim(char *line) {
     readerp++;
   }
   *writerp = '\0';
-
-  // delete memory following '\0'
-  size_t size = sizeof(char) * newLength;
-  char *shorterLine = (char *)malloc(size);
-  if (shorterLine == NULL) {
-    error("malloc failed");
-  }
-  strncpy(shorterLine, line, newLength);
-  line = shorterLine;
-  free(line);
 }
 
 static void toLowerCase(char *line) {
@@ -88,12 +74,9 @@ static _Bool isPalindrome(char *line) {
   }
   return true;
 }
+// endregion
 
-/**
- * returns new string
- * output = str1 + str2
- */
-static char *strConcat(char *str1, char *str2) {
+static char *concat(char *str1, char *str2) {
   size_t size = sizeof(char) * (strlen(str1) + strlen(str2)) + 1;
   char *output = (char *)malloc(size);
   if (output == NULL) {
@@ -124,7 +107,7 @@ static void writeUpdatedLine(char *line, uint8_t ignoreWhitespaces,
   free(copy);
 
   // output = line + msg
-  char *output = strConcat(line, msg);
+  char *output = concat(line, msg);
 
   // write
   fprintf(outputStream, "%s", output);
@@ -195,13 +178,13 @@ int main(int argc, char **argv) {
       while (getline(&line, &len, inputStream) != -1) {
         writeUpdatedLine(line, ignoreWhitespaces, ignoreLetterCasing,
                          outputStream);
-        free(line);
       }
+      free(line);
       fclose(inputStream);
     }
   } else {
     // get user input from stdin
-    char *line = NULL;  // -> gets free'd in writeUpdatedLine
+    char *line = NULL;
     size_t len = 0;
     if (getline(&line, &len, stdin) == -1) {
       error("reading from stdin with getline failed");
