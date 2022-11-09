@@ -36,7 +36,7 @@
 #define log(fmt, ...) \
   fprintf(stderr, "[%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__);
 #else
-#define log(fmt, ignored...)
+#define log(fmt, ...) /* NOP */
 #endif
 
 #define error(s)                                   \
