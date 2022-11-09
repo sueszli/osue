@@ -1,3 +1,20 @@
+/**
+ * @file ispalindrom.c
+ * @author Yahya Jabary <mailto: yahya.jabary@tuwien.ac.at>
+ * @date 09.11.2022
+ *
+ * @brief Checks if a string read from console or defined file is a palindrome
+ * and writes the results back to the console or another defined file.
+ *
+ * @details This program checks if a string is a palindrome or not. A palindrome
+ * is a word, phrase, number, or other sequence of characters which reads the
+ * same backward as forward, such as madam or racecar.
+ * After checking whether the given string <X> read from the console or a file
+ * is a palindrome or not, the program either writes "<X> is a palindrom"
+ * [sic] or "<X> is not a palindrom" [sic] to the console or to a file.
+ * The program can also be set to ignore white spaces and be case insensitive.
+ */
+
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
@@ -9,12 +26,17 @@
 #include <string.h>
 #include <unistd.h>
 
-// region "print macros"
+/**
+ * @brief Macros for formatting error messages and exiting or printing optional
+ * debug messages if the flag DDEBUG is set.
+ */
+
+// print macros ::
 #ifdef DEBUG
 #define log(fmt, ...) \
   fprintf(stderr, "[%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__);
 #else
-#define log(ignore)
+#define log(fmt, ignored...)
 #endif
 
 #define error(s)                                   \
@@ -30,89 +52,63 @@
   fprintf(stderr, "\t%s\n", "o -> output path (default: stdout)");           \
   fprintf(stderr, "\t%s\n", "files -> input paths (default: stdin)");        \
   exit(EXIT_FAILURE);
-// endregion
+// :: print macros
 
-// region "safe stuff (no dynamic memory allocation)"
-static void trim(char *line) {
-  size_t newLength = 0;
-  char *readerp = line;
-  char *writerp = line;
+// function prototypes ::
+/**
+ * @brief Parses commandline arguments, sets flags, iterates through input
+ * file(s) if necessary, iterates through each "line", passes each line to
+ * "writeUpdatedLine()" and then frees the memory allocated for the line.
+ * @param argc number of commandline arguments
+ * @param argv array of commandline arguments
+ * @return EXIT_SUCCESS if program ran successfully, EXIT_FAILURE otherwise
+ */
+int main(int argc, char **argv);
 
-  while (*readerp != '\0') {
-    if (!isspace(*readerp)) {
-      *writerp = *readerp;
-      writerp++;
-      newLength++;
-    }
-    readerp++;
-  }
-  *writerp = '\0';
-}
-
-static void toLowerCase(char *line) {
-  char *p = line;
-  while (*p != '\0') {
-    *p = tolower(*p);
-    p++;
-  }
-}
-
-static _Bool isPalindrome(char *line) {
-  const size_t length = strlen(line);
-  const size_t halfLength = length >> 1;
-
-  if (length == 0) {
-    return false;
-  }
-
-  for (size_t i = 0; i < halfLength; i++) {
-    char left = line[i];
-    char right = line[length - (1 + i)];
-    if (left != right) {
-      return false;
-    }
-  }
-  return true;
-}
-// endregion
-
-static char *concat(char *str1, char *str2) {
-  size_t size = sizeof(char) * (strlen(str1) + strlen(str2)) + 1;
-  char *output = (char *)malloc(size);
-  if (output == NULL) {
-    error("malloc failed");
-  }
-
-  strncpy(output, str1, strlen(str1));
-  char *endOfCopy = output + strlen(str1);
-  strncpy(endOfCopy, str2, strlen(str2));
-  *(endOfCopy + strlen(str2)) = '\0';
-  return output;
-}
-
+/**
+ * @brief Checks if a string is a palindrome or not and writes either "<X> is a
+ * palindrom" [sic] or "<X> is not a palindrom" [sic] to the console or to a
+ * file.
+ * @param line string to check
+ * @param ignoreWhiteSpaces flag to ignore white spaces (treated as boolean)
+ * @param ignoreLetterCasing flag to ignore letter casing (treated as boolean)
+ * @param outputStream stdout or file to write the initial input + calculated
+ * message to
+ */
 static void writeUpdatedLine(char *line, uint8_t ignoreWhitespaces,
-                             uint8_t ignoreLetterCasing, FILE *outputStream) {
-  line[strlen(line) - 1] = '\0';  // remove '\n' at the end
+                             uint8_t ignoreLetterCasing, FILE *outputStream);
+/**
+ * @brief Removes all whitespaces given argument by placing them at the
+ * beggining and then placing a null terminator after the last placed
+ * non-whitespace. -> This means that the argument will contain 2 null
+ * terminators.
+ * @param line string to remove whitespaces from
+ */
+static void trim(char *line);
 
-  // get msg
-  char *copy = strdup(line);
-  if (ignoreWhitespaces) {
-    trim(copy);
-  }
-  if (ignoreLetterCasing) {
-    toLowerCase(copy);
-  }
-  char *msg =
-      isPalindrome(copy) ? " is a palindrom\n" : " is not a palindrom\n";
-  free(copy);
+/**
+ * @brief Replaces all uppercase letters with their lowercase equivalent in the
+ * given argument.
+ * @param line string to replace uppercase letters with lowercase letters
+ */
+static void toLowerCase(char *line);
 
-  // output = line + msg
-  char *output = concat(line, msg);
+/**
+ * @brief Checks if a string is a palindrome or not and returns boolean value
+ * based on the result.
+ * @param line string to check
+ */
+static _Bool isPalindrome(char *line);
 
-  // write
-  fprintf(outputStream, "%s", output);
-  free(output);
-}
+/**
+ * @brief Allocates memory and concatenates the two given strings.
+ * @param str1 first string which will be placed at the beginning of the new
+ * string
+ * @param str2 second string which will be placed at the end of the new string
+ * @return pointer to the new string (make sure to free it after use)
+ */
+static char *concat(char *str1, char *str2);
+// :: function prototypes
 
 int main(int argc, char **argv) {
   uint8_t ignoreLetterCasing = 0;
@@ -176,6 +172,9 @@ int main(int argc, char **argv) {
       char *line = NULL;
       size_t len = 0;
       while (getline(&line, &len, inputStream) != -1) {
+        if (strlen(line) == 0) {
+          continue;
+        }
         writeUpdatedLine(line, ignoreWhitespaces, ignoreLetterCasing,
                          outputStream);
       }
@@ -195,4 +194,87 @@ int main(int argc, char **argv) {
 
   fclose(outputStream);
   return EXIT_SUCCESS;
+}
+
+static void writeUpdatedLine(char *line, uint8_t ignoreWhitespaces,
+                             uint8_t ignoreLetterCasing, FILE *outputStream) {
+  line[strlen(line) - 1] = '\0';  // remove '\n' at the end
+
+  // get msg
+  char *copy = strdup(line);
+  if (copy == NULL) {
+    error("strdup failed");
+  }
+  if (ignoreWhitespaces) {
+    trim(copy);
+  }
+  if (ignoreLetterCasing) {
+    toLowerCase(copy);
+  }
+  char *msg =
+      isPalindrome(copy) ? " is a palindrom\n" : " is not a palindrom\n";
+  free(copy);
+
+  // output = line + msg
+  char *output = concat(line, msg);
+
+  // write
+  fprintf(outputStream, "%s", output);
+  free(output);
+}
+
+static void trim(char *line) {
+  size_t newLength = 0;
+  char *readerp = line;
+  char *writerp = line;
+
+  while (*readerp != '\0') {
+    if (!isspace(*readerp)) {
+      *writerp = *readerp;
+      writerp++;
+      newLength++;
+    }
+    readerp++;
+  }
+  *writerp = '\0';
+}
+
+static void toLowerCase(char *line) {
+  char *p = line;
+  while (*p != '\0') {
+    *p = tolower(*p);
+    p++;
+  }
+}
+
+static _Bool isPalindrome(char *line) {
+  const size_t length = strlen(line);
+  const size_t halfLength = length >> 1;
+
+  if (length == 0) {
+    return false;
+  }
+
+  for (size_t i = 0; i < halfLength; i++) {
+    char left = line[i];
+    char right = line[length - (1 + i)];
+    if (left != right) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static char *concat(char *str1, char *str2) {
+  size_t size = sizeof(char) * (strlen(str1) + strlen(str2)) + 1;
+  char *output = (char *)malloc(size);
+  if (output == NULL) {
+    error("malloc failed");
+  }
+
+  strncpy(output, str1, strlen(str1));
+  char *endOfCopy = output + strlen(str1);
+  strncpy(endOfCopy, str2, strlen(str2));
+  *(endOfCopy + strlen(str2)) = '\0';
+  return output;
 }
