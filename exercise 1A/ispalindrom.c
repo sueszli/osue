@@ -215,10 +215,8 @@ static void writeUpdatedLine(char *line, uint8_t ignoreWhitespaces,
       isPalindrome(copy) ? " is a palindrom\n" : " is not a palindrom\n";
   free(copy);
 
-  // output = line + msg
+  // write output (output = line + msg)
   char *output = concat(line, msg);
-
-  // write
   fprintf(outputStream, "%s", output);
   free(output);
 }
@@ -273,8 +271,8 @@ static char *concat(char *str1, char *str2) {
   }
 
   strncpy(output, str1, strlen(str1));
-  char *endOfCopy = output + strlen(str1);
-  strncpy(endOfCopy, str2, strlen(str2));
-  *(endOfCopy + strlen(str2)) = '\0';
+  char *endOfFirstCopy = output + strlen(str1);
+  strncpy(endOfFirstCopy, str2, strlen(str2));
+  *(endOfFirstCopy + strlen(str2)) = '\0';
   return output;
 }
