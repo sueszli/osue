@@ -1,0 +1,2 @@
+
+- Use (atomic) generator counter in shared buffer to determine the generator ID (for better debugger messages)
