@@ -3,7 +3,7 @@
 // generators" in the shared memory circular buffer and use it to set our own ID
 // for debugging information
 
-// 1) create makefiles
+// 1) create makefiles -> DONE
 // 2) create shell scripts (run, valgrind)
 // 3) implement
 
