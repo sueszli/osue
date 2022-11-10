@@ -24,10 +24,10 @@ ULTRA_VERBOSE_FLAGS = $(SHOW_LOG) -std=c99 -pedantic -Wall -Werror -Wextra -g3 $
 all: ispalindrom
 
 ispalindrom: ispalindrom.o
-	$(OLD_COMPILER) -o $@ $^
+	$(NEW_COMPILER) -o $@ $^
 
 %.o: %.c
-	$(OLD_COMPILER) $(DEFAULT_FLAGS) -c -o $@ $<
+	$(NEW_COMPILER) $(DEFAULT_LOG_FLAGS) -c -o $@ $<
 
 ispalindrom.o: ispalindrom.c
 

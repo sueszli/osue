@@ -192,7 +192,11 @@ int main(int argc, char **argv) {
     free(line);
   }
 
-  fclose(outputStream);
+  // close output
+  int status = fclose(outputStream);
+  if (status == EOF) {
+    error("fclose failed");
+  }
   return EXIT_SUCCESS;
 }
 
