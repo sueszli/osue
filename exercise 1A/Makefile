@@ -1,6 +1,6 @@
 # @file Makefile
 # @author Yahya Jabary <mailto: yahya.jabary@tuwien.ac.at>
-# @date 09.11.2022
+# @date 01.11.2022
 # 
 # @brief Makefile with multiple compile options to choose from.
 

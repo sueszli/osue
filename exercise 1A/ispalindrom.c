@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
     argumentError("The same option was used twice or more often.");
   }
 
-  // set output
+  // open output
   FILE *outputStream;
   if (outputPath != NULL) {
     outputStream = fopen(outputPath, "w");
@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
   const int numInputFiles = argc - optind;
   log("%s %d", "num of input files:", numInputFiles);
   if (numInputFiles > 0) {
-    // iterate through files
+    // iterate through files, send each line to writeUpdatedLine()
     while (argc > optind) {
       char *inputPath = argv[optind++];
       log("%s: %s", "reading content of", inputPath);
@@ -179,10 +179,12 @@ int main(int argc, char **argv) {
                          outputStream);
       }
       free(line);
-      fclose(inputStream);
+      if (fclose(inputStream) == EOF) {
+        error("fclose failed");
+      }
     }
   } else {
-    // get user input from stdin
+    // get user input from stdin, send line to writeUpdatedLine()
     char *line = NULL;
     size_t len = 0;
     if (getline(&line, &len, stdin) == -1) {
@@ -193,8 +195,7 @@ int main(int argc, char **argv) {
   }
 
   // close output
-  int status = fclose(outputStream);
-  if (status == EOF) {
+  if (fclose(outputStream) == EOF) {
     error("fclose failed");
   }
   return EXIT_SUCCESS;
