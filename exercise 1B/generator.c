@@ -48,15 +48,16 @@ typedef char **NodeList;  // @invariant no duplicates
 // :: types
 
 // logging ::
-static void logEdgeList(EdgeList edgeList) {
-  char msg[] = "Edge list: ";
+static void logEdgeList(const char *msg, EdgeList edgeList) {
   size_t edgeSize = MAX_NAME_SIZE * 2 + 4;
-  char *out =
-      malloc((edgeList.numEdges * edgeSize + strlen(msg) + 1) * sizeof(char *));
+  char *out = malloc((edgeList.numEdges * edgeSize + 1) * sizeof(char *));
   if (out == NULL) {
     error("malloc failed");
   }
-  strcpy(out, msg);
+  for (size_t i = 0; i < edgeList.numEdges * edgeSize + 1; i++) {
+    out[i] = '\0';
+  }
+
   for (size_t i = 0; i < edgeList.numEdges; i++) {
     char *left = edgeList.fst[i].from;
     char *right = edgeList.fst[i].to;
@@ -67,35 +68,36 @@ static void logEdgeList(EdgeList edgeList) {
     strcat(out, ")");
     strcat(out, " ");
   }
-  strcat(out, "\0");
 
-  log("%s\n", out);
+  log("%s: %s\n", msg, out);
   free(out);
 }
 
-static void logNodeList(NodeList nodeList) {
+static void logNodeList(const char *msg, NodeList nodeList) {
   size_t len = 0;
   while (nodeList[len] != NULL) {
     len++;
   }
 
-  char msg[] = "Node list: ";
-  char *out = malloc((len * MAX_NAME_SIZE + strlen(msg) + 1) * sizeof(char *));
+  char *out = malloc((len * MAX_NAME_SIZE + 1) * sizeof(char *));
   if (out == NULL) {
     error("malloc failed");
   }
-  strcpy(out, msg);
+  for (size_t i = 0; i < len * MAX_NAME_SIZE + 1; i++) {
+    out[i] = '\0';
+  }
+
   for (size_t i = 0; i < len; i++) {
     strcat(out, nodeList[i]);
     strcat(out, " ");
   }
-  strcat(out, "\0");
 
-  log("%s\n", out);
+  log("%s: %s\n", msg, out);
   free(out);
 }
 // :: logging
 
+// parsing ::
 static void parseEdges(EdgeList edgeList, int argc, char **argv) {
   for (size_t i = 1; i < argc; i++) {
     char *argument = argv[i];
@@ -156,7 +158,9 @@ static char **parseNodes(NodeList nodeList, EdgeList edgeList) {
   newNodeList[size] = NULL;
   return newNodeList;
 }
+// :: parsing
 
+// solving ::
 static void shuffle(NodeList list) {
   size_t len = 0;
   while (list[len] != NULL) {
@@ -173,14 +177,14 @@ static void shuffle(NodeList list) {
   }
 }
 
-bool contradictsOrder(char *from, char *to, NodeList nodeList) {
+bool contradictsOrder(Edge edge, NodeList nodeList) {
   size_t fromIndex = 0;
   size_t toIndex = 0;
   for (size_t i = 0; nodeList[i] != NULL; i++) {
-    if (strcmp(nodeList[i], from) == 0) {
+    if (strcmp(nodeList[i], edge.from) == 0) {
       fromIndex = i;
     }
-    if (strcmp(nodeList[i], to) == 0) {
+    if (strcmp(nodeList[i], edge.to) == 0) {
       toIndex = i;
     }
   }
@@ -189,16 +193,19 @@ bool contradictsOrder(char *from, char *to, NodeList nodeList) {
 
 static void genSolution(EdgeList solution, EdgeList allEdges,
                         NodeList nodePermutation) {
-  log("Generating solution:\n", NULL);
-  log("\tAll edges:\n", NULL);
+  shuffle(nodePermutation);
+  logNodeList("Permutation", nodePermutation);
 
+  logEdgeList("All edges", allEdges);
   for (size_t i = 0; i < allEdges.numEdges; i++) {
     Edge edge = allEdges.fst[i];
-    if (!contradictsOrder(edge.from, edge.to, nodePermutation)) {
-      solution.fst[i] = edge;
-    }
   }
+
+  // realloc
+
+  // logEdgeList("Solution", solution);
 }
+// :: solving
 
 int main(int argc, char **argv) {
   if (argc < 2) {
@@ -213,35 +220,36 @@ int main(int argc, char **argv) {
     error("malloc failed");
   }
   parseEdges(allEdges, argc, argv);
-  logEdgeList(allEdges);
 
   // parse nodes
-  NodeList nodePermutation =
-      calloc(2 * numEdges * sizeof(char *), sizeof(char *));
-  if (nodePermutation == NULL) {
+  NodeList allNodes = calloc(2 * numEdges * sizeof(char *), sizeof(char *));
+  if (allNodes == NULL) {
     error("calloc failed");
   }
-  nodePermutation = parseNodes(nodePermutation, allEdges);
-  logNodeList(nodePermutation);
+  allNodes = parseNodes(allNodes, allEdges);
+
+  // log
+  logEdgeList("All edges", allEdges);
+  log("Num of all edges: %zu\n", allEdges.numEdges);
+  logNodeList("All nodes", allNodes);
 
   // generate feedback arc sets
   uint8_t iterations = 1;
   while (iterations > 0) {
-    shuffle(nodePermutation);
-
+    log("\n\n// Iteration %d\n", iterations);
     EdgeList solution = {.numEdges = numEdges,
                          .fst = malloc(numEdges * sizeof(Edge))};
     if (solution.fst == NULL) {
       error("malloc failed");
     }
-    // genSolution(solution, allEdges, nodePermutation);
+    genSolution(solution, allEdges, allNodes);
 
     free(solution.fst);
     iterations--;
   }
 
   free(allEdges.fst);
-  free(nodePermutation);
+  free(allNodes);
 
   exit(EXIT_SUCCESS);
 }
