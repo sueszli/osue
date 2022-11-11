@@ -8,94 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 
-// print macros ::
-#ifdef DEBUG
-#define log(fmt, ...) \
-  fprintf(stderr, "[%s:%d] " fmt, __FILE__, __LINE__, ##__VA_ARGS__);
-#else
-#define log(fmt, ...) /* NOP */
-#endif
-
-#define error(s)                                   \
-  fprintf(stderr, "%s: %s\n", s, strerror(errno)); \
-  exit(EXIT_FAILURE);
-
-#define argumentError(s)                                                       \
-  fprintf(stderr, "%s\n", s);                                                  \
-  fprintf(stderr, "%s\n", "USAGE:");                                           \
-  fprintf(stderr, "\t%s\n", "generator EDGE1...");                             \
-  fprintf(stderr, "%s\n", "EXAMPLE:");                                         \
-  fprintf(stderr, "\t%s\n", "# Each 'x-y' argument below is a directed edge"); \
-  fprintf(stderr, "\t%s\n", "# from vertice 'x' to vertice 'y' in a graph.");  \
-  fprintf(stderr, "\t%s\n", "generator 0-1 1-2 1-3 1-4 2-4 3-6 4-3 4-5 6-0");  \
-  exit(EXIT_FAILURE);
-// :: print macros
-
-// types ::
-#define MAX_NAME_SIZE (1024)  // max name size for an edge or node
-
-typedef struct {
-  char *from;
-  char *to;
-} Edge;
-
-typedef struct {
-  size_t numEdges;
-  Edge *fst;
-} EdgeList;
-
-typedef char **NodeList;  // @invariant no duplicates
-// :: types
-
-// logging ::
-static void logEdgeList(const char *msg, EdgeList edgeList) {
-  size_t edgeSize = MAX_NAME_SIZE * 2 + 4;
-  char *out = malloc((edgeList.numEdges * edgeSize + 1) * sizeof(char *));
-  if (out == NULL) {
-    error("malloc failed");
-  }
-  for (size_t i = 0; i < edgeList.numEdges * edgeSize + 1; i++) {
-    out[i] = '\0';
-  }
-
-  for (size_t i = 0; i < edgeList.numEdges; i++) {
-    char *left = edgeList.fst[i].from;
-    char *right = edgeList.fst[i].to;
-    strcat(out, "(");
-    strcat(out, left);
-    strcat(out, "-");
-    strcat(out, right);
-    strcat(out, ")");
-    strcat(out, " ");
-  }
-
-  log("%s: %s\n", msg, out);
-  free(out);
-}
-
-static void logNodeList(const char *msg, NodeList nodeList) {
-  size_t len = 0;
-  while (nodeList[len] != NULL) {
-    len++;
-  }
-
-  char *out = malloc((len * MAX_NAME_SIZE + 1) * sizeof(char *));
-  if (out == NULL) {
-    error("malloc failed");
-  }
-  for (size_t i = 0; i < len * MAX_NAME_SIZE + 1; i++) {
-    out[i] = '\0';
-  }
-
-  for (size_t i = 0; i < len; i++) {
-    strcat(out, nodeList[i]);
-    strcat(out, " ");
-  }
-
-  log("%s: %s\n", msg, out);
-  free(out);
-}
-// :: logging
+#include "common.h"
 
 // parsing ::
 static void parseEdges(EdgeList edgeList, int argc, char **argv) {
@@ -116,8 +29,7 @@ static void parseEdges(EdgeList edgeList, int argc, char **argv) {
     // parse
     char *left = strtok(argument, "-");
     char *right = strtok(NULL, "-");
-    edgeList.fst[i - 1].from = left;
-    edgeList.fst[i - 1].to = right;
+    edgeList.fst[i - 1] = (Edge){.from = left, .to = right};
   }
 }
 
@@ -191,19 +103,37 @@ bool contradictsOrder(Edge edge, NodeList nodeList) {
   return fromIndex > toIndex;
 }
 
-static void genSolution(EdgeList solution, EdgeList allEdges,
-                        NodeList nodePermutation) {
-  shuffle(nodePermutation);
-  logNodeList("Permutation", nodePermutation);
-
-  logEdgeList("All edges", allEdges);
-  for (size_t i = 0; i < allEdges.numEdges; i++) {
-    Edge edge = allEdges.fst[i];
+static EdgeList genSolution(EdgeList allEdges, NodeList nodePermutation) {
+  // malloc
+  EdgeList solution = {.numEdges = allEdges.numEdges,
+                       .fst = malloc(allEdges.numEdges * sizeof(Edge))};
+  if (solution.fst == NULL) {
+    error("malloc failed");
   }
 
-  // realloc
+  // shuffle
+  shuffle(nodePermutation);
 
-  // logEdgeList("Solution", solution);
+  // get contradicting edges
+  size_t solutionCounter = 0;
+  for (size_t i = 0; i < allEdges.numEdges; i++) {
+    Edge e = allEdges.fst[i];
+    if (contradictsOrder(e, nodePermutation)) {
+      solution.fst[solutionCounter] = e;
+      solutionCounter++;
+    }
+  }
+  solution.numEdges = solutionCounter;
+  solution.fst[solutionCounter] = (Edge){.from = NULL, .to = NULL};
+
+  // realloc
+  EdgeList rSolution = {
+      .numEdges = solution.numEdges,
+      .fst = realloc(solution.fst, solution.numEdges * sizeof(Edge) + 1)};
+  if (rSolution.fst == NULL) {
+    error("realloc failed");
+  }
+  return rSolution;
 }
 // :: solving
 
@@ -228,21 +158,21 @@ int main(int argc, char **argv) {
   }
   allNodes = parseNodes(allNodes, allEdges);
 
-  // log
   logEdgeList("All edges", allEdges);
   log("Num of all edges: %zu\n", allEdges.numEdges);
   logNodeList("All nodes", allNodes);
 
-  // generate feedback arc sets
-  uint8_t iterations = 1;
+  // solve
+  size_t iterations = 100;
   while (iterations > 0) {
-    log("\n\n// Iteration %d\n", iterations);
-    EdgeList solution = {.numEdges = numEdges,
-                         .fst = malloc(numEdges * sizeof(Edge))};
-    if (solution.fst == NULL) {
-      error("malloc failed");
+    // log("\n\n// Iteration %zu\n", iterations);
+    EdgeList solution = genSolution(allEdges, allNodes);  // malloc
+
+    if (solution.numEdges < MAX_SOLUTION_SIZE) {
+      log("Solution is right: %zu\n", solution.numEdges);
+      logEdgeList("Solution", solution);
+      log("\n");
     }
-    genSolution(solution, allEdges, allNodes);
 
     free(solution.fst);
     iterations--;
