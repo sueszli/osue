@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 
 // print macros ::
 #ifdef DEBUG
@@ -30,6 +32,8 @@
 // :: print macros
 
 // types ::
+#define MAX_NAME_SIZE (1024)  // max name size for an edge or node
+
 typedef struct {
   char *from;
   char *to;
@@ -43,11 +47,54 @@ typedef struct {
 typedef char **NodeList;  // @invariant no duplicates
 // :: types
 
+// logging ::
 static void logEdgeList(EdgeList edgeList) {
-  for (size_t i = 0; i < edgeList.numEdges; i++) {
-    log("(%s-%s)\n", edgeList.fst[i].from, edgeList.fst[i].to);
+  char msg[] = "Edge list: ";
+  size_t edgeSize = MAX_NAME_SIZE * 2 + 4;
+  char *out =
+      malloc((edgeList.numEdges * edgeSize + strlen(msg) + 1) * sizeof(char *));
+  if (out == NULL) {
+    error("malloc failed");
   }
+  strcpy(out, msg);
+  for (size_t i = 0; i < edgeList.numEdges; i++) {
+    char *left = edgeList.fst[i].from;
+    char *right = edgeList.fst[i].to;
+    strcat(out, "(");
+    strcat(out, left);
+    strcat(out, "-");
+    strcat(out, right);
+    strcat(out, ")");
+    strcat(out, " ");
+  }
+  strcat(out, "\0");
+
+  log("%s\n", out);
+  free(out);
 }
+
+static void logNodeList(NodeList nodeList) {
+  size_t len = 0;
+  while (nodeList[len] != NULL) {
+    len++;
+  }
+
+  char msg[] = "Node list: ";
+  char *out = malloc((len * MAX_NAME_SIZE + strlen(msg) + 1) * sizeof(char *));
+  if (out == NULL) {
+    error("malloc failed");
+  }
+  strcpy(out, msg);
+  for (size_t i = 0; i < len; i++) {
+    strcat(out, nodeList[i]);
+    strcat(out, " ");
+  }
+  strcat(out, "\0");
+
+  log("%s\n", out);
+  free(out);
+}
+// :: logging
 
 static void parseEdges(EdgeList edgeList, int argc, char **argv) {
   for (size_t i = 1; i < argc; i++) {
@@ -72,59 +119,28 @@ static void parseEdges(EdgeList edgeList, int argc, char **argv) {
   }
 }
 
-static size_t nodeListLen(NodeList nodeList) {
-  size_t len = 0;
-  while (nodeList[len] != NULL) {
-    len++;
-  }
-  return len;
-}
-
-static void logNodeList(NodeList nodeList) {
-  size_t len = nodeListLen(nodeList);
-
-  char *msg = "Node list: ";
-  uint8_t nodeNameSize = 128;  // assumption about max node name size
-  char *out = malloc((len * nodeNameSize + strlen(msg) + 1) * sizeof(char *));
-  if (out == NULL) {
-    error("malloc failed");
-  }
-  strcpy(out, msg);
-  for (size_t i = 0; i < len; i++) {
-    strcat(out, nodeList[i]);
-    strcat(out, " ");
-  }
-
-  log("%s\n", out);
-  free(out);
-}
-
 static bool contains(NodeList nodeList, char *input) {
-  size_t i = 0;
-  while (nodeList[i] != NULL) {
+  for (size_t i = 0; nodeList[i] != NULL; i++) {
     if (strcmp(nodeList[i], input) == 0) {
       return true;
     }
-    i++;
   }
   return false;
 }
 
 static char **parseNodes(NodeList nodeList, EdgeList edgeList) {
-  // @invariant nodeList is empty
-  // @invariant nodeList can't contain duplicates
   char **top = nodeList;
   size_t size = 0;
 
   // add nodes from edges
   for (size_t i = 0; i < edgeList.numEdges; i++) {
     char *node1 = edgeList.fst[i].from;
-    char *node2 = edgeList.fst[i].to;
     if (!contains(nodeList, node1)) {
       *top = node1;
       top++;
       size++;
     }
+    char *node2 = edgeList.fst[i].to;
     if (!contains(nodeList, node2)) {
       *top = node2;
       top++;
@@ -141,36 +157,91 @@ static char **parseNodes(NodeList nodeList, EdgeList edgeList) {
   return newNodeList;
 }
 
-int main(int argc, char **argv) {
-  char *msg = "test";
-  char *shuffled = strfry(msg);
-  log("%s\n", shuffled);
+static void shuffle(NodeList list) {
+  size_t len = 0;
+  while (list[len] != NULL) {
+    len++;
+  }
 
-  // parse and validate args
+  srand(time(NULL));  // seed
+  for (size_t i = 0; i < len; i++) {
+    size_t j = i + rand() / (RAND_MAX / (len - i) + 1);
+    // swap
+    char *tmp = list[j];
+    list[j] = list[i];
+    list[i] = tmp;
+  }
+}
+
+bool contradictsOrder(char *from, char *to, NodeList nodeList) {
+  size_t fromIndex = 0;
+  size_t toIndex = 0;
+  for (size_t i = 0; nodeList[i] != NULL; i++) {
+    if (strcmp(nodeList[i], from) == 0) {
+      fromIndex = i;
+    }
+    if (strcmp(nodeList[i], to) == 0) {
+      toIndex = i;
+    }
+  }
+  return fromIndex > toIndex;
+}
+
+static void genSolution(EdgeList solution, EdgeList allEdges,
+                        NodeList nodePermutation) {
+  log("Generating solution:\n", NULL);
+  log("\tAll edges:\n", NULL);
+
+  for (size_t i = 0; i < allEdges.numEdges; i++) {
+    Edge edge = allEdges.fst[i];
+    if (!contradictsOrder(edge.from, edge.to, nodePermutation)) {
+      solution.fst[i] = edge;
+    }
+  }
+}
+
+int main(int argc, char **argv) {
   if (argc < 2) {
     argumentError("At least one argument required");
   }
-  u_int64_t numEdges = argc - 1;
+
+  // parse edges
+  const int numEdges = argc - 1;
   EdgeList allEdges = {.numEdges = numEdges,
                        .fst = malloc(numEdges * sizeof(Edge))};
   if (allEdges.fst == NULL) {
     error("malloc failed");
   }
   parseEdges(allEdges, argc, argv);
-  NodeList nodeList = calloc(2 * numEdges * sizeof(char *), sizeof(char *));
-  if (nodeList == NULL) {
+  logEdgeList(allEdges);
+
+  // parse nodes
+  NodeList nodePermutation =
+      calloc(2 * numEdges * sizeof(char *), sizeof(char *));
+  if (nodePermutation == NULL) {
     error("calloc failed");
   }
-  nodeList = parseNodes(nodeList, allEdges);
-  logNodeList(nodeList);
+  nodePermutation = parseNodes(nodePermutation, allEdges);
+  logNodeList(nodePermutation);
 
-  // solve problem
-  // strfry to randomly swap characters in string (-> does it also work with
-  // pointers?)
-  // https://codebrowser.dev/glibc/glibc/string/strfry.c.html
+  // generate feedback arc sets
+  uint8_t iterations = 1;
+  while (iterations > 0) {
+    shuffle(nodePermutation);
+
+    EdgeList solution = {.numEdges = numEdges,
+                         .fst = malloc(numEdges * sizeof(Edge))};
+    if (solution.fst == NULL) {
+      error("malloc failed");
+    }
+    // genSolution(solution, allEdges, nodePermutation);
+
+    free(solution.fst);
+    iterations--;
+  }
 
   free(allEdges.fst);
-  free(nodeList);
+  free(nodePermutation);
 
   exit(EXIT_SUCCESS);
 }

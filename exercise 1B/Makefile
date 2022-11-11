@@ -17,8 +17,8 @@ defs = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
 libraries = -lpthread -lrt
 
 DEFAULT = -std=c99 -pedantic -Wall -g $(defs)
-LESS_VERBOSE = -std=c99 -pedantic -Wall -g -DDEBUG $(defs)
-VERBOSE = -std=c99 -pedantic -Wall -Wextra -g3 -DDEBUG $(defs)
+LESS_VERBOSE = -std=c99 -pedantic -Wall -Wwrite-strings -g3 -DDEBUG $(defs)
+VERBOSE = -std=c99 -pedantic -Wall -Wextra -Wwrite-strings -g3 -DDEBUG $(defs)
 
 
 # building ELF-executables
