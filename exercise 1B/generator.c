@@ -29,11 +29,7 @@
   exit(EXIT_FAILURE);
 // :: print macros
 
-// convenience macros ::
-#define sizeOfMember(structName, member) sizeof(((structName *)0)->member)
-// :: convenience macros
-
-// graph types ::
+// types ::
 typedef struct {
   char *from;
   char *to;
@@ -45,15 +41,15 @@ typedef struct {
 } EdgeList;
 
 typedef char **NodeList;  // @invariant no duplicates
-// :: graph types
+// :: types
 
-void printEdgeList(EdgeList edgeList) {
+static void logEdgeList(EdgeList edgeList) {
   for (size_t i = 0; i < edgeList.numEdges; i++) {
-    printf("(%s-%s)\n", edgeList.fst[i].from, edgeList.fst[i].to);
+    log("(%s-%s)\n", edgeList.fst[i].from, edgeList.fst[i].to);
   }
 }
 
-void parseEdges(EdgeList edgeList, int argc, char **argv) {
+static void parseEdges(EdgeList edgeList, int argc, char **argv) {
   for (size_t i = 1; i < argc; i++) {
     char *argument = argv[i];
 
@@ -76,42 +72,68 @@ void parseEdges(EdgeList edgeList, int argc, char **argv) {
   }
 }
 
-void printNodeList(NodeList nodeList) {
-  char **p = nodeList.fst;
-  while (*p != NULL) {
-    if (0 == strcmp(p *, input)) {
+static void logNodeList(NodeList nodeList) {
+  size_t len = 0;
+  while (nodeList[len] != NULL) {
+    len++;
+  }
+
+  char *msg = "Node list: ";
+  uint8_t nodeNameSize = 128;  // assumption about max node name size
+  char *out = malloc((len * nodeNameSize + strlen(msg) + 1) * sizeof(char *));
+  if (out == NULL) {
+    error("malloc failed");
+  }
+  strcpy(out, msg);
+  for (size_t i = 0; i < len; i++) {
+    strcat(out, nodeList[i]);
+    strcat(out, " ");
+  }
+
+  log("%s\n", out);
+  free(out);
+}
+
+static bool contains(NodeList nodeList, char *input) {
+  size_t i = 0;
+  while (nodeList[i] != NULL) {
+    if (strcmp(nodeList[i], input) == 0) {
       return true;
     }
-    p++;
+    i++;
   }
   return false;
 }
 
-bool contains(NodeList nodeList, char *input) {
-  char **p = nodeList.fst;
-  while (*p != NULL) {
-    p++;
-  }
+static char **parseNodes(NodeList nodeList, EdgeList edgeList) {
+  // @invariant nodeList is empty
+  // @invariant nodeList can't contain duplicates
+  char **top = nodeList;
+  size_t size = 0;
 
-  char *p = nodeList.fst;
-  while (p != '\0') {
-    if (0 == strcmp(p, input)) {
-      return true;
-    }
-    p++;
-  }
-  return false;
-}
-
-void parseNodes(NodeList nodeList, EdgeList edgeList) {
+  // add nodes from edges
   for (size_t i = 0; i < edgeList.numEdges; i++) {
-    char *a = edgeList.fst[i].from;
-    char *b = edgeList.fst[i].to;
-
-    log("%s - %s\n", a, b);
+    char *node1 = edgeList.fst[i].from;
+    char *node2 = edgeList.fst[i].to;
+    if (!contains(nodeList, node1)) {
+      *top = node1;
+      top++;
+      size++;
+    }
+    if (!contains(nodeList, node2)) {
+      *top = node2;
+      top++;
+      size++;
+    }
   }
 
-  // don't forget to realloc to remove unnecessary memory
+  // realloc
+  char **newNodeList = realloc(nodeList, (size + 1) * sizeof(char *));
+  if (newNodeList == NULL) {
+    error("realloc failed");
+  }
+  newNodeList[size] = NULL;
+  return newNodeList;
 }
 
 int main(int argc, char **argv) {
@@ -119,20 +141,26 @@ int main(int argc, char **argv) {
   if (argc < 2) {
     argumentError("At least one argument required");
   }
-  EdgeList edgeList = {.numEdges = argc - 1,
-                       .fst = malloc(sizeof(Edge) * (argc - 1))};
-  parseEdges(edgeList, argc, argv);
-  NodeList nodeList = malloc(sizeof(Edge) * (argc - 1) * 2);
-  printNodeList(nodeList);
-  // parseNodes(nodeList, edgeList);
+  u_int64_t numEdges = argc - 1;
+  EdgeList allEdges = {.numEdges = numEdges,
+                       .fst = malloc(numEdges * sizeof(Edge))};
+  if (allEdges.fst == NULL) {
+    error("malloc failed");
+  }
+  parseEdges(allEdges, argc, argv);
+  NodeList nodeList = calloc(2 * numEdges * sizeof(char *), sizeof(char *));
+  if (nodeList == NULL) {
+    error("calloc failed");
+  }
+  nodeList = parseNodes(nodeList, allEdges);
+  logNodeList(nodeList);
 
   // solve problem
-
   // strfry to randomly swap characters in string (-> does it also work with
   // pointers?)
 
-  free(edgeList.fst);
-  // free(nodeList.fst);
+  free(allEdges.fst);
+  free(nodeList);
 
   exit(EXIT_SUCCESS);
 }
