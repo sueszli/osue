@@ -72,11 +72,16 @@ static void parseEdges(EdgeList edgeList, int argc, char **argv) {
   }
 }
 
-static void logNodeList(NodeList nodeList) {
+static size_t nodeListLen(NodeList nodeList) {
   size_t len = 0;
   while (nodeList[len] != NULL) {
     len++;
   }
+  return len;
+}
+
+static void logNodeList(NodeList nodeList) {
+  size_t len = nodeListLen(nodeList);
 
   char *msg = "Node list: ";
   uint8_t nodeNameSize = 128;  // assumption about max node name size
@@ -137,6 +142,10 @@ static char **parseNodes(NodeList nodeList, EdgeList edgeList) {
 }
 
 int main(int argc, char **argv) {
+  char *msg = "test";
+  char *shuffled = strfry(msg);
+  log("%s\n", shuffled);
+
   // parse and validate args
   if (argc < 2) {
     argumentError("At least one argument required");
@@ -158,6 +167,7 @@ int main(int argc, char **argv) {
   // solve problem
   // strfry to randomly swap characters in string (-> does it also work with
   // pointers?)
+  // https://codebrowser.dev/glibc/glibc/string/strfry.c.html
 
   free(allEdges.fst);
   free(nodeList);
