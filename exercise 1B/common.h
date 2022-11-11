@@ -2,7 +2,9 @@
 #define _COMMON_H_
 
 // config ::
-#define MAX_SOLUTION_SIZE (42)  // max num of edges in submitted solutions
+#define MAX_SOLUTION_SIZE \
+  (99999)  // max num of edges in submitted solutions -> set by assignment to be
+           // at least 8
 // :: config
 
 // ------

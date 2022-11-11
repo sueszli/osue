@@ -124,12 +124,11 @@ static EdgeList genSolution(EdgeList allEdges, NodeList nodePermutation) {
     }
   }
   solution.numEdges = solutionCounter;
-  solution.fst[solutionCounter] = (Edge){.from = NULL, .to = NULL};
 
   // realloc
   EdgeList rSolution = {
       .numEdges = solution.numEdges,
-      .fst = realloc(solution.fst, solution.numEdges * sizeof(Edge) + 1)};
+      .fst = realloc(solution.fst, solution.numEdges * sizeof(Edge))};
   if (rSolution.fst == NULL) {
     error("realloc failed");
   }
@@ -141,6 +140,8 @@ int main(int argc, char **argv) {
   if (argc < 2) {
     argumentError("At least one argument required");
   }
+
+  // get shared memory
 
   // parse edges
   const int numEdges = argc - 1;
@@ -163,15 +164,14 @@ int main(int argc, char **argv) {
   logNodeList("All nodes", allNodes);
 
   // solve
-  size_t iterations = 100;
+  size_t iterations = 5;
   while (iterations > 0) {
-    // log("\n\n// Iteration %zu\n", iterations);
-    EdgeList solution = genSolution(allEdges, allNodes);  // malloc
+    EdgeList solution = genSolution(allEdges, allNodes);
 
     if (solution.numEdges < MAX_SOLUTION_SIZE) {
-      log("Solution is right: %zu\n", solution.numEdges);
+      printf("\n");
+      log("Num of edges in solution: %zu\n", solution.numEdges);
       logEdgeList("Solution", solution);
-      log("\n");
     }
 
     free(solution.fst);
