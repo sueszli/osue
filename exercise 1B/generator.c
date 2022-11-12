@@ -73,13 +73,46 @@ static char **parseNodes(NodeList nodeList, EdgeList edgeList) {
 // :: parsing
 
 // solving ::
+static bool setSeedFromOS(const char *path) {
+  FILE *in = fopen(path, "r");
+  if (in == NULL) {
+    return false;
+  }
+  unsigned int seed;
+
+  if (fread(&seed, sizeof seed, 1, in) != -1) {
+    fflush(in);
+    fclose(in);
+    srand(seed);
+    return true;
+  }
+  return false;
+}
+
+static void setRandomSeed(void) {
+  // avoid same seed if multiple processes get started simultaneously
+  const char *path1 = "/dev/random";
+  const char *path2 = "/dev/urandom";
+  const char *path3 = "/dev/arandom";
+
+  if (setSeedFromOS(path1)) {
+    log("Set seed from '%s'\n", path1);
+  } else if (setSeedFromOS(path2)) {
+    log("Set seed from '%s'\n", path2);
+  } else if (setSeedFromOS(path3)) {
+    log("Set seed from '%s'\n", path3);
+  } else {
+    log("%s\n", "Failed to set seed from OS path");
+    srand(time(NULL));
+  }
+}
+
 static void shuffle(NodeList list) {
   size_t len = 0;
   while (list[len] != NULL) {
     len++;
   }
 
-  srand(time(NULL));  // seed
   for (size_t i = 0; i < len; i++) {
     size_t j = i + rand() / (RAND_MAX / (len - i) + 1);
     // swap
@@ -164,18 +197,19 @@ int main(int argc, char **argv) {
   logNodeList("All nodes", allNodes);
 
   // solve
-  size_t iterations = 5;
-  while (iterations > 0) {
+  size_t ITERATIONS = 5;
+  setRandomSeed();
+  while (ITERATIONS > 0) {
     EdgeList solution = genSolution(allEdges, allNodes);
 
-    if (solution.numEdges < MAX_SOLUTION_SIZE) {
+    if (solution.numEdges <= MAX_SOLUTION_SIZE) {
       printf("\n");
-      log("Num of edges in solution: %zu\n", solution.numEdges);
-      logEdgeList("Solution", solution);
+      log("Solution size: %zu\n", solution.numEdges);
+      // logEdgeList("Solution", solution);
     }
 
     free(solution.fst);
-    iterations--;
+    ITERATIONS--;
   }
 
   free(allEdges.fst);

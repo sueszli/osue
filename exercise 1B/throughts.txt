@@ -1,0 +1,5 @@
+
+- create signal handler
+- create shared memory data structure (circular buffer)
+  - Use counter in buffer to determine the generator ID for better debugger messages
+- set all variables to atomic

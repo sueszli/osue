@@ -3,8 +3,8 @@
 
 // config ::
 #define MAX_SOLUTION_SIZE \
-  (99999)  // max num of edges in submitted solutions -> set by assignment to be
-           // at least 8
+  (999)  // max num of edges in submitted solutions -> set by assignment to be
+         // at least 8
 // :: config
 
 // ------
