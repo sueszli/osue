@@ -1,13 +1,8 @@
-#ifndef _COMMON_H_
-#define _COMMON_H_
+#ifndef COMMON_H
+#define COMMON_H
 
-// config ::
-#define MAX_SOLUTION_SIZE \
-  (999)  // max num of edges in submitted solutions -> set by assignment to be
-         // at least 8
-// :: config
-
-// ------
+#include <sys/types.h>
+#include <unistd.h>
 
 // print macros ::
 #ifdef DEBUG
@@ -63,7 +58,7 @@
   exit(EXIT_FAILURE);
 // :: print macros
 
-// types ::
+// graph ::
 typedef struct {
   char *from;
   char *to;
@@ -75,6 +70,18 @@ typedef struct {
 } EdgeList;
 
 typedef char **NodeList;
-// :: types
+// :: graph
+
+// buffer ::
+#define MAX_SOLUTION_SIZE                                                    \
+  (999) /**< max num of edges in submitted solutions -> set by assignment to \
+           be at least 8 */
+
+#define SHM_NAME "/shm" /**< name of shared memory in '/dev/shm/<SHM_NAME>' */
+
+typedef struct {
+} CircularBufferSHM;
+
+// :: buffer
 
 #endif
