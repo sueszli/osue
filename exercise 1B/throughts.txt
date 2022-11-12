@@ -1,4 +1,0 @@
-
-- create signal handler
-- create shared memory data structure (circular buffer)
-- set all shared variables to atomic

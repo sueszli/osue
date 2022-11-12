@@ -1,10 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <sys/types.h>
-#include <unistd.h>
-
-// print macros ::
+//#region print macros
 #ifdef DEBUG
 #define log(fmt, ...)                                                  \
   fprintf(stderr, "==%d== [%s:%d] " fmt, getpid(), __FILE__, __LINE__, \
@@ -56,9 +53,28 @@
   fprintf(stderr, "\t%s\n", "# from vertice 'x' to vertice 'y' in a graph.");  \
   fprintf(stderr, "\t%s\n", "generator 0-1 1-2 1-3 1-4 2-4 3-6 4-3 4-5 6-0");  \
   exit(EXIT_FAILURE);
-// :: print macros
+//#endregion
 
-// graph ::
+//#region shared memory types
+/**
+ * @brief Number edges that a solution is allowed to have at most to be allowed
+ * to be submitted.
+ * @invariant >= 8 (given by the assignment)
+ */
+#define MAX_SOLUTION_SIZE (999)
+
+/**
+ * @brief Shared memory and semaphore paths
+ * @see Use unix tools to manually inspect:
+ *     - Use the `ipcs` command to see the resources.
+ *     - Use the `ipcrm` command to remove the resources.
+ *     - see `/dev/shm/<name>` for the shared memory.
+ */
+#define SHM_PATH "/11912007_shared_memory"
+#define SEM_USED_SPACE_PATH "/11912007_used_space"
+#define SEM_AVAILABLE_SPACE_PATH "/11912007_available_space"
+#define SEM_MUTEX_PATH "/11912007_mutex"
+
 typedef struct {
   char *from;
   char *to;
@@ -70,18 +86,17 @@ typedef struct {
 } EdgeList;
 
 typedef char **NodeList;
-// :: graph
 
-// buffer ::
-#define MAX_SOLUTION_SIZE                                                    \
-  (999) /**< max num of edges in submitted solutions -> set by assignment to \
-           be at least 8 */
-
-#define SHM_NAME "/shm" /**< name of shared memory in '/dev/shm/<SHM_NAME>' */
-
+#define BUFFER_SIZE (1 << 8)
 typedef struct {
-} CircularBufferSHM;
+  EdgeList buffer[BUFFER_SIZE];
+  uint8_t writePosition;
+  uint8_t readPosition;
 
-// :: buffer
+  // shutdown data
+  bool terminate;
+  uint64_t numWriters;
+} CircularBuffer;
+//#endregion
 
 #endif

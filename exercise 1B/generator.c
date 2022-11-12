@@ -1,5 +1,8 @@
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <semaphore.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -7,11 +10,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "common.h"
 
-// parsing ::
+//#region parsing
 static void parseEdges(EdgeList edgeList, int argc, char **argv) {
   for (size_t i = 1; i < argc; i++) {
     char *argument = argv[i];
@@ -68,9 +74,9 @@ static char **parseNodes(NodeList nodeList, EdgeList edgeList) {
   newNodeList[size] = NULL;
   return newNodeList;
 }
-// :: parsing
+//#endregion
 
-// solving ::
+//#region solving
 static bool setSeedFromOS(const char *path) {
   FILE *in = fopen(path, "r");
   if (in == NULL) {
@@ -161,7 +167,7 @@ static EdgeList genSolution(EdgeList allEdges, NodeList nodePermutation) {
   }
   return rSolution;
 }
-// :: solving
+//#endregion
 
 int main(int argc, char **argv) {
   if (argc < 2) {
@@ -185,31 +191,44 @@ int main(int argc, char **argv) {
   log("Num of all edges: %zu\n", allEdges.numEdges);
   logNodeList("All nodes", allNodes);
 
-  // open shared memory -> shm_open
-  // map shared memory into memory -> mmap
+  // open shared memory -> shm_open()
+  int fd = shm_open(SHM_PATH, O_RDWR, 0);
+  if (fd == -1) {
+    error("shm_open failed");
+  }
 
-  // solve
+  // map shared memory into memory -> mmap()
+  CircularBuffer *shm = mmap(NULL, sizeof(CircularBuffer),
+                             PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (shm == MAP_FAILED) {
+    error("mmap failed");
+  }
+
   setRandomSeed();
   size_t i = 1;
   while (i > 0) {
     EdgeList solution = genSolution(allEdges, allNodes);
 
     if (solution.numEdges <= MAX_SOLUTION_SIZE) {
-      // write into buffer -> mutual exclusion
       printf("\n");
       log("Solution size: %zu\n", solution.numEdges);
       logEdgeList("Solution", solution);
+      // enter mutex zone -> sem_wait()
+      // ... do stuff
+      // exit mutex zone -> sem_post()
     }
 
     free(solution.fst);
     i--;
   }
 
-  // unmap shared memory from memory -> munmap
-  // close shared memory -> close
-  // close shared memory -> shm_close
+  // unmap shared memory -> munmap()
+  // close shared memory -> close()
+
+  // close semaphores -> sem_close()
 
   free(allEdges.fst);
   free(allNodes);
+
   exit(EXIT_SUCCESS);
 }

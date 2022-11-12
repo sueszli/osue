@@ -21,10 +21,12 @@ make generator
 printf "\n███████████████████████████████████████████████████████████████████████████████████████\n"
 printf "\nRUNNING SUPERVISOR\n"
 
+
 valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all -s \
 ./supervisor
 
 printf "−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−\n"
+
 printf "\nRUNNING GENERATOR\n"
 
 valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all -s \
@@ -33,10 +35,9 @@ valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all -s \
 printf "\n███████████████████████████████████████████████████████████████████████████████████████\n"
 printf "\nRUNNING ALL PROCESSES\n"
 
-./supervisor
-
-./generator $ARGS
+./supervisor & ./generator $ARGS &
 
 printf "\n███████████████████████████████████████████████████████████████████████████████████████\n"
 
 make clean
+sudo rm -rf /dev/shm
