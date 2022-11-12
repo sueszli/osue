@@ -94,8 +94,6 @@ typedef struct {
   EdgeList buffer[BUFFER_SIZE];
   uint8_t writeIndex;
   uint8_t readIndex;
-
-  // shutdown data
   bool terminate;
   atomic_int numGenerators;
 } CircularBuffer;

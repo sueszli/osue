@@ -227,7 +227,7 @@ int main(int argc, char **argv) {
 
   // increment generator counter
   shm->numGenerators++;
-  log("New generator created - total: %zu\n", shm->numGenerators);
+  log("New generator created - total: %d\n", shm->numGenerators);
 
   setRandomSeed();
   while ((shm->terminate) == false) {
@@ -244,7 +244,7 @@ int main(int argc, char **argv) {
       }
 
       // writing mutex for generators -> sem_wait()
-      if (sem_wait(sem_mutex == -1) && (errno != EINTR)) {
+      if ((sem_wait(sem_mutex) == -1) && (errno != EINTR)) {
         error("sem_wait failed");
       }
 
@@ -253,12 +253,12 @@ int main(int argc, char **argv) {
       shm->writeIndex = (shm->writeIndex + 1) % BUFFER_SIZE;
 
       // writing mutex for generators -> sem_post()
-      if (sem_post(sem_mutex == -1)) {
+      if (sem_post(sem_mutex) == -1) {
         error("sem_post failed");
       }
 
       // alternating mutex: signal space used -> sem_post()
-      if (sem_post(sem_available_space == -1)) {
+      if (sem_post(sem_available_space) == -1) {
         error("sem_post failed");
       }
     }
@@ -266,7 +266,7 @@ int main(int argc, char **argv) {
   }
 
   // decrement generator counter
-  log("Terminating generator - total: %zu\n", shm->numGenerators);
+  log("Terminating generator - total: %d\n", shm->numGenerators);
   shm->numGenerators--;
 
   // unmap shared memory -> munmap()
