@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <stdatomic.h>
+
 //#region print macros
 #ifdef DEBUG
 #define log(fmt, ...)                                                  \
@@ -90,12 +92,12 @@ typedef char **NodeList;
 #define BUFFER_SIZE (1 << 8)
 typedef struct {
   EdgeList buffer[BUFFER_SIZE];
-  uint8_t writePosition;
-  uint8_t readPosition;
+  uint8_t writeIndex;
+  uint8_t readIndex;
 
   // shutdown data
   bool terminate;
-  uint64_t numWriters;
+  atomic_int numGenerators;
 } CircularBuffer;
 //#endregion
 

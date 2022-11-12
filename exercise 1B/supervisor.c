@@ -64,10 +64,10 @@ int main(int argc, char **argv) {
   }
 
   // initialize shared memory
-  shm->writePosition = 0;
-  shm->readPosition = 0;
+  shm->writeIndex = 0;
+  shm->readIndex = 0;
   shm->terminate = false;
-  shm->numWriters = 0;
+  shm->numGenerators = 0;
 
   // create semaphores -> sem_open()
   sem_t *sem_used_space =
@@ -98,8 +98,8 @@ int main(int argc, char **argv) {
     }
 
     // check solution
-    EdgeList submission = shm->buffer[shm->readPosition];
-    shm->readPosition = (shm->readPosition + 1) % BUFFER_SIZE;
+    EdgeList submission = shm->buffer[shm->readIndex];
+    shm->readIndex = (shm->readIndex + 1) % BUFFER_SIZE;
     if (submission.numEdges == 0) {
       log("%s\n", "Given argument is acyclic: no edges need to be removed");
       break;
@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 
   // wake up all blocked generators, terminate them
   shm->terminate = true;
-  for (uint64_t i = 0; i < shm->numWriters; i++) {
+  for (uint64_t i = 0; i < shm->numGenerators; i++) {
     if (sem_post(sem_available_space) == -1) {
       error("sem_post failed");
     }

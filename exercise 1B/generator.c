@@ -192,9 +192,13 @@ int main(int argc, char **argv) {
   logNodeList("All nodes", allNodes);
 
   // open shared memory -> shm_open()
-  int fd = shm_open(SHM_PATH, O_RDWR, 0);
+  int fd = shm_open(SHM_PATH, O_RDWR, S_IRUSR | S_IWUSR);
   if (fd == -1) {
-    error("shm_open failed");
+    if (errno == ENOENT) {
+      error("Supervisor process must be running before the generators");
+    } else {
+      error("shm_open failed");
+    }
   }
 
   // map shared memory into memory -> mmap()
@@ -203,29 +207,88 @@ int main(int argc, char **argv) {
   if (shm == MAP_FAILED) {
     error("mmap failed");
   }
-
-  setRandomSeed();
-  size_t i = 1;
-  while (i > 0) {
-    EdgeList solution = genSolution(allEdges, allNodes);
-
-    if (solution.numEdges <= MAX_SOLUTION_SIZE) {
-      printf("\n");
-      log("Solution size: %zu\n", solution.numEdges);
-      logEdgeList("Solution", solution);
-      // enter mutex zone -> sem_wait()
-      // ... do stuff
-      // exit mutex zone -> sem_post()
-    }
-
-    free(solution.fst);
-    i--;
+  if (close(fd) == -1) {
+    error("close failed");
   }
 
+  // open semaphores -> sem_open()
+  sem_t *sem_used_space = sem_open(SEM_USED_SPACE_PATH, 0);
+  if (sem_used_space == SEM_FAILED) {
+    error("sem_open failed");
+  }
+  sem_t *sem_available_space = sem_open(SEM_AVAILABLE_SPACE_PATH, 0);
+  if (sem_available_space == SEM_FAILED) {
+    error("sem_open failed");
+  }
+  sem_t *sem_mutex = sem_open(SEM_MUTEX_PATH, 0);
+  if (sem_mutex == SEM_FAILED) {
+    error("sem_open failed");
+  }
+
+  // increment generator counter
+  shm->numGenerators++;
+  log("New generator created - total: %zu\n", shm->numGenerators);
+
+  setRandomSeed();
+  while ((shm->terminate) == false) {
+    EdgeList solution = genSolution(allEdges, allNodes);
+    if (solution.numEdges <= MAX_SOLUTION_SIZE) {
+      // alternating mutex: wait for free space -> sem_wait()
+      if ((sem_wait(sem_available_space) == -1) && (errno != EINTR)) {
+        error("sem_wait failed");
+      }
+
+      // in case supervisor woke up all blocked generators for termination
+      if (shm->terminate == true) {
+        break;
+      }
+
+      // writing mutex for generators -> sem_wait()
+      if (sem_wait(sem_mutex == -1) && (errno != EINTR)) {
+        error("sem_wait failed");
+      }
+
+      // submit solution
+      shm->buffer[shm->writeIndex] = solution;
+      shm->writeIndex = (shm->writeIndex + 1) % BUFFER_SIZE;
+
+      // writing mutex for generators -> sem_post()
+      if (sem_post(sem_mutex == -1)) {
+        error("sem_post failed");
+      }
+
+      // alternating mutex: signal space used -> sem_post()
+      if (sem_post(sem_available_space == -1)) {
+        error("sem_post failed");
+      }
+    }
+    free(solution.fst);
+  }
+
+  // decrement generator counter
+  log("Terminating generator - total: %zu\n", shm->numGenerators);
+  shm->numGenerators--;
+
   // unmap shared memory -> munmap()
+  if (munmap(shm, sizeof(CircularBuffer)) == -1) {
+    error("munmap failed");
+  }
+
   // close shared memory -> close()
+  if (close(fd) == -1) {
+    error("close failed");
+  }
 
   // close semaphores -> sem_close()
+  if (sem_close(sem_used_space) == -1) {
+    error("sem_close failed");
+  }
+  if (sem_close(sem_available_space) == -1) {
+    error("sem_close failed");
+  }
+  if (sem_close(sem_mutex) == -1) {
+    error("sem_close failed");
+  }
 
   free(allEdges.fst);
   free(allNodes);
