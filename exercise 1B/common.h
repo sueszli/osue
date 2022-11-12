@@ -11,27 +11,28 @@
 
 // print macros ::
 #ifdef DEBUG
-#define log(fmt, ...) \
-  fprintf(stderr, "[%s:%d] " fmt, __FILE__, __LINE__, ##__VA_ARGS__);
+#define log(fmt, ...)                                                  \
+  fprintf(stderr, "==%d== [%s:%d] " fmt, getpid(), __FILE__, __LINE__, \
+          ##__VA_ARGS__);
 
-#define logEdgeList(msg, edgeList)                 \
-  fprintf(stderr, "[%s:%d] ", __FILE__, __LINE__); \
-  fprintf(stderr, "%s: ", msg);                    \
-  for (size_t i = 0; i < edgeList.numEdges; i++) { \
-    char *left = edgeList.fst[i].from;             \
-    char *right = edgeList.fst[i].to;              \
-    fprintf(stderr, "(%s-%s) ", left, right);      \
-  }                                                \
+#define logEdgeList(msg, edgeList)                                  \
+  fprintf(stderr, "==%d== [%s:%d] ", getpid(), __FILE__, __LINE__); \
+  fprintf(stderr, "%s: ", msg);                                     \
+  for (size_t i = 0; i < edgeList.numEdges; i++) {                  \
+    char *left = edgeList.fst[i].from;                              \
+    char *right = edgeList.fst[i].to;                               \
+    fprintf(stderr, "(%s-%s) ", left, right);                       \
+  }                                                                 \
   fprintf(stderr, "\n");
 
-#define logNodeList(msg, nodeList)                 \
-  fprintf(stderr, "[%s:%d] ", __FILE__, __LINE__); \
-  fprintf(stderr, "%s: ", msg);                    \
-  size_t len = 0;                                  \
-  while (nodeList[len] != NULL) {                  \
-    fprintf(stderr, "%s ", nodeList[len]);         \
-    len++;                                         \
-  }                                                \
+#define logNodeList(msg, nodeList)                                  \
+  fprintf(stderr, "==%d== [%s:%d] ", getpid(), __FILE__, __LINE__); \
+  fprintf(stderr, "%s: ", msg);                                     \
+  size_t len = 0;                                                   \
+  while (nodeList[len] != NULL) {                                   \
+    fprintf(stderr, "%s ", nodeList[len]);                          \
+    len++;                                                          \
+  }                                                                 \
   fprintf(stderr, "\n");
 
 #else

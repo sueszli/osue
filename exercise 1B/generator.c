@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -170,6 +171,8 @@ static EdgeList genSolution(EdgeList allEdges, NodeList nodePermutation) {
 // :: solving
 
 int main(int argc, char **argv) {
+  log("PROCESS ID: %d\n", getpid());
+
   if (argc < 2) {
     argumentError("At least one argument required");
   }
