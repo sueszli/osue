@@ -1,3 +1,22 @@
+/**
+ * @file supverisor.c
+ * @author Yahya Jabary <mailto: yahya.jabary@tuwien.ac.at>
+ * @date 09.11.2022
+ *
+ * @brief Manager process for generators (workers) which receives solutions and
+ * updates the best one so far. Kills all workers when a signal from the user is
+ * received.
+ *
+ * @details This manager process consists of 3 segments:
+ * First, the Initialization: Creating the shared memory used for
+ * communication between manager and workers and semaphores used to synchronize
+ * all processes.
+ * Second, the Main Loop: Receiving all submitted solutions from the workers and
+ * logging them if they are better than the best solution so far.
+ * Third, the cleanup: Cleaning up all resources which were allocated during the
+ * initializtion.
+ */
+
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -16,13 +35,30 @@
 
 #include "common.h"
 
-static volatile sig_atomic_t quit = 0;
+static volatile sig_atomic_t quit = 0; /** < interrupts main loop */
 
+/**
+ * @brief Signal handler for SIGINT and SIGTERM.
+ * @details Sets the quit flag to 1 to interrupt the main loop.
+ * @param sig Signal number, given by sigaction.
+ */
 static void onSignal(int signal) {
   fprintf(stderr, "Shutting down - Received user signal: %d\n", signal);
   quit = 1;
 }
 
+/**
+ * @brief Main loop consisting of 3 segments: Initialization, Main Loop,
+ * Cleanup. In the Initialization segment, the shared memory and semaphores are
+ * opened and mapped to the process. In the Main Loop segment, the manager
+ * receives solutions from the workers and logs them if they are better than the
+ * best solution so far. In the Cleanup segment, all resources which were
+ * allocated during the Initialization segment are cleaned up.
+ *
+ * @param argc Number of command line arguments.
+ * @param argv Command line arguments.
+ * @return EXIT_SUCCESS on success, EXIT_FAILURE on failure.
+ */
 int main(int argc, char **argv) {
   if (argc > 1) {
     argumentError("No arguments allowed");

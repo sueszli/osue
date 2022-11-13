@@ -1,3 +1,22 @@
+/**
+ * @file generator.c
+ * @author Yahya Jabary <mailto: yahya.jabary@tuwien.ac.at>
+ * @date 09.11.2022
+ *
+ * @brief This worker creates feedback arc sets and sends them to the supervisor
+ * through shared memory.
+ *
+ * @details This worker process consists of 3 segments:
+ * First, the Initialization: Parsing and validating user arguments, opening up
+ * the shared memory used for communication between manager and workers and
+ * semaphores used to synchronize all processes.
+ * Second, the Main Loop: Generating solutions and sending them to the manager
+ * through the shared memory. Writing to the shared memory is synchronized using
+ * semaphores and mutual exclusion between all processes is ensured.
+ * Third, the cleanup: Cleaning up all resources which were allocated during
+ * the initializtion.
+ */
+
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -18,6 +37,14 @@
 #include "common.h"
 
 //#region parsing
+/**
+ * @brief Parses the command line arguments into the given EdgeList and
+ * validates them.
+ *
+ * @param edgeList Pointer to the EdgeList to be filled.
+ * @param argc Number of command line arguments.
+ * @param argv Command line arguments.
+ */
 static void parseEdges(EdgeList edgeList, int argc, char **argv) {
   for (size_t i = 1; i < argc; i++) {
     char *argument = argv[i];
@@ -39,6 +66,13 @@ static void parseEdges(EdgeList edgeList, int argc, char **argv) {
   }
 }
 
+/**
+ * @brief Checks whether the given nodeList contains the given node.
+ *
+ * @param nodeList List of nodes.
+ * @param node Node to be searched for.
+ * @return true if the node is in the list, false otherwise.
+ */
 static bool contains(NodeList nodeList, char *input) {
   for (size_t i = 0; nodeList[i] != NULL; i++) {
     if (strcmp(nodeList[i], input) == 0) {
@@ -48,6 +82,15 @@ static bool contains(NodeList nodeList, char *input) {
   return false;
 }
 
+/**
+ * @brief Creates a set of nodes without duplicates from the given edgeList.
+ *
+ * @param edgeList List of edges (parsed from command line arguments).
+ * @param nodeList List of nodes to be determined from the edgeList.
+ *
+ * @return The filled nodeList, reallocated with only the necessary size to save
+ * memory space.
+ */
 static char **parseNodes(NodeList nodeList, EdgeList edgeList) {
   char **top = nodeList;
   size_t size = 0;
@@ -77,6 +120,13 @@ static char **parseNodes(NodeList nodeList, EdgeList edgeList) {
 //#endregion
 
 //#region solving
+/**
+ * @brief Sets a randomization seed for the shuffle function by using the
+ * given path to a file in a unix system.
+ *
+ * @param path Path to a file in a unix system.
+ * @return Boolean indicating whether the seed was set successfully.
+ */
 static bool setSeedFromOS(const char *path) {
   FILE *in = fopen(path, "r");
   if (in == NULL) {
@@ -93,6 +143,11 @@ static bool setSeedFromOS(const char *path) {
   return false;
 }
 
+/**
+ * @brief Tries to set a randomization seed for the shuffle function by using
+ * the given path to a file in a unix system. If this fails, a seed is set
+ * using the current time.
+ */
 static void setRandomSeed(void) {
   // increase performance by using better seeds if possible
   // seeds are similar when multiple processes get started simultaneously
@@ -112,6 +167,10 @@ static void setRandomSeed(void) {
   }
 }
 
+/**
+ * @brief Shuffles the given list of nodes.
+ * @param nodeList List of nodes to be shuffled.
+ */
 static void shuffle(NodeList list) {
   size_t len = 0;
   while (list[len] != NULL) {
@@ -126,6 +185,16 @@ static void shuffle(NodeList list) {
   }
 }
 
+/**
+ * @brief Checks whether the nodes in the given edge contradict the position of
+ * the nodes in the given nodeList based on the Monte-Carlo algorithm for
+ * randomized minimal feedback arc sets.
+ *
+ * @param edge Edge to be checked.
+ * @param nodeList List of nodes based on which this function checks whether the
+ * edge contradicts the order or not.
+ * @return true if the edge contradicts the order, false otherwise.
+ */
 bool contradictsOrder(Edge edge, NodeList nodeList) {
   size_t fromIndex = 0;
   size_t toIndex = 0;
@@ -140,6 +209,15 @@ bool contradictsOrder(Edge edge, NodeList nodeList) {
   return fromIndex > toIndex;
 }
 
+/**
+ * @brief Generates a randomized solution based on the Monte-Carlo algorithm for
+ * minimal feedback arc sets.
+ *
+ * @param edgeList List of edges (parsed from command line arguments).
+ * @param nodeList List of nodes (generated from the edges from the commandline
+ * args).
+ * @return A solution to the given problem as a list of edges.
+ */
 static EdgeList genSolution(EdgeList allEdges, NodeList nodePermutation) {
   EdgeList solution = {.numEdges = allEdges.numEdges,
                        .fst = malloc(allEdges.numEdges * sizeof(Edge))};
@@ -169,6 +247,18 @@ static EdgeList genSolution(EdgeList allEdges, NodeList nodePermutation) {
 }
 //#endregion
 
+/**
+ * @brief This function consists of the following segments:
+ * 1. Parsing the command line arguments.
+ * 2. Initializing the resources needed to send the solution to the manager.
+ * 3. Main loop: Generating a randomized solution and sending it to the manager
+ * in a mutually exclusive way.
+ * 4. Cleaning up the resources.
+ *
+ * @param argc Number of command line arguments.
+ * @param argv List of command line arguments.
+ * @return EXIT_SUCCESS if the program ran successfully, EXIT_FAILURE otherwise.
+ */
 int main(int argc, char **argv) {
   if (argc < 2) {
     argumentError("At least one argument required");

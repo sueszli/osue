@@ -27,8 +27,8 @@
 #include <unistd.h>
 
 /**
- * @brief Macros for formatting error messages and exiting or printing optional
- * debug messages if the flag DDEBUG is set.
+ * @brief Convenience macros for formatting error messages and exiting or
+ * printing optional debug messages if the flag -DDEBUG is set.
  */
 
 // print macros ::

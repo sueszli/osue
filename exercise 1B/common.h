@@ -1,7 +1,21 @@
+/**
+ * @file common.h
+ * @author Yahya Jabary <mailto: yahya.jabary@tuwien.ac.at>
+ * @date 09.11.2022
+ *
+ * @brief This file contains the common definitions and functions used by all
+ * processes.
+ */
+
 #ifndef COMMON_H
 #define COMMON_H
 
 #include <stdatomic.h>
+
+/**
+ * @brief Convenience macros for formatting error messages and exiting or
+ * printing optional debug messages if the flag -DDEBUG is set.
+ */
 
 //#region print macros
 #ifdef DEBUG
@@ -59,15 +73,14 @@
 
 /**
  * @brief Number edges that a solution is allowed to have at most to be allowed
- * to be submitted.
+ * to be submitted. Can be chosen freely.
  * @invariant >= 8 (given by the assignment)
  */
-#define MAX_SOLUTION_SIZE (9999)
+#define MAX_SOLUTION_SIZE (999)
 
 /**
- * @brief Shared memory and semaphore paths
- * @see Use unix tools to manually inspect:
- *     - see `/dev/shm/<name>` for the shared memory.
+ * @brief Shared memory and semaphore paths.
+ * @see the path '/dev/shm/<name>' on local machine.
  */
 #define SHM_PATH "/11912007shm"
 #define SEM_USED_SPACE_PATH "/11912007used"
@@ -77,14 +90,14 @@
 typedef struct {
   char *from;
   char *to;
-} Edge;
+} Edge; /**< A directed edge from one vertice to another. */
 
 typedef struct {
   size_t numEdges;
   Edge *fst;
-} EdgeList;
+} EdgeList; /**< A list of edges. */
 
-typedef char **NodeList;
+typedef char **NodeList; /**< A list of nodes. */
 
 #define BUFFER_SIZE (32)
 typedef struct {
@@ -93,6 +106,7 @@ typedef struct {
   uint8_t readIndex;
   bool terminate;
   atomic_int numGenerators;
-} CircularBuffer;
+} CircularBuffer; /**< A circular buffer used as shared memory between
+                     generators and supervisor. */
 
 #endif
