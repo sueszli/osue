@@ -1,0 +1,19 @@
+CC = gcc 
+DEFS = -D_BSD_SOURCE -D_SVID -D_POSIX_C_SOURCE=200809L
+CFLAGS = -Wall -g -std=c99 -pedantic $(DEFS)
+
+OBJECTS = mydiff.o
+
+.PHONY: all clean
+all: mydiff
+
+mydiff: $(OBJECTS)
+	$(CC) -o $@ $^
+
+*.o: *.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+mydiff.o: mydiff.c
+
+clean:
+	rm -rf *.o mydiff

@@ -1,0 +1,3 @@
+INPUT             =  ../src
+FILE_PATTERNS     = *.c *.h
+EXTRACT_STATIC    = YES

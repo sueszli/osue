@@ -1,0 +1,233 @@
+\hypertarget{datatypes_8h}{\section{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/datatypes.h File Reference}
+\label{datatypes_8h}\index{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/datatypes.\-h@{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/datatypes.\-h}}
+}
+
+
+datatypes Module  
+
+
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$assert.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$errno.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$ctype.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structEdge}{Edge}
+\begin{DoxyCompactList}\small\item\em Contains an edge with direction start to end. \end{DoxyCompactList}\item 
+struct \hyperlink{structFeedbackArc}{Feedback\-Arc}
+\begin{DoxyCompactList}\small\item\em Contains an Array of M\-A\-X\-\_\-\-E\-D\-G\-E\-S+1 Edges. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{datatypes_8h_a31a83f886935080b58e4c0c44ab19ec0}{\#define {\bfseries M\-A\-X\-\_\-\-E\-D\-G\-E\-S}~(8)}\label{datatypes_8h_a31a83f886935080b58e4c0c44ab19ec0}
+
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structEdge}{Edge} $\ast$ \hyperlink{datatypes_8h_a8b660b558788eb6746fceec693982f88}{construct\-Edge} (char $\ast$arr, char $\ast$program\-Name)
+\begin{DoxyCompactList}\small\item\em construct a \hyperlink{structEdge}{Edge} from a String \end{DoxyCompactList}\item 
+void \hyperlink{datatypes_8h_a7720c3f0e90068213669d7e5acc08e9c}{show\-Edges} (struct \hyperlink{structEdge}{Edge} $\ast$edge\-Arr)
+\begin{DoxyCompactList}\small\item\em print out an \hyperlink{structEdge}{Edge} array \end{DoxyCompactList}\item 
+struct \hyperlink{structEdge}{Edge} $\ast$ \hyperlink{datatypes_8h_abe9acffad3a0d5dff47b5121d8b4e99b}{remove\-Duplicate\-Edges} (struct \hyperlink{structEdge}{Edge} $\ast$edge\-Arr, char $\ast$program\-Name, int e\-Size)
+\begin{DoxyCompactList}\small\item\em removes duplicate Edges \end{DoxyCompactList}\item 
+int $\ast$ \hyperlink{datatypes_8h_a0537246dbd16b05bba3c9f7a9a7048e0}{make\-Vertice\-List} (struct \hyperlink{structEdge}{Edge} $\ast$edge\-Arr)
+\begin{DoxyCompactList}\small\item\em make a orderd Vertice list (array) from an \hyperlink{structEdge}{Edge} array \end{DoxyCompactList}\item 
+void \hyperlink{datatypes_8h_a1c0e1868dba9893be710f9c4ae2c9a86}{show\-Vertices} (int $\ast$vertices)
+\begin{DoxyCompactList}\small\item\em print out a vertice array \end{DoxyCompactList}\item 
+int \hyperlink{datatypes_8h_a1e49b57ef9a4643eac2e220083248520}{get\-Size} (int $\ast$vertices)
+\begin{DoxyCompactList}\small\item\em the size of vertice list \end{DoxyCompactList}\item 
+int \hyperlink{datatypes_8h_a32a3b35008990917f5fd586861d23f1f}{get\-Size\-Edges} (struct \hyperlink{structEdge}{Edge} $\ast$edges)
+\begin{DoxyCompactList}\small\item\em the size of aedge list \end{DoxyCompactList}\item 
+int \hyperlink{datatypes_8h_ae6b6812177a06d9190b5d1bbc466c77d}{get\-Index} (int $\ast$vertices, int entry)
+\begin{DoxyCompactList}\small\item\em first index of an entry of a vertice array \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+datatypes Module \begin{DoxyAuthor}{Author}
+Lukas Fink 11911069 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+10.\-11.\-2021
+\end{DoxyDate}
+contains datatypes required for the generator and supervisor 
+
+\subsection{Function Documentation}
+\hypertarget{datatypes_8h_a8b660b558788eb6746fceec693982f88}{\index{datatypes.\-h@{datatypes.\-h}!construct\-Edge@{construct\-Edge}}
+\index{construct\-Edge@{construct\-Edge}!datatypes.h@{datatypes.\-h}}
+\subsubsection[{construct\-Edge}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf Edge}$\ast$ construct\-Edge (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{arr, }
+\item[{char $\ast$}]{program\-Name}
+\end{DoxyParamCaption}
+)}}\label{datatypes_8h_a8b660b558788eb6746fceec693982f88}
+
+
+construct a \hyperlink{structEdge}{Edge} from a String 
+
+construct an \hyperlink{structEdge}{Edge}
+
+the String has to be of the form \mbox{[}0..9\mbox{]}+\mbox{[}-\/\mbox{]}\mbox{[}0..9\mbox{]}+. E.\-g.\-: 1-\/2 or 2345-\/5421 for the function to succeed 
+\begin{DoxyParams}{Parameters}
+{\em arr} & input String \\
+\hline
+{\em program\-Name} & name of the program calling the function \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+returns a new random vertice array if the String has the required structure and contains no self-\/loops, otherwise return N\-U\-L\-L 
+\end{DoxyReturn}
+\hypertarget{datatypes_8h_ae6b6812177a06d9190b5d1bbc466c77d}{\index{datatypes.\-h@{datatypes.\-h}!get\-Index@{get\-Index}}
+\index{get\-Index@{get\-Index}!datatypes.h@{datatypes.\-h}}
+\subsubsection[{get\-Index}]{\setlength{\rightskip}{0pt plus 5cm}int get\-Index (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{vertices, }
+\item[{int}]{entry}
+\end{DoxyParamCaption}
+)}}\label{datatypes_8h_ae6b6812177a06d9190b5d1bbc466c77d}
+
+
+first index of an entry of a vertice array 
+
+Index function
+
+finds the first appearence of the given input in the given array 
+\begin{DoxyParams}{Parameters}
+{\em vertices} & array of vertices \\
+\hline
+{\em entry} & entry of the vertice-\/array \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+index of vertice array or (-\/1) if the array doesn't contain the entry 
+\end{DoxyReturn}
+\hypertarget{datatypes_8h_a1e49b57ef9a4643eac2e220083248520}{\index{datatypes.\-h@{datatypes.\-h}!get\-Size@{get\-Size}}
+\index{get\-Size@{get\-Size}!datatypes.h@{datatypes.\-h}}
+\subsubsection[{get\-Size}]{\setlength{\rightskip}{0pt plus 5cm}int get\-Size (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{vertices}
+\end{DoxyParamCaption}
+)}}\label{datatypes_8h_a1e49b57ef9a4643eac2e220083248520}
+
+
+the size of vertice list 
+
+Size function for Vertices
+
+the size of a vertice list excluding the terminator (negative value) 
+\begin{DoxyParams}{Parameters}
+{\em vertices} & array of vertices M\-U\-S\-T contain a vertice with negative value to terminate properly \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+size of vertice list excluding the end (-\/1) 
+\end{DoxyReturn}
+\hypertarget{datatypes_8h_a32a3b35008990917f5fd586861d23f1f}{\index{datatypes.\-h@{datatypes.\-h}!get\-Size\-Edges@{get\-Size\-Edges}}
+\index{get\-Size\-Edges@{get\-Size\-Edges}!datatypes.h@{datatypes.\-h}}
+\subsubsection[{get\-Size\-Edges}]{\setlength{\rightskip}{0pt plus 5cm}int get\-Size\-Edges (
+\begin{DoxyParamCaption}
+\item[{struct {\bf Edge} $\ast$}]{edges}
+\end{DoxyParamCaption}
+)}}\label{datatypes_8h_a32a3b35008990917f5fd586861d23f1f}
+
+
+the size of aedge list 
+
+Size function for Edges
+
+the size of edge list excluding the terminator (negative value) 
+\begin{DoxyParams}{Parameters}
+{\em edges} & array of edges M\-U\-S\-T contain an edge with negative values to terminate properly \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+size of edge list excluding the terminator (edge with negative value) 
+\end{DoxyReturn}
+\hypertarget{datatypes_8h_a0537246dbd16b05bba3c9f7a9a7048e0}{\index{datatypes.\-h@{datatypes.\-h}!make\-Vertice\-List@{make\-Vertice\-List}}
+\index{make\-Vertice\-List@{make\-Vertice\-List}!datatypes.h@{datatypes.\-h}}
+\subsubsection[{make\-Vertice\-List}]{\setlength{\rightskip}{0pt plus 5cm}int$\ast$ make\-Vertice\-List (
+\begin{DoxyParamCaption}
+\item[{struct {\bf Edge} $\ast$}]{edge\-Arr}
+\end{DoxyParamCaption}
+)}}\label{datatypes_8h_a0537246dbd16b05bba3c9f7a9a7048e0}
+
+
+make a orderd Vertice list (array) from an \hyperlink{structEdge}{Edge} array 
+
+make a vertice list (array)
+
+generates a new int array containing the vertices from the given \hyperlink{structEdge}{Edge} array 
+\begin{DoxyParams}{Parameters}
+{\em edge\-Arr} & input \hyperlink{structEdge}{Edge} Array to generate the vertice array from M\-U\-S\-T contain a edge with negative values at the end to terminate properly \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+returns a new vertice list when succeeding, otherwise N\-U\-L\-L 
+\end{DoxyReturn}
+\hypertarget{datatypes_8h_abe9acffad3a0d5dff47b5121d8b4e99b}{\index{datatypes.\-h@{datatypes.\-h}!remove\-Duplicate\-Edges@{remove\-Duplicate\-Edges}}
+\index{remove\-Duplicate\-Edges@{remove\-Duplicate\-Edges}!datatypes.h@{datatypes.\-h}}
+\subsubsection[{remove\-Duplicate\-Edges}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf Edge}$\ast$ remove\-Duplicate\-Edges (
+\begin{DoxyParamCaption}
+\item[{struct {\bf Edge} $\ast$}]{edge\-Arr, }
+\item[{char $\ast$}]{program\-Name, }
+\item[{int}]{e\-Size}
+\end{DoxyParamCaption}
+)}}\label{datatypes_8h_abe9acffad3a0d5dff47b5121d8b4e99b}
+
+
+removes duplicate Edges 
+
+remove duplicate Edges function
+
+generates a new \hyperlink{structEdge}{Edge} array containing no duplicates 
+\begin{DoxyParams}{Parameters}
+{\em edge\-Arr} & input \hyperlink{structEdge}{Edge} Array to remove duplicates from \\
+\hline
+{\em program\-Name} & name of the program calling the function \\
+\hline
+{\em e\-Size} & size of the input \hyperlink{structEdge}{Edge} Arrayy \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+returns a new \hyperlink{structEdge}{Edge} array without duplicates when succeeding, otherwise N\-U\-L\-L 
+\end{DoxyReturn}
+\hypertarget{datatypes_8h_a7720c3f0e90068213669d7e5acc08e9c}{\index{datatypes.\-h@{datatypes.\-h}!show\-Edges@{show\-Edges}}
+\index{show\-Edges@{show\-Edges}!datatypes.h@{datatypes.\-h}}
+\subsubsection[{show\-Edges}]{\setlength{\rightskip}{0pt plus 5cm}void show\-Edges (
+\begin{DoxyParamCaption}
+\item[{struct {\bf Edge} $\ast$}]{edge\-Arr}
+\end{DoxyParamCaption}
+)}}\label{datatypes_8h_a7720c3f0e90068213669d7e5acc08e9c}
+
+
+print out an \hyperlink{structEdge}{Edge} array 
+
+print Edges
+
+prints Edges until an \hyperlink{structEdge}{Edge} with negaive value 
+\begin{DoxyParams}{Parameters}
+{\em edge\-Arr} & array of edges to be printed \\
+\hline
+\end{DoxyParams}
+\hypertarget{datatypes_8h_a1c0e1868dba9893be710f9c4ae2c9a86}{\index{datatypes.\-h@{datatypes.\-h}!show\-Vertices@{show\-Vertices}}
+\index{show\-Vertices@{show\-Vertices}!datatypes.h@{datatypes.\-h}}
+\subsubsection[{show\-Vertices}]{\setlength{\rightskip}{0pt plus 5cm}void show\-Vertices (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{vertices}
+\end{DoxyParamCaption}
+)}}\label{datatypes_8h_a1c0e1868dba9893be710f9c4ae2c9a86}
+
+
+print out a vertice array 
+
+print vertices
+
+print a vertice array to stdout 
+\begin{DoxyParams}{Parameters}
+{\em vertices} & array to print from M\-U\-S\-T contain a vertice with negative value to terminate properly \\
+\hline
+\end{DoxyParams}

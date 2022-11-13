@@ -1,0 +1,114 @@
+\hypertarget{circularBuffer_8c}{\section{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/circular\-Buffer.c File Reference}
+\label{circularBuffer_8c}\index{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/circular\-Buffer.\-c@{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/circular\-Buffer.\-c}}
+}
+
+
+circular buffer Module implementation  
+
+
+{\ttfamily \#include \char`\"{}circular\-Buffer.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{circularBuffer_8c_aa57b994fa66422a6b4dba0bc4f4ac75d}{deep\-Copy\-Arc} (struct \hyperlink{structFeedbackArc}{Feedback\-Arc} $\ast$dest, struct \hyperlink{structFeedbackArc}{Feedback\-Arc} src)
+\begin{DoxyCompactList}\small\item\em deep copy of an Feedback Arc \end{DoxyCompactList}\item 
+void \hyperlink{circularBuffer_8c_a045531a4de9641672f3c81900c02f5b8}{read\-C\-B} (struct \hyperlink{structFeedbackArc}{Feedback\-Arc} $\ast$dest, struct \hyperlink{structCircularBuffer}{Circular\-Buffer} $\ast$circular\-Buf, sem\-\_\-t $\ast$sem\-Free, sem\-\_\-t $\ast$sem\-Used, char $\ast$program\-Name)
+\begin{DoxyCompactList}\small\item\em read from the circular buffer \end{DoxyCompactList}\item 
+void \hyperlink{circularBuffer_8c_a042ae9c9788b020b8e8f9aa46ddc27c0}{write\-C\-B} (struct \hyperlink{structFeedbackArc}{Feedback\-Arc} fb\-A, struct \hyperlink{structCircularBuffer}{Circular\-Buffer} $\ast$circular\-Buf, sem\-\_\-t $\ast$sem\-Free, sem\-\_\-t $\ast$sem\-Used, char $\ast$program\-Name)
+\begin{DoxyCompactList}\small\item\em write to the circular buffer \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+circular buffer Module implementation \begin{DoxyAuthor}{Author}
+Lukas Fink 11911069 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+10.\-11.\-2021
+\end{DoxyDate}
+contains functions for reading from and writing to the circular buffer 
+
+\subsection{Function Documentation}
+\hypertarget{circularBuffer_8c_aa57b994fa66422a6b4dba0bc4f4ac75d}{\index{circular\-Buffer.\-c@{circular\-Buffer.\-c}!deep\-Copy\-Arc@{deep\-Copy\-Arc}}
+\index{deep\-Copy\-Arc@{deep\-Copy\-Arc}!circularBuffer.c@{circular\-Buffer.\-c}}
+\subsubsection[{deep\-Copy\-Arc}]{\setlength{\rightskip}{0pt plus 5cm}static int deep\-Copy\-Arc (
+\begin{DoxyParamCaption}
+\item[{struct {\bf Feedback\-Arc} $\ast$}]{dest, }
+\item[{struct {\bf Feedback\-Arc}}]{src}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{circularBuffer_8c_aa57b994fa66422a6b4dba0bc4f4ac75d}
+
+
+deep copy of an Feedback Arc 
+
+deep copy function
+
+copys values of src to dest and terminates the edge array with an edge with negative values. 
+\begin{DoxyParams}{Parameters}
+{\em dest} & destination for the data to be copied \\
+\hline
+{\em src} & source of data to be copied from \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on failure 
+\end{DoxyReturn}
+\hypertarget{circularBuffer_8c_a045531a4de9641672f3c81900c02f5b8}{\index{circular\-Buffer.\-c@{circular\-Buffer.\-c}!read\-C\-B@{read\-C\-B}}
+\index{read\-C\-B@{read\-C\-B}!circularBuffer.c@{circular\-Buffer.\-c}}
+\subsubsection[{read\-C\-B}]{\setlength{\rightskip}{0pt plus 5cm}void read\-C\-B (
+\begin{DoxyParamCaption}
+\item[{struct {\bf Feedback\-Arc} $\ast$}]{dest, }
+\item[{struct {\bf Circular\-Buffer} $\ast$}]{circular\-Buf, }
+\item[{sem\-\_\-t $\ast$}]{sem\-Free, }
+\item[{sem\-\_\-t $\ast$}]{sem\-Used, }
+\item[{char $\ast$}]{program\-Name}
+\end{DoxyParamCaption}
+)}}\label{circularBuffer_8c_a045531a4de9641672f3c81900c02f5b8}
+
+
+read from the circular buffer 
+
+read function
+
+deep copy of the buffer to the given destination 
+\begin{DoxyParams}{Parameters}
+{\em dest} & destination for the data to be copied \\
+\hline
+{\em circular\-Buf} & the circular Buffer where data is read from \\
+\hline
+{\em sem\-Free} & semaphore which value equals the free space of the buffer \\
+\hline
+{\em sem\-Used} & semaphore which value equals the used space of the buffer \\
+\hline
+{\em program\-Name} & name of the program calling the function \\
+\hline
+\end{DoxyParams}
+\hypertarget{circularBuffer_8c_a042ae9c9788b020b8e8f9aa46ddc27c0}{\index{circular\-Buffer.\-c@{circular\-Buffer.\-c}!write\-C\-B@{write\-C\-B}}
+\index{write\-C\-B@{write\-C\-B}!circularBuffer.c@{circular\-Buffer.\-c}}
+\subsubsection[{write\-C\-B}]{\setlength{\rightskip}{0pt plus 5cm}void write\-C\-B (
+\begin{DoxyParamCaption}
+\item[{struct {\bf Feedback\-Arc}}]{fb\-A, }
+\item[{struct {\bf Circular\-Buffer} $\ast$}]{circular\-Buf, }
+\item[{sem\-\_\-t $\ast$}]{sem\-Free, }
+\item[{sem\-\_\-t $\ast$}]{sem\-Used, }
+\item[{char $\ast$}]{program\-Name}
+\end{DoxyParamCaption}
+)}}\label{circularBuffer_8c_a042ae9c9788b020b8e8f9aa46ddc27c0}
+
+
+write to the circular buffer 
+
+write function
+
+write the given Feedback-\/\-Arc into the circular Buffer 
+\begin{DoxyParams}{Parameters}
+{\em fba} & Feedback-\/\-Arc to be written into the buffer \\
+\hline
+{\em circular\-Buf} & the circular Buffer where data is written to \\
+\hline
+{\em sem\-Free} & semaphore which value equals the free space of the buffer \\
+\hline
+{\em sem\-Used} & semaphore which value equals the used space of the buffer \\
+\hline
+{\em program\-Name} & name of the program calling the function \\
+\hline
+\end{DoxyParams}
