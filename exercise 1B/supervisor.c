@@ -19,7 +19,7 @@
 static volatile sig_atomic_t quit = 0;
 
 static void onSignal(int signal) {
-  fprintf(stderr, "User sent quit signal: %d\n", signal);
+  fprintf(stderr, "Shutting down - Received user signal: %d\n", signal);
   quit = 1;
 }
 
@@ -27,9 +27,6 @@ int main(int argc, char **argv) {
   if (argc > 1) {
     argumentError("No arguments allowed");
   }
-
-  //#region initialize
-  log("%s\n", "Initializing...");
 
   // register signal handler
   struct sigaction sa;
@@ -43,24 +40,21 @@ int main(int argc, char **argv) {
   }
 
   // create shared memory -> shm_open()
-  int fd = shm_open(SHM_PATH, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
-  if (fd < 0) {
+  int shm_fd = shm_open(SHM_PATH, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+  if (shm_fd == -1) {
     error("shm_open failed");
   }
 
   // set shared memory size -> ftruncate()
-  if (ftruncate(fd, sizeof(CircularBuffer)) == -1) {
+  if (ftruncate(shm_fd, sizeof(CircularBuffer)) == -1) {
     error("ftruncate failed");
   }
 
   // map shared memory into memory -> mmap()
   CircularBuffer *shm = mmap(NULL, sizeof(CircularBuffer),
-                             PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+                             PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
   if (shm == MAP_FAILED) {
     error("mmap failed");
-  }
-  if (close(fd) == -1) {
-    error("close failed");
   }
 
   // initialize shared memory
@@ -87,30 +81,26 @@ int main(int argc, char **argv) {
     error("sem_open failed");
   }
 
-  //#endregion
-
   EdgeList bestSolution = {.numEdges = SIZE_MAX, .fst = NULL};
-  log("%s\n", "Starting process...");
   while (!quit) {
     // alternating mutex: wait for used space -> sem_wait()
     if ((sem_wait(sem_used_space) == -1) && (errno != EINTR)) {
       error("sem_wait failed");
+    }
+    if (quit) {
+      break;
     }
 
     // check solution
     EdgeList submission = shm->buffer[shm->readIndex];
     shm->readIndex = (shm->readIndex + 1) % BUFFER_SIZE;
     if (submission.numEdges == 0) {
-      log("%s\n", "Given argument is acyclic: no edges need to be removed");
+      fprintf(stdout, "%s\n", "Input graph is acyclic.");
       break;
     } else if (submission.numEdges < bestSolution.numEdges) {
-      bestSolution = submission;
-      fprintf(stdout, "New best solution: %zu edges", bestSolution.numEdges);
-      for (size_t i = 0; i < bestSolution.numEdges; i++) {
-        fprintf(stdout, "(%s-%s) ", bestSolution.fst[i].from,
-                bestSolution.fst[i].to);
-      }
-      fprintf(stdout, "\n");
+      fprintf(stdout, "New best solution: %zu edges.", bestSolution.numEdges);
+      bestSolution.numEdges = submission.numEdges;
+      bestSolution.fst = submission.fst;
     }
 
     // alternating mutex: signal available space -> sem_post()
@@ -119,11 +109,9 @@ int main(int argc, char **argv) {
     }
   }
 
-  //#region cleanup
-  log("%s\n", "Cleaning up...");
-
   // wake up all blocked generators, terminate them
   shm->terminate = true;
+  log("Waking up all %d generators for termination...\n", shm->numGenerators);
   for (uint64_t i = 0; i < shm->numGenerators; i++) {
     if (sem_post(sem_available_space) == -1) {
       error("sem_post failed");
@@ -136,8 +124,8 @@ int main(int argc, char **argv) {
   }
 
   // close shared memory -> close()
-  if (shm_unlink(SHM_PATH) == -1) {
-    error("shm_unlink failed");
+  if (close(shm_fd) == -1) {
+    error("close failed");
   }
 
   // delete shared memory -> shm_unlink()
@@ -166,7 +154,6 @@ int main(int argc, char **argv) {
   if (sem_unlink(SEM_MUTEX_PATH) == -1) {
     error("sem_unlink failed");
   }
-  //#endregion
 
   return EXIT_SUCCESS;
 }

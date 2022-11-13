@@ -57,25 +57,22 @@
   exit(EXIT_FAILURE);
 //#endregion
 
-//#region shared memory types
 /**
  * @brief Number edges that a solution is allowed to have at most to be allowed
  * to be submitted.
  * @invariant >= 8 (given by the assignment)
  */
-#define MAX_SOLUTION_SIZE (999)
+#define MAX_SOLUTION_SIZE (9999)
 
 /**
  * @brief Shared memory and semaphore paths
  * @see Use unix tools to manually inspect:
- *     - Use the `ipcs` command to see the resources.
- *     - Use the `ipcrm` command to remove the resources.
  *     - see `/dev/shm/<name>` for the shared memory.
  */
-#define SHM_PATH "/11912007_shared_memory"
-#define SEM_USED_SPACE_PATH "/11912007_used_space"
-#define SEM_AVAILABLE_SPACE_PATH "/11912007_available_space"
-#define SEM_MUTEX_PATH "/11912007_mutex"
+#define SHM_PATH "/11912007shm"
+#define SEM_USED_SPACE_PATH "/11912007used"
+#define SEM_AVAILABLE_SPACE_PATH "/11912007available"
+#define SEM_MUTEX_PATH "/11912007mutex"
 
 typedef struct {
   char *from;
@@ -89,7 +86,7 @@ typedef struct {
 
 typedef char **NodeList;
 
-#define BUFFER_SIZE (1 << 8)
+#define BUFFER_SIZE (32)
 typedef struct {
   EdgeList buffer[BUFFER_SIZE];
   uint8_t writeIndex;
@@ -97,6 +94,5 @@ typedef struct {
   bool terminate;
   atomic_int numGenerators;
 } CircularBuffer;
-//#endregion
 
 #endif

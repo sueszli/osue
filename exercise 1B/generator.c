@@ -192,8 +192,8 @@ int main(int argc, char **argv) {
   logNodeList("All nodes", allNodes);
 
   // open shared memory -> shm_open()
-  int fd = shm_open(SHM_PATH, O_RDWR, S_IRUSR | S_IWUSR);
-  if (fd == -1) {
+  int shm_fd = shm_open(SHM_PATH, O_RDWR, S_IRUSR | S_IWUSR);
+  if (shm_fd == -1) {
     if (errno == ENOENT) {
       error("Supervisor process must be running before the generators");
     } else {
@@ -203,12 +203,9 @@ int main(int argc, char **argv) {
 
   // map shared memory into memory -> mmap()
   CircularBuffer *shm = mmap(NULL, sizeof(CircularBuffer),
-                             PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+                             PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
   if (shm == MAP_FAILED) {
     error("mmap failed");
-  }
-  if (close(fd) == -1) {
-    error("close failed");
   }
 
   // open semaphores -> sem_open()
@@ -237,28 +234,23 @@ int main(int argc, char **argv) {
       if ((sem_wait(sem_available_space) == -1) && (errno != EINTR)) {
         error("sem_wait failed");
       }
-
-      // in case supervisor woke up all blocked generators for termination
       if (shm->terminate == true) {
-        break;
+        break;  // if woken up by supervisor, terminate
       }
 
-      // writing mutex for generators -> sem_wait()
-      if ((sem_wait(sem_mutex) == -1) && (errno != EINTR)) {
+      // write solution (critical section) -> sem_wait() + sem_post()
+      if ((sem_wait(sem_mutex)) == -1 && (errno != EINTR)) {
         error("sem_wait failed");
       }
-
-      // submit solution
+      logEdgeList("Solution", solution);
       shm->buffer[shm->writeIndex] = solution;
       shm->writeIndex = (shm->writeIndex + 1) % BUFFER_SIZE;
-
-      // writing mutex for generators -> sem_post()
       if (sem_post(sem_mutex) == -1) {
         error("sem_post failed");
       }
 
       // alternating mutex: signal space used -> sem_post()
-      if (sem_post(sem_available_space) == -1) {
+      if (sem_post(sem_used_space) == -1) {
         error("sem_post failed");
       }
     }
@@ -275,7 +267,7 @@ int main(int argc, char **argv) {
   }
 
   // close shared memory -> close()
-  if (close(fd) == -1) {
+  if (close(shm_fd) == -1) {
     error("close failed");
   }
 
