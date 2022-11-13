@@ -1,1 +1,0 @@
-char *program_name;
