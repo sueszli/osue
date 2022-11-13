@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
     } else if (submission.numEdges < bestSolution.numEdges) {
       bestSolution = submission;
       fprintf(stdout, "New best solution: %zu edges\n", bestSolution.numEdges);
-      logEdgeList("Best solution", bestSolution);
+      // https://stackoverflow.com/questions/40200227/store-an-string-on-a-shared-memory-c
     }
 
     // alternating mutex: signal available space -> sem_post()
