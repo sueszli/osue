@@ -9,7 +9,7 @@
 
 
 # compiler version (gcc-12 not available in OSUE lab)
-GCC = gcc-12
+GCC = gcc
 
 
 # compile flags
@@ -31,7 +31,7 @@ generator: generator.o
 	$(GCC) -o $@ $^ $(libraries)
 
 %.o: %.c
-	$(GCC) $(LESS_VERBOSE) -c -o $@ $<
+	$(GCC) $(DEFAULT) -c -o $@ $<
 
 
 # dependencies for object files

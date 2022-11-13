@@ -10,8 +10,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <stdatomic.h>
-
 //#region print macros
 /*
  * Convenience macros for formatting error messages and exiting or
@@ -104,7 +102,7 @@ typedef struct {
   uint8_t writeIndex;
   uint8_t readIndex;
   bool terminate;
-  atomic_int numGenerators;
+  int numGenerators;
 } CircularBuffer; /**< A circular buffer used as shared memory between
                      generators and supervisor. */
 
