@@ -12,12 +12,11 @@
 
 #include <stdatomic.h>
 
-/**
- * @brief Convenience macros for formatting error messages and exiting or
+//#region print macros
+/*
+ * Convenience macros for formatting error messages and exiting or
  * printing optional debug messages if the flag -DDEBUG is set.
  */
-
-//#region print macros
 #ifdef DEBUG
 #define log(fmt, ...)                                                  \
   fprintf(stderr, "==%d== [%s:%d] " fmt, getpid(), __FILE__, __LINE__, \
@@ -76,11 +75,11 @@
  * to be submitted. Can be chosen freely.
  * @invariant >= 8 (given by the assignment)
  */
-#define MAX_SOLUTION_SIZE (999)
+#define MAX_SOLUTION_SIZE (64)
 
-/**
- * @brief Shared memory and semaphore paths.
- * @see the path '/dev/shm/<name>' on local machine.
+/*
+ * Shared memory and semaphore paths.
+ * see the path '/dev/shm/<name>' on local machine.
  */
 #define SHM_PATH "/11912007shm"
 #define SEM_USED_SPACE_PATH "/11912007used"

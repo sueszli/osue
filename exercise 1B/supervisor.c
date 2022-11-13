@@ -131,12 +131,12 @@ int main(int argc, char **argv) {
     EdgeList submission = shm->buffer[shm->readIndex];
     shm->readIndex = (shm->readIndex + 1) % BUFFER_SIZE;
     if (submission.numEdges == 0) {
-      fprintf(stdout, "%s\n", "Input graph is acyclic.");
+      fprintf(stdout, "%s\n", "Input graph is acyclic - Terminating...");
       break;
     } else if (submission.numEdges < bestSolution.numEdges) {
-      fprintf(stdout, "New best solution: %zu edges.", bestSolution.numEdges);
-      bestSolution.numEdges = submission.numEdges;
-      bestSolution.fst = submission.fst;
+      bestSolution = submission;
+      fprintf(stdout, "New best solution: %zu edges\n", bestSolution.numEdges);
+      logEdgeList("Best solution", bestSolution);
     }
 
     // alternating mutex: signal available space -> sem_post()
