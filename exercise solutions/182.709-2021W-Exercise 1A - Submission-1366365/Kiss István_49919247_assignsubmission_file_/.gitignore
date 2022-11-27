@@ -1,0 +1,11 @@
+*.pdf
+*.o
+*.json
+*.plist
+mycompress
+.DS_Store
+*.txt
+test
+.vscode/configurationCache.log
+.vscode/dryrun.log
+.vscode/targets.log

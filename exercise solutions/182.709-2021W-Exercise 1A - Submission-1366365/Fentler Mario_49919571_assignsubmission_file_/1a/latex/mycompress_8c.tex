@@ -1,0 +1,75 @@
+\hypertarget{mycompress_8c}{\section{mycompress.\-c File Reference}
+\label{mycompress_8c}\index{mycompress.\-c@{mycompress.\-c}}
+}
+
+
+This programm does a compression of given words from a input stream by counting the consecutive occourences of letters and merging them together to letter+occurence count and then writes them to the output stream.  
+
+
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}mycompress.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{mycompress_8c_a0ddf1224851353fc92bfbff6f499fa97}{int {\bfseries main} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})}\label{mycompress_8c_a0ddf1224851353fc92bfbff6f499fa97}
+
+\item 
+\hypertarget{mycompress_8c_aa1187b70998f73cdb598833d6afaa30a}{void \hyperlink{mycompress_8c_aa1187b70998f73cdb598833d6afaa30a}{print\-\_\-usage} (void)}\label{mycompress_8c_aa1187b70998f73cdb598833d6afaa30a}
+
+\begin{DoxyCompactList}\small\item\em prints the usage method to the user if the option arguments when calling the program are not used correctly \end{DoxyCompactList}\item 
+void \hyperlink{mycompress_8c_a54e7753d94472c47efa621b2d3a4be75}{check\-File\-Opened\-Without\-Error} (F\-I\-L\-E $\ast$fp, char $\ast$program\-Name)
+\begin{DoxyCompactList}\small\item\em Checks if the given file was successfully opened. Throws error message instead. \end{DoxyCompactList}\item 
+void \hyperlink{mycompress_8c_a5427b9bc7b8fb6e4973390f1090359d3}{do\-Compression} (F\-I\-L\-E $\ast$fp, F\-I\-L\-E $\ast$output\-\_\-stream)
+\begin{DoxyCompactList}\small\item\em does a compression of the given input words by counting the consecutive occourences of letters and merging them together to letter+occurence count and writes it to the output\-\_\-stream \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This programm does a compression of given words from a input stream by counting the consecutive occourences of letters and merging them together to letter+occurence count and then writes them to the output stream. \begin{DoxyAuthor}{Author}
+Mario Fentler 12025969 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+11.\-11.\-2021 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\hypertarget{mycompress_8c_a54e7753d94472c47efa621b2d3a4be75}{\index{mycompress.\-c@{mycompress.\-c}!check\-File\-Opened\-Without\-Error@{check\-File\-Opened\-Without\-Error}}
+\index{check\-File\-Opened\-Without\-Error@{check\-File\-Opened\-Without\-Error}!mycompress.c@{mycompress.\-c}}
+\subsubsection[{check\-File\-Opened\-Without\-Error}]{\setlength{\rightskip}{0pt plus 5cm}void check\-File\-Opened\-Without\-Error (
+\begin{DoxyParamCaption}
+\item[{F\-I\-L\-E $\ast$}]{fp, }
+\item[{char $\ast$}]{program\-Name}
+\end{DoxyParamCaption}
+)}}\label{mycompress_8c_a54e7753d94472c47efa621b2d3a4be75}
+
+
+Checks if the given file was successfully opened. Throws error message instead. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em fp} & pointer to the file to be checked \\
+\hline
+{\em program\-Name} & pointer to the program\-Name which should be included in the error message \\
+\hline
+\end{DoxyParams}
+\hypertarget{mycompress_8c_a5427b9bc7b8fb6e4973390f1090359d3}{\index{mycompress.\-c@{mycompress.\-c}!do\-Compression@{do\-Compression}}
+\index{do\-Compression@{do\-Compression}!mycompress.c@{mycompress.\-c}}
+\subsubsection[{do\-Compression}]{\setlength{\rightskip}{0pt plus 5cm}void do\-Compression (
+\begin{DoxyParamCaption}
+\item[{F\-I\-L\-E $\ast$}]{fp, }
+\item[{F\-I\-L\-E $\ast$}]{output\-\_\-stream}
+\end{DoxyParamCaption}
+)}}\label{mycompress_8c_a5427b9bc7b8fb6e4973390f1090359d3}
+
+
+does a compression of the given input words by counting the consecutive occourences of letters and merging them together to letter+occurence count and writes it to the output\-\_\-stream 
+
+
+\begin{DoxyParams}{Parameters}
+{\em fp} & pointer to the temporary file containing the read data from the input stream \\
+\hline
+{\em output\-\_\-stream} & pointer to the stream used for printing the result \\
+\hline
+\end{DoxyParams}

@@ -1,0 +1,23 @@
+The directory structure of this project is (partially) given by the
+following diagram:
+
+.
+|-- doc
+|   `-- Makefile
+|-- Makefile
+`-- src
+    `-- Makefile
+
+The directory 'src' contains the program source files. The Makefile in
+this directory builds or cleans the program(s).
+
+The directory 'doc' contains the Doxygen configuration. The Makefile
+in this directory builds or cleans the documentation.
+
+For convenience, there is a third Makefile in the base directory. This
+Makefile builds or cleans everything by delegating the work to the
+other Makefiles.
+
+To build everything, say 'make' in the base directory.
+
+To clean everything, say 'make clean' in the base directory.

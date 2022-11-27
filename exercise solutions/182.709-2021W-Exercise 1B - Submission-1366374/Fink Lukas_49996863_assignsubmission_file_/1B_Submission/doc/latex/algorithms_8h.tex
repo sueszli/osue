@@ -1,0 +1,83 @@
+\hypertarget{algorithms_8h}{\section{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/algorithms.h File Reference}
+\label{algorithms_8h}\index{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/algorithms.\-h@{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/algorithms.\-h}}
+}
+
+
+algorithms Module  
+
+
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$assert.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$errno.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$time.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}datatypes.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int $\ast$ \hyperlink{algorithms_8h_a1db7413d0be8f54d4b1b9a89bb2b43b3}{fisher\-\_\-yates\-\_\-shuffle} (int $\ast$vertices)
+\begin{DoxyCompactList}\small\item\em permutation of vertice array \end{DoxyCompactList}\item 
+struct \hyperlink{structFeedbackArc}{Feedback\-Arc} $\ast$ \hyperlink{algorithms_8h_ad42ffb6e43dbbf2b8b4e511899f48cf2}{fas\-\_\-algorithm} (int $\ast$vertices, struct \hyperlink{structEdge}{Edge} $\ast$edges, char $\ast$program\-Name)
+\begin{DoxyCompactList}\small\item\em feedback arc set algorithm \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+algorithms Module \begin{DoxyAuthor}{Author}
+Lukas Fink 11911069 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+10.\-11.\-2021
+\end{DoxyDate}
+contains the fisher\-\_\-yates\-\_\-shuffle algorithm and an algorithm for generating feedback-\/\-Arcs 
+
+\subsection{Function Documentation}
+\hypertarget{algorithms_8h_ad42ffb6e43dbbf2b8b4e511899f48cf2}{\index{algorithms.\-h@{algorithms.\-h}!fas\-\_\-algorithm@{fas\-\_\-algorithm}}
+\index{fas\-\_\-algorithm@{fas\-\_\-algorithm}!algorithms.h@{algorithms.\-h}}
+\subsubsection[{fas\-\_\-algorithm}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf Feedback\-Arc}$\ast$ fas\-\_\-algorithm (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{vertices, }
+\item[{struct {\bf Edge} $\ast$}]{edges, }
+\item[{char $\ast$}]{program\-Name}
+\end{DoxyParamCaption}
+)}}\label{algorithms_8h_ad42ffb6e43dbbf2b8b4e511899f48cf2}
+
+
+feedback arc set algorithm 
+
+feedback arc set algorithm
+
+Select all edges (u, v) for which u $>$ v in the ordering. These edges form a feedback arc set. 
+\begin{DoxyParams}{Parameters}
+{\em vertices} & vertices of the graph, randomized. \\
+\hline
+{\em edges} & edges without duplicates. \\
+\hline
+{\em program\-Name} & name of the program \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+feedback arc set pointer when solution contains less or equal to size Edges, otherwise N\-U\-L\-L 
+\end{DoxyReturn}
+\hypertarget{algorithms_8h_a1db7413d0be8f54d4b1b9a89bb2b43b3}{\index{algorithms.\-h@{algorithms.\-h}!fisher\-\_\-yates\-\_\-shuffle@{fisher\-\_\-yates\-\_\-shuffle}}
+\index{fisher\-\_\-yates\-\_\-shuffle@{fisher\-\_\-yates\-\_\-shuffle}!algorithms.h@{algorithms.\-h}}
+\subsubsection[{fisher\-\_\-yates\-\_\-shuffle}]{\setlength{\rightskip}{0pt plus 5cm}int$\ast$ fisher\-\_\-yates\-\_\-shuffle (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{vertices}
+\end{DoxyParamCaption}
+)}}\label{algorithms_8h_a1db7413d0be8f54d4b1b9a89bb2b43b3}
+
+
+permutation of vertice array 
+
+implementation of the fisher\-\_\-yates\-\_\-shuffle algorithm
+
+uses a version of the fisher\-\_\-yates\-\_\-shuffle algorithm to generate a new randomly orderd array of vertices 
+\begin{DoxyParams}{Parameters}
+{\em vertices} & input array of vertices \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+returns a new random vertice array 
+\end{DoxyReturn}

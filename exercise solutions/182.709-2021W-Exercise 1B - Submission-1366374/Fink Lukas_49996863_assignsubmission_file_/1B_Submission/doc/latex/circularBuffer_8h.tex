@@ -1,0 +1,122 @@
+\hypertarget{circularBuffer_8h}{\section{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/circular\-Buffer.h File Reference}
+\label{circularBuffer_8h}\index{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/circular\-Buffer.\-h@{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/circular\-Buffer.\-h}}
+}
+
+
+circular buffer Module  
+
+
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$assert.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$errno.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$fcntl.\-h$>$}\\*
+{\ttfamily \#include $<$sys/mman.\-h$>$}\\*
+{\ttfamily \#include $<$sys/types.\-h$>$}\\*
+{\ttfamily \#include $<$sys/stat.\-h$>$}\\*
+{\ttfamily \#include $<$semaphore.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}datatypes.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structCircularBuffer}{Circular\-Buffer}
+\begin{DoxyCompactList}\small\item\em contains a buffer containing M\-A\-X\-\_\-\-D\-A\-T\-A Feedback\-Arcs \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{circularBuffer_8h_aae1e365ad338c0e4f24c4204c21414a9}{\#define {\bfseries S\-H\-M\-\_\-\-C\-I\-R\-C\-U\-L\-A\-R\-\_\-\-B\-U\-F\-F\-E\-R}~\char`\"{}/11911069\-\_\-myshm\char`\"{}}\label{circularBuffer_8h_aae1e365ad338c0e4f24c4204c21414a9}
+
+\item 
+\hypertarget{circularBuffer_8h_aaf06a3762adb0aa04b8a5f8f016ca5e9}{\#define {\bfseries M\-A\-X\-\_\-\-D\-A\-T\-A}~(32)}\label{circularBuffer_8h_aaf06a3762adb0aa04b8a5f8f016ca5e9}
+
+\item 
+\hypertarget{circularBuffer_8h_a020b0186da38d4b7babe9e35fb113a89}{\#define {\bfseries S\-E\-M\-\_\-\-F\-R\-E\-E}~\char`\"{}/11911069\-\_\-sem\-\_\-free\char`\"{}}\label{circularBuffer_8h_a020b0186da38d4b7babe9e35fb113a89}
+
+\item 
+\hypertarget{circularBuffer_8h_aed0d20eed9848299892d8d20b443d152}{\#define {\bfseries S\-E\-M\-\_\-\-U\-S\-E\-D}~\char`\"{}/11911069\-\_\-sem\-\_\-used\char`\"{}}\label{circularBuffer_8h_aed0d20eed9848299892d8d20b443d152}
+
+\item 
+\hypertarget{circularBuffer_8h_a8a91ec877b4296f558fa076872a48350}{\#define {\bfseries S\-E\-M\-\_\-\-W\-R\-I\-T\-E}~\char`\"{}/11911069\-\_\-sem\-\_\-write\char`\"{}}\label{circularBuffer_8h_a8a91ec877b4296f558fa076872a48350}
+
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{circularBuffer_8h_a045531a4de9641672f3c81900c02f5b8}{read\-C\-B} (struct \hyperlink{structFeedbackArc}{Feedback\-Arc} $\ast$dest, struct \hyperlink{structCircularBuffer}{Circular\-Buffer} $\ast$circular\-Buf, sem\-\_\-t $\ast$sem\-Free, sem\-\_\-t $\ast$sem\-Used, char $\ast$program\-Name)
+\begin{DoxyCompactList}\small\item\em read from the circular buffer \end{DoxyCompactList}\item 
+void \hyperlink{circularBuffer_8h_a042ae9c9788b020b8e8f9aa46ddc27c0}{write\-C\-B} (struct \hyperlink{structFeedbackArc}{Feedback\-Arc} fb\-A, struct \hyperlink{structCircularBuffer}{Circular\-Buffer} $\ast$circular\-Buf, sem\-\_\-t $\ast$sem\-Free, sem\-\_\-t $\ast$sem\-Used, char $\ast$program\-Name)
+\begin{DoxyCompactList}\small\item\em write to the circular buffer \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+circular buffer Module \begin{DoxyAuthor}{Author}
+Lukas Fink 11911069 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+10.\-11.\-2021
+\end{DoxyDate}
+contains the circular buffer required for communication between generator and supervisor 
+
+\subsection{Function Documentation}
+\hypertarget{circularBuffer_8h_a045531a4de9641672f3c81900c02f5b8}{\index{circular\-Buffer.\-h@{circular\-Buffer.\-h}!read\-C\-B@{read\-C\-B}}
+\index{read\-C\-B@{read\-C\-B}!circularBuffer.h@{circular\-Buffer.\-h}}
+\subsubsection[{read\-C\-B}]{\setlength{\rightskip}{0pt plus 5cm}void read\-C\-B (
+\begin{DoxyParamCaption}
+\item[{struct {\bf Feedback\-Arc} $\ast$}]{dest, }
+\item[{struct {\bf Circular\-Buffer} $\ast$}]{circular\-Buf, }
+\item[{sem\-\_\-t $\ast$}]{sem\-Free, }
+\item[{sem\-\_\-t $\ast$}]{sem\-Used, }
+\item[{char $\ast$}]{program\-Name}
+\end{DoxyParamCaption}
+)}}\label{circularBuffer_8h_a045531a4de9641672f3c81900c02f5b8}
+
+
+read from the circular buffer 
+
+read function
+
+deep copy of the buffer to the given destination 
+\begin{DoxyParams}{Parameters}
+{\em dest} & destination for the data to be copied \\
+\hline
+{\em circular\-Buf} & the circular Buffer where data is read from \\
+\hline
+{\em sem\-Free} & semaphore which value equals the free space of the buffer \\
+\hline
+{\em sem\-Used} & semaphore which value equals the used space of the buffer \\
+\hline
+{\em program\-Name} & name of the program calling the function \\
+\hline
+\end{DoxyParams}
+\hypertarget{circularBuffer_8h_a042ae9c9788b020b8e8f9aa46ddc27c0}{\index{circular\-Buffer.\-h@{circular\-Buffer.\-h}!write\-C\-B@{write\-C\-B}}
+\index{write\-C\-B@{write\-C\-B}!circularBuffer.h@{circular\-Buffer.\-h}}
+\subsubsection[{write\-C\-B}]{\setlength{\rightskip}{0pt plus 5cm}void write\-C\-B (
+\begin{DoxyParamCaption}
+\item[{struct {\bf Feedback\-Arc}}]{fb\-A, }
+\item[{struct {\bf Circular\-Buffer} $\ast$}]{circular\-Buf, }
+\item[{sem\-\_\-t $\ast$}]{sem\-Free, }
+\item[{sem\-\_\-t $\ast$}]{sem\-Used, }
+\item[{char $\ast$}]{program\-Name}
+\end{DoxyParamCaption}
+)}}\label{circularBuffer_8h_a042ae9c9788b020b8e8f9aa46ddc27c0}
+
+
+write to the circular buffer 
+
+write function
+
+write the given Feedback-\/\-Arc into the circular Buffer 
+\begin{DoxyParams}{Parameters}
+{\em fba} & Feedback-\/\-Arc to be written into the buffer \\
+\hline
+{\em circular\-Buf} & the circular Buffer where data is written to \\
+\hline
+{\em sem\-Free} & semaphore which value equals the free space of the buffer \\
+\hline
+{\em sem\-Used} & semaphore which value equals the used space of the buffer \\
+\hline
+{\em program\-Name} & name of the program calling the function \\
+\hline
+\end{DoxyParams}

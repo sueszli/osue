@@ -1,0 +1,81 @@
+\hypertarget{comp_8h}{\section{/homes/y11911069/\-Documents/1\-A\-\_\-\-Solution/src/comp.h File Reference}
+\label{comp_8h}\index{/homes/y11911069/\-Documents/1\-A\-\_\-\-Solution/src/comp.\-h@{/homes/y11911069/\-Documents/1\-A\-\_\-\-Solution/src/comp.\-h}}
+}
+
+
+Compression Module.  
+
+
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$assert.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$errno.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+char $\ast$ \hyperlink{comp_8h_ad90ddd258858a70358212804f6de7b89}{compress} (char $\ast$input, int end, char $\ast$program\-Name)
+\begin{DoxyCompactList}\small\item\em This function compresses a char-\/array into a new char-\/array and returns it. \end{DoxyCompactList}\item 
+int \hyperlink{comp_8h_ac73702619e61394f5fd7a94e89fc9d83}{size\-Of\-Char\-Array} (char $\ast$arr)
+\begin{DoxyCompactList}\small\item\em This function returns the size of an char array. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Compression Module. \begin{DoxyAuthor}{Author}
+Lukas Fink 11911069 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+04.\-11.\-2021
+\end{DoxyDate}
+The compress module. It contains a compression function and a size function for char arrays. 
+
+\subsection{Function Documentation}
+\hypertarget{comp_8h_ad90ddd258858a70358212804f6de7b89}{\index{comp.\-h@{comp.\-h}!compress@{compress}}
+\index{compress@{compress}!comp.h@{comp.\-h}}
+\subsubsection[{compress}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ compress (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{input, }
+\item[{int}]{end, }
+\item[{char $\ast$}]{program\-Name}
+\end{DoxyParamCaption}
+)}}\label{comp_8h_ad90ddd258858a70358212804f6de7b89}
+
+
+This function compresses a char-\/array into a new char-\/array and returns it. 
+
+compress function
+
+Compresses e.\-g. aaabbc\textbackslash{}n to a3b2c1\textbackslash{}n1. If not successful, it exits with E\-X\-I\-T\-\_\-\-F\-A\-I\-L\-U\-R\-E. 
+\begin{DoxyParams}{Parameters}
+{\em input} & the input char array. \\
+\hline
+{\em end} & the index of the last element '\textbackslash{}0'. \\
+\hline
+{\em program\-Name} & the name of the program calling (for error-\/messages) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Returns a new compressed char array. 
+\end{DoxyReturn}
+\hypertarget{comp_8h_ac73702619e61394f5fd7a94e89fc9d83}{\index{comp.\-h@{comp.\-h}!size\-Of\-Char\-Array@{size\-Of\-Char\-Array}}
+\index{size\-Of\-Char\-Array@{size\-Of\-Char\-Array}!comp.h@{comp.\-h}}
+\subsubsection[{size\-Of\-Char\-Array}]{\setlength{\rightskip}{0pt plus 5cm}int size\-Of\-Char\-Array (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{arr}
+\end{DoxyParamCaption}
+)}}\label{comp_8h_ac73702619e61394f5fd7a94e89fc9d83}
+
+
+This function returns the size of an char array. 
+
+size\-Of\-Char\-Array function
+
+It counts the number of chars until (but not including) the '\textbackslash{}0' char. 
+\begin{DoxyParams}{Parameters}
+{\em arr} & the input char array. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Returns the length of the array up to (but not including) the '\textbackslash{}0' char. 
+\end{DoxyReturn}

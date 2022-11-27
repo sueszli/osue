@@ -1,0 +1,153 @@
+\hypertarget{myexpand_8c}{}\section{/home/tobias/\+Desktop/\+Tobias/\+Uni/\+O\+S\+U\+E/zweiter\+Versuch/1\+A/src/myexpand.c File Reference}
+\label{myexpand_8c}\index{/home/tobias/\+Desktop/\+Tobias/\+Uni/\+O\+S\+U\+E/zweiter\+Versuch/1\+A/src/myexpand.\+c@{/home/tobias/\+Desktop/\+Tobias/\+Uni/\+O\+S\+U\+E/zweiter\+Versuch/1\+A/src/myexpand.\+c}}
+
+
+Myexpand program.  
+
+
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$unistd.\+h$>$}\newline
+{\ttfamily \#include $<$ctype.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$errno.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}myexpand.\+h\char`\"{}}\newline
+Include dependency graph for myexpand.\+c\+:
+% FIG 0
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static char $\ast$ \hyperlink{myexpand_8c_aaa0177bcfed8147ccb711cdbac705d30}{create\+Spaces} (int amount)
+\begin{DoxyCompactList}\small\item\em This function returns a string with tabstop spaces. \end{DoxyCompactList}\item 
+char $\ast$ \hyperlink{myexpand_8c_acdc2a82f2a70d01c2d6818b03ff63d84}{readline} (F\+I\+LE $\ast$file)
+\begin{DoxyCompactList}\small\item\em This function returns single line, from a file or the terminal input. \end{DoxyCompactList}\item 
+static char $\ast$ \hyperlink{myexpand_8c_a6fe1e9c3526359168df658ff6d2c22d2}{string\+Replace} (char search, char $\ast$replace, char $\ast$string)
+\begin{DoxyCompactList}\small\item\em Replaces all specific chars with a part of a given string. \end{DoxyCompactList}\item 
+void \hyperlink{myexpand_8c_a48b6f64da1e1822ef1540494e4db6831}{read\+File} (F\+I\+LE $\ast$file, F\+I\+LE $\ast$o)
+\begin{DoxyCompactList}\small\item\em This function reads files and writes the replaced string in an output. \end{DoxyCompactList}\item 
+int \hyperlink{myexpand_8c_a0ddf1224851353fc92bfbff6f499fa97}{main} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\begin{DoxyCompactList}\small\item\em Starting point of the Program, parses arguments, reads files, delegates to functions. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{myexpand_8c_aaec11098b586c4fe52b0111224feba01}{t\+\_\+arg} = 8
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Myexpand program. 
+
+\begin{DoxyAuthor}{Author}
+Tobias Kutscher $<$e1634063.\+tuwien.\+ac.\+at$>$ 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+14.\+11.\+2021
+\end{DoxyDate}
+This program takes a string input fia file or terminal and expands all tab characters to a given amount of spaces 
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{myexpand_8c_aaa0177bcfed8147ccb711cdbac705d30}\label{myexpand_8c_aaa0177bcfed8147ccb711cdbac705d30}} 
+\index{myexpand.\+c@{myexpand.\+c}!create\+Spaces@{create\+Spaces}}
+\index{create\+Spaces@{create\+Spaces}!myexpand.\+c@{myexpand.\+c}}
+\subsubsection{\texorpdfstring{create\+Spaces()}{createSpaces()}}
+{\footnotesize\ttfamily static char$\ast$ create\+Spaces (\begin{DoxyParamCaption}\item[{int}]{amount }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+This function returns a string with tabstop spaces. 
+
+function to create a string with tabstop amount of spaces
+
+This function returns a string with tabstop spaces. 
+\begin{DoxyParams}{Parameters}
+{\em amount} & of spaces to put in the string \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the string of spaces 
+\end{DoxyReturn}
+\mbox{\Hypertarget{myexpand_8c_a0ddf1224851353fc92bfbff6f499fa97}\label{myexpand_8c_a0ddf1224851353fc92bfbff6f499fa97}} 
+\index{myexpand.\+c@{myexpand.\+c}!main@{main}}
+\index{main@{main}!myexpand.\+c@{myexpand.\+c}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}\item[{int}]{argc,  }\item[{char $\ast$}]{argv\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+
+
+Starting point of the Program, parses arguments, reads files, delegates to functions. 
+
+Program entry point.
+
+main reads the arguments and checks if files need to be read. start Read\+Files and sets the output. 
+\begin{DoxyParams}{Parameters}
+{\em argc} & The argument counter. \\
+\hline
+{\em argv} & The argument vector. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Returns E\+X\+I\+T\+\_\+\+S\+U\+C\+C\+E\+SS. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{myexpand_8c_a48b6f64da1e1822ef1540494e4db6831}\label{myexpand_8c_a48b6f64da1e1822ef1540494e4db6831}} 
+\index{myexpand.\+c@{myexpand.\+c}!read\+File@{read\+File}}
+\index{read\+File@{read\+File}!myexpand.\+c@{myexpand.\+c}}
+\subsubsection{\texorpdfstring{read\+File()}{readFile()}}
+{\footnotesize\ttfamily void read\+File (\begin{DoxyParamCaption}\item[{F\+I\+LE $\ast$}]{file,  }\item[{F\+I\+LE $\ast$}]{o }\end{DoxyParamCaption})}
+
+
+
+This function reads files and writes the replaced string in an output. 
+
+File Reader an Replacement caller
+
+global\+\_\+variables\+: t\+\_\+arg \mbox{\Hypertarget{myexpand_8c_acdc2a82f2a70d01c2d6818b03ff63d84}\label{myexpand_8c_acdc2a82f2a70d01c2d6818b03ff63d84}} 
+\index{myexpand.\+c@{myexpand.\+c}!readline@{readline}}
+\index{readline@{readline}!myexpand.\+c@{myexpand.\+c}}
+\subsubsection{\texorpdfstring{readline()}{readline()}}
+{\footnotesize\ttfamily char$\ast$ readline (\begin{DoxyParamCaption}\item[{F\+I\+LE $\ast$}]{file }\end{DoxyParamCaption})}
+
+
+
+This function returns single line, from a file or the terminal input. 
+
+reads a single line with buffer
+
+reads part of the line until the whole line is read. uses B\+U\+F\+S\+I\+ZE which is the best buffer size for the given system 
+\begin{DoxyParams}{Parameters}
+{\em file} & to read from \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+string with the complete line 
+\end{DoxyReturn}
+\mbox{\Hypertarget{myexpand_8c_a6fe1e9c3526359168df658ff6d2c22d2}\label{myexpand_8c_a6fe1e9c3526359168df658ff6d2c22d2}} 
+\index{myexpand.\+c@{myexpand.\+c}!string\+Replace@{string\+Replace}}
+\index{string\+Replace@{string\+Replace}!myexpand.\+c@{myexpand.\+c}}
+\subsubsection{\texorpdfstring{string\+Replace()}{stringReplace()}}
+{\footnotesize\ttfamily static char$\ast$ string\+Replace (\begin{DoxyParamCaption}\item[{char}]{search,  }\item[{char $\ast$}]{replace,  }\item[{char $\ast$}]{string }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Replaces all specific chars with a part of a given string. 
+
+Char replacement in a string
+
+chars are replaced according to the formular\+: p = tabstop $\ast$ ((x / tabstop) + 1) 
+\begin{DoxyParams}{Parameters}
+{\em search} & char to be replaces \\
+\hline
+{\em replace} & string to replace the char \\
+\hline
+{\em string} & string where chars are replaced \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Variable Documentation}
+\mbox{\Hypertarget{myexpand_8c_aaec11098b586c4fe52b0111224feba01}\label{myexpand_8c_aaec11098b586c4fe52b0111224feba01}} 
+\index{myexpand.\+c@{myexpand.\+c}!t\+\_\+arg@{t\+\_\+arg}}
+\index{t\+\_\+arg@{t\+\_\+arg}!myexpand.\+c@{myexpand.\+c}}
+\subsubsection{\texorpdfstring{t\+\_\+arg}{t\_arg}}
+{\footnotesize\ttfamily int t\+\_\+arg = 8}
+
+Length of a tabstop, may be overwritten by an input 

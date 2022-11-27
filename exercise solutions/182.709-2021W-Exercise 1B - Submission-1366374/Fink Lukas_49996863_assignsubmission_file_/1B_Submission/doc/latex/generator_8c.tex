@@ -1,0 +1,68 @@
+\hypertarget{generator_8c}{\section{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/generator.c File Reference}
+\label{generator_8c}\index{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/generator.\-c@{/homes/y11911069/\-Documents/\-Exercise\-\_\-1/1\-B\-\_\-\-Solution/src/generator.\-c}}
+}
+
+
+generator module.  
+
+
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$assert.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$errno.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$fcntl.\-h$>$}\\*
+{\ttfamily \#include $<$sys/mman.\-h$>$}\\*
+{\ttfamily \#include $<$sys/types.\-h$>$}\\*
+{\ttfamily \#include $<$sys/stat.\-h$>$}\\*
+{\ttfamily \#include $<$semaphore.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}datatypes.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}algorithms.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}circular\-Buffer.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{generator_8c_a0ddf1224851353fc92bfbff6f499fa97}{main} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\begin{DoxyCompactList}\small\item\em The program starts here. It should be called like './generator 0-\/1 1-\/2 ...'. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+generator module. \begin{DoxyAuthor}{Author}
+Lukas Fink 11911069 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+10.\-11.\-2021
+\end{DoxyDate}
+a generator reads the edges of a graph and sends a possible solution to the supervisor. 
+
+\subsection{Function Documentation}
+\hypertarget{generator_8c_a0ddf1224851353fc92bfbff6f499fa97}{\index{generator.\-c@{generator.\-c}!main@{main}}
+\index{main@{main}!generator.c@{generator.\-c}}
+\subsubsection[{main}]{\setlength{\rightskip}{0pt plus 5cm}int main (
+\begin{DoxyParamCaption}
+\item[{int}]{argc, }
+\item[{char $\ast$}]{argv\mbox{[}$\,$\mbox{]}}
+\end{DoxyParamCaption}
+)}}\label{generator_8c_a0ddf1224851353fc92bfbff6f499fa97}
+
+
+The program starts here. It should be called like './generator 0-\/1 1-\/2 ...'. 
+
+Program entry point.
+
+T\-O\-D\-O
+\begin{DoxyItemize}
+\item 
+\item 
+\begin{DoxyParams}{Parameters}
+{\em argc} & The argument counter. \\
+\hline
+{\em argv} & The argument vector. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Returns E\-X\-I\-T\-\_\-\-S\-U\-C\-C\-E\-S\-S on success, E\-X\-I\-T\-\_\-\-F\-A\-I\-L\-U\-R\-E on failure. 
+\end{DoxyReturn}
+
+\end{DoxyItemize}
