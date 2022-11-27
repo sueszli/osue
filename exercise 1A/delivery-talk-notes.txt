@@ -1,0 +1,7 @@
+Exercise 1A:
+  - Forgot error handling at file output
+    ```
+      if (fclose(outputStream) == EOF) {
+        error("fclose failed");
+      }
+    ```

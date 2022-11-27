@@ -1,11 +1,3 @@
-Exercise 1A:
-  - Forgot error handling at file output
-    ```
-      if (fclose(outputStream) == EOF) {
-        error("fclose failed");
-      }
-    ```
-
 Exercise 1B:
   - Supervisor does not receive any data, because I'm sending pointers to the strings and not the actual chars.
     The pointers are not the same after being transferred via the shared memory.
