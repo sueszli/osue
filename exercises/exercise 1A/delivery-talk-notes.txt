@@ -5,3 +5,5 @@ Exercise 1A:
         error("fclose failed");
       }
     ```
+
+Feedback: should open `stdin` as a stream and be able to read multiple lines from the input

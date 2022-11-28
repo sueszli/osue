@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "stdlib.h": "c",
-        "errno.h": "c",
-        "fileout.h": "c"
-    }
-}
