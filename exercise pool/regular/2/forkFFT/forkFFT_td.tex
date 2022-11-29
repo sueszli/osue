@@ -1,0 +1,167 @@
+\input{../../template.ltx}
+\usepackage{amsmath}
+\usepackage{multicol}
+\begin{document}
+
+\osuetitle{2}
+
+\section*{Assignment -- Fork Fourier Transform}
+Implement the Cooley-Tukey Fast Fourier Transform\footnote{\url{https://en.wikipedia.org/wiki/Cooley-Tukey\_FFT\_algorithm}} algorithm.
+\begin{verbatim}
+    SYNOPSIS
+        forkFFT
+\end{verbatim}
+
+\subsection*{Instructions}
+The input of the program are floating point values, which should be read from \osueglvar{stdin}.
+Subsequent values are separated by a newline character.
+The sequence ends when an EOF (End Of File) is encountered.
+
+Your program must accept any number of values.
+Terminate the program with exit status \verb|EXIT_FAILURE|
+if an invalid input is encountered.
+
+The program computes the Fourier Transform of its input values recursively,
+i.e. by calling itself:
+\begin{enumerate}
+\item If the array consists of only 1 number, write that number to \osueglvar{stdout}
+and exit with exit status \verb|EXIT_SUCCESS|.
+\item Otherwise the array consists of $n>1$ numbers.
+Split it into two parts with $n/2$ numbers each,
+such that one part contains all the numbers at even indices
+and the second part contains all the numbers at odd indices:
+\[
+P_E=\{A[0],\;A[2],\;A[4],\;\dots\}
+\]
+\[
+P_O=\{A[1],\;A[3],\;A[5],\;\dots\}
+\]
+Terminate the program with exit status \verb|EXIT_FAILURE|
+if the length of the array is not even.
+
+\item Using \osuefunc{fork(2)} and \osuefunc{execlp(3)},
+recursively execute this program in two child processes,
+one for each of the two parts.
+Use two unnamed pipes per child
+to redirect \osueglvar{stdin} and \osueglvar{stdout}
+(see \osuefunc{pipe(2)} and \osuefunc{dup2(3)}).
+Write $P_E$ to \osueglvar{stdin} of one child
+and $P_O$ to \osueglvar{stdin} of the other child.
+Read the respective results from each child's \osueglvar{stdout}.
+The two child processes must run simultaneously!
+
+\item Use \osuefunc{wait(2)} or \osuefunc{waitpid(2)}
+to read the exit status of the children.
+Terminate the program with exit status \verb|EXIT_FAILURE|
+if the exit status of any of the two child processes is not \verb|EXIT_SUCCESS|.
+
+\item Let $R_E$ be the result of the even part $P_E$
+and $R_O$ be the result of the odd part $P_O$.
+The result $R$ of the Fourier Transform of the entire array can now be computed
+by applying the ``butterfly'' operation to the two results:
+\[
+\forall k\;|\;0\leq k<n/2\;:\quad R[k]=R_E[k]+e^{-\frac{2\pi i}{n}\cdot k}\cdot R_O[k]
+\quad\text{and}\quad R[k+n/2]=R_E[k]-e^{-\frac{2\pi i}{n}\cdot k}\cdot R_O[k]
+\]
+which is identical to:
+\[
+\forall k\;|\;0\leq k<n/2\;:\quad
+\renewcommand{\arraystretch}{1.8}
+\begin{array}{r@{\;=\;}l}
+ R[k]     & R_E[k]+\left(\text{cos}(-\frac{2\pi}{n}\cdot k)+i\cdot\text{sin}(-\frac{2\pi}{n}\cdot k)\right)\cdot R_O[k]\\
+R[k+n/2] & R_E[k]-\left(\text{cos}(-\frac{2\pi}{n}\cdot k)+i\cdot\text{sin}(-\frac{2\pi}{n}\cdot k)\right)\cdot R_O[k]
+\end{array}
+\]
+You may approximate the value of $\pi$ with $3.141592654$.
+\item The resulting array is printed to \osueglvar{stdout}, one value per line.
+Since the resulting numbers are complex, the program prints two values per line:
+the real and the imaginary part of each value, separated by a whitespace
+(likewise $R_E$ and $R_O$ are imaginary,
+thus when reading them from the child processes,
+two values per line must be parsed).
+You may append \verb|*i| or similar to the second value
+to indicate that it is the imaginary part (see examples).
+Terminate the program with exit status \verb|EXIT_SUCCESS|.
+
+\end{enumerate}
+
+Throughout the program,
+it is sufficient to use single precision floating point numbers.
+
+\subsection*{Hints}
+\begin{enumerate}
+\item Use \osuefunc{strtof(3)} to parse floating point values.
+The \verb|endptr| argument can be helpful for reading two numbers per line
+when reading from the child processes.
+\item Use the header \osueglvar{math.h} for the calculation of the sine and cosine.
+Add \verb|-lm| to the linker options to use these functions.
+\item When dealing with complex numbers,
+you may find following property useful to implement multiplication:
+$(a+i\cdot b)(c+i\cdot d)=a\cdot c-b\cdot d+i\cdot(a\cdot d+b\cdot c)$
+Addition should be straight-forward to implement
+and no other operation with complex numbers is required.
+\item In order to avoid endless recursion\footnote{\url{http://en.wikipedia.org/wiki/Fork\_bomb}},
+fork only if the input number is greater than 1.
+\item To output error messages and debug messages, always use
+\osueglvar{stderr} because \osueglvar{stdout} is redirected in most cases.
+\item Due to the rejection of sequences of odd length by each (child-)process,
+the algorithm has the property of only correctly processing sequences
+where the length is a power of 2.
+\end{enumerate}
+
+\subsection*{Examples}
+\begin{multicols}{2}
+\paragraph{Constant signal:}
+\begin{verbatim}
+$ cat constant.txt
+1.0
+1.0
+$ ./forkFFT < constant.txt
+2.0 0.0*i
+0.0 0.0*i
+
+
+
+
+
+
+
+
+
+
+
+
+\end{verbatim}
+
+\paragraph{Sinus wave:}
+\begin{verbatim}
+$ cat sine.txt
+0.000000
+0.707107
+1.000000
+0.707107
+0.000000
+-0.707107
+-1.000000
+-0.707107
+$ ./forkFFT < sine.txt
+0.000000 0.000000*i
+0.000000 -4.000001*i
+0.000000 0.000000*i
+0.000000 -0.000001*i
+0.000000 0.000000*i
+-0.000000 0.000001*i
+0.000000 0.000000*i
+-0.000000 4.000001*i
+\end{verbatim}
+\end{multicols}
+
+Small deviations of the resulting values,
+which are a consequence of the limited precision of floating point numbers,
+are not relevant and not considered to be an error.
+
+\input{./../BonusExercise.tex}
+
+\osueguidelinestwo
+
+\end{document}

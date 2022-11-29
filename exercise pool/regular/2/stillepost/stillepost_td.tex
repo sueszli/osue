@@ -1,0 +1,97 @@
+% TeX source file
+% Sysprog WS 2005
+% Beispiel 3: stillepost
+% Dietmar Schabus (e0147322@student.tuwien.ac.at)
+\input{../../template.ltx}
+
+\begin{document}
+
+\osuetitle{2}
+
+\section*{Aufgabenstellung -- stillepost}
+
+Gründen Sie eine Prozessfamilie bestehend aus einem Elternprozess und
+$n$ Kindprozessen (nicht Kind und Enkelkind, $n\ge2$). Spielen Sie dann mit
+der Familie ein Stille-Post-Spiel.
+
+Das von Ihnen zu entwickelnde Programm \osueprog{stillepost} soll sich
+folgendermaßen verhalten:
+
+\begin{itemize}
+\item Der Benutzer des Programms überlegt sich einen beliebigen
+String.
+\item Er ruft das Programm (also den Elternprozess) mit dem String als
+Parameter auf. Beispiel: \osuecmd{stillepost 25 \char`"OSUE macht
+Spass.\char`"}
+\item Der Elternprozess sagt den String an sein erstes Kind weiter,
+jedoch nicht ohne eine kleine Veränderung einzubauen -- wie beim
+Stille-Post-Spiel üblich.
+\item Das erste Kind erhält diesen String, verändert ihn wieder
+geringfügig und gibt ihn an das zweite Kind weiter.
+\item Das zweite Kind verfährt ebenso wie das erste, nur gibt es den
+von ihm veränderten String nicht an einen anderen Prozess weiter,
+sondern sagt ihn laut (gibt ihn auf \osueprog{stdout} aus).
+\end{itemize}
+
+\subsection*{Anleitung}
+
+Das Programm soll folgende Synopsis befolgen:
+\begin{verbatim}
+    SYNOPSIS:
+        stillepost [-v] <n> <string>
+\end{verbatim}
+
+Beachten Sie: Wenn Sie einen String übergeben wollen, der Leerzeichen
+enthält, müssen Sie ihn in Hochkommata einschließen, damit er als
+nur ein Argument behandelt wird: \osuearg{\char`"String mit
+Leerzeichen\char`"}
+
+Der Elternprozess soll seine Kinder mittels \osuefunc{fork(2)}
+erzeugen, die Kommunikation zwischen den Prozessen soll über Unnamed
+Pipes erfolgen, welche mit \osuefunc{pipe(2)} erzeugt werden.
+
+Die Veränderungen eines jeden Mitspielers (Prozesses) sollen so
+vorgenommen werden, dass mittels \osuefunc{rand(3)} eine zufällige
+Position innerhalb des Strings gewählt, und dann das Zeichen an
+dieser Stelle durch ein anderes, ebenfalls zufälliges Zeichen aus
+\osueregex{[a-zA-Z]} ersetzt wird.
+
+Stellen Sie mittels \osuefunc{srand(3)} sicher, dass alle Prozesse eine
+unterschiedliche Random-Seed verwenden, damit nicht jeder Prozess die
+selben Änderungen vornimmt.
+
+Die Option \osuearg{-v} schließlich soll es ermöglichen, das Spiel aus
+der Sicht eines allwissenden Betrachters (bzw. jemand mit ausgezeichnetem Geh{\"o}hr)
+zu verfolgen. Wird die Option
+angegeben, gibt jeder Prozess den String zuerst unverändert und dann
+in der veränderten Form (wie er ihn weitergeben wird) auf
+\osueglvar{stdout} aus.
+
+Führen Sie eine sinnvolle Beschränkung für die Länge des Strings
+ein.
+
+\subsection*{Testen}
+
+Testen Sie ihr Programm vor allem mit der Option \osuearg{-v}, da dann
+deutlich sichtbarer ist, was jeder einzelne Prozess tut.
+
+Beispielrunde:
+
+\begin{osuefmtcode}
+$ \osueinput{./stillepost -v 2 "OSUE macht Spass."}
+Parent: erhalten: OSUE macht Spass.
+Parent: weiter  : OSUE macht Xpass.
+child1 : erhalten: OSUE macht Xpass.
+child1 : weiter  : OSkE macht Xpass.
+child2 : erhalten: OSkE macht Xpass.
+child2 : weiter  : OSkE macAt Xpass.
+child2 : Ende    : OSkE macAt Xpass.
+\end{osuefmtcode}
+
+Die Ausgabe ihres Programms muss nicht genau wie in dem Beispiel
+formatiert sein. Natürlich wird der String umso unkenntlicher, je
+kürzer er ist.
+
+\osueguidelinestwo
+
+\end{document}

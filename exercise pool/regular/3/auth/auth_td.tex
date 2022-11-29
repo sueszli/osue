@@ -1,0 +1,173 @@
+\input{../../template.ltx}
+\begin{document}
+
+\osuetitle{3}
+
+\section*{Aufgabenstellung -- auth}
+
+In dieser Aufgabe sollen Sie eine passwort-geschützte Datenbank entwickeln. Die
+Implementierung soll aus zwei Programmen bestehen: einem Server, der die
+Datenbank verwaltet und Anfragen über deren Inhalt bearbeitet, und einem
+Client, mit welchem der Benutzer Informationen der Datenbank vom Server setzen
+oder abfragen kann. Die Kommunikation zwischen den Prozessen soll mittels
+Shared Memory realisiert werden und die Synchronisation über Semaphore
+erfolgen.
+
+Der Server speichert folgende Benutzerdaten - Name des Benutzers
+(\texttt{username}), Passwort (\texttt{password}) und ein Geheimnis
+(\texttt{secret}) - in einer Datenbank. Der Client soll dem Benutzer ein
+Interface bieten, mit dem der Benutzer diese Informationen vom Server setzen
+und abfragen kann.
+
+\subsection*{Anleitung}
+
+Die Kommunikation zwischen den Clients und dem Server soll mittels einem
+einzigen Shared Memory Object erfolgen (\textbf{nicht} einem pro Client). Es
+darf auch nicht die gesamte Datenbank im Shared Memory geladen sein,
+sondern nur die Information, die der Server mit einem einzigen Client
+austauscht. Allerdings muss eine beliebige Anzahl von Clients gleichzeitig und
+unabhängig voneinander mit dem Server kommunizieren können.
+
+Implementieren Sie ein geeinetes Protokoll, mit welchem die Clients und der
+Server über das Shared Memory Object kommunizieren. Überlegen Sie sich dafür
+eine Struktur, mit welcher Anfragen und Antworten im Shared Memory gespeichert
+werden. Legen Sie so viele Semaphore an, wie für die Synchronisierung der
+Kommunikation zwischen dem Server und den Clients benötigt werden. Achten Sie
+darauf Deadlocks zu vermeiden!
+
+Server und Client sollen die Freigabe des Shared Memory Objects und der
+Semaphore koordinieren. Spätestens wenn der Server und alle Clients terminiert
+haben, müssen alle Semaphore und Shared Memory Objects freigegeben sein. Sollte
+der Server vor einigen der Clients terminieren, dann müssen auch alle
+verbleibenden Clients unverzüglich terminieren. Achten Sie deshalb auf eine
+geeignete und korrekte Signal- und Fehlerbehandlung.
+
+Sobald der Server oder Client eines der Signale \osueconst{SIGINT} oder
+\osueconst{SIGTERM} empfängt, soll die aktuelle Transaktion beendet werden und
+das Programm anschließend mit dem Rückgabewert 0 beendet werden.
+
+
+\subsubsection*{Server}
+\begin{verbatim}
+USAGE: auth-server [-l database]
+\end{verbatim}
+
+Der Server legt zu Beginn die benötigten Resourcen an. Anschließend lädt der
+Server die angegebene Datenbank in einer geeigneten Datenstruktur in den
+Speicher. Wird diese Option beim Start nicht angegeben, so verwenden Sie bitte
+eine leere Datenbank als Ausgangspunkt. Die Datenbank dient dem Server im
+Weiteren als Informationsquelle für das Bearbeiten der Client-Anfragen. Gibt es
+ein Problem beim Einlesen der Datenbank, so beenden Sie den Server mit einer
+Fehlermeldung.
+
+Nach der Initialisierung, bearbeitet der Server Anfragen von Clients. Der
+Server legt den vom Client gewünschten Eintrag an oder sucht den entsprechenden
+Eintrag in der Datenbank und sendet dem Client eine Antwort mit der gewünschten
+Information.
+
+Der Server soll bei \textit{jeder Terminierung} seine Datenbank in eine Datei
+names \texttt{auth-server.db.csv} schreiben. Falls die Datei bereits existiert,
+soll diese einfach überschrieben werden.
+
+
+\subsubsection*{Client}
+\begin{verbatim}
+USAGE: auth-client { -r | -l } username password
+\end{verbatim}
+
+Der Client wird entweder mit Option \texttt{-r} oder mit Option \texttt{-l}
+ausgeführt. Diese Optionen entsprechen den folgenden Ausführungsmodi:
+
+\begin{description}
+  \item[Register] Mit der Option \texttt{-r} kann ein neuer Benutzer
+    registriert werden. Falls der Benutzer (\texttt{username}) schon existiert,
+    soll der Server dies dem Client entsprechend kommunizieren. Der Client soll
+    in diesem Fall nach Ausgabe einer entsprechenden Fehlermeldung terminieren
+    (\texttt{EXIT\_FAILURE}).  Existiert noch kein Benutzer mit dem angegebenen
+    Namen (\texttt{username}) in der Datenbank des Servers, so soll der
+    Benutzer angelegt werden und dies dem Client mitteilen. Der Client gibt
+    eine entsprechende Erfolgsmeldung aus und terminiert
+    (\texttt{EXIT\_SUCCESS}).
+  \item[Login] Mit der Option \texttt{-l} kann sich ein
+    bereits registrierter Benutzer einloggen. Der Server soll überprüfen, ob
+    der gegebene Benutzer im System vorhanden ist oder nicht. Falls der
+    Benutzer ungültig ist, soll der Server dies dem Client kommunizieren. Der
+    Client soll nach Ausgabe einer entsprechenden Fehlermeldung terminieren
+    (\texttt{EXIT\_FAILURE}).  Im Erfolgsfall soll der Client eine
+    entsprechende Erfolgsmeldung ausgeben und auf weitere Befehle des Benutzers
+    warten.
+\end{description}
+
+Nach einem erfolgreichen Login soll der Benutzer über die Standardeingabe
+wiederholt einen der folgenden drei Befehle eingeben können:
+
+\begin{description}
+  \item[write secret] Der Benutzer soll eine Nachricht auf die Standardeingabe
+    schreiben können, die als \texttt{secret} am Server gespeichert und mit dem
+    eingeloggten Benutzer assoziiert wird.
+  \item[read secret] Der Client soll das entsprechende Geheimnis
+    ausgeben.
+  \item[logout] Der Server loggt den Benutzer aus und der Client terminiert
+    (\texttt{EXIT\_SUCCESS}).
+\end{description}
+
+Der Client erfragt den gewünschten Befehl bis sich der Benutzer ausloggt.
+Gestalten Sie am Client ein einfaches Benutzerinterface, etwa:
+\begin{verbatim}
+Commands:
+  1) write secret
+  2) read secret
+  3) logout
+Please select a command (1-3):
+\end{verbatim}
+
+Die Inputs (Befehlsnummer und Geheimnis) sollen von der Standardeingabe
+gelesen werden.
+
+Um sicher zu gehen, dass der Client auch wirklich eingeloggt ist, soll bei
+erfolgreichem Login eine zufällige Session-ID vom Server erzeugt, und an den
+Client gesendet werden. Diese ID muss bei jeder Kommunikation vom Client an den
+Server gesendet werden, um zu verifizieren, dass es sich um den
+authentifizierten Client handelt.  Sollte ein Client mit falscher Session-ID
+versuchen, zum Beispiel auf das \textit{secret} eines anderen Clients
+zuzugreifen, so soll der Server eine Fehlermeldung ausgeben und dem Client
+signalisieren, dass die Session ungültig ist.  Beim Logout soll die Session-ID
+zerstört werden.
+
+
+\subsection*{Datenformat}
+
+\subsubsection*{Datenbank}
+
+Die Datenbank soll als CSV-Datei gestaltet werden. Jede Zeile beinhaltet ein
+Geheimnis \texttt{secret} eines Benutzers \texttt{username}, das mit einem
+Passwort \texttt{password} geschützt ist.
+
+\begin{verbatim}
+username;password;secret
+\end{verbatim}
+
+Achten Sie darauf, keine unnötigen Leerzeichen zwischen den Semikolons
+einzufügen, und insbesondere darauf, beim Speichern des secrets keinen
+Zeilenumbruch (\verb|'\n'|) mitzuspeichern, wodurch leere Zeilen in der
+Datenbank entstehen würden.
+
+Sie dürfen für alle Felder (\texttt{username}, \texttt{password},
+\texttt{secret}) eine maximale Länge definieren um Ihnen die Arbeit zu
+erleichtern.
+
+\subsubsection*{Beispiel}
+
+\begin{verbatim}
+Theodor;ilovemilka;I'm the best!
+Anton;cforever;
+Emil;osueisgreat;Something you would like to know, but I won't say ANYBODY!
+\end{verbatim}
+
+Der zweite Benutzer namens \texttt{Anton} hat in diesem Beispiel kein Geheimnis
+gespeichert.
+
+
+\osueguidelinesthree
+
+\end{document}

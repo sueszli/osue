@@ -18,6 +18,6 @@ Overview:
   - exam 1
 
 2021
-  - exam 1
+  - exam 1 (accessible on inflab server)
 
 Unknown

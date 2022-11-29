@@ -1,0 +1,94 @@
+% dsort, 11/2010, Thomas Ogrisegg
+\input{../../template.ltx}
+
+\begin{document}
+
+\osuetitle{2}
+
+\section*{Aufgabenstellung -- dsort}
+
+\begin{verbatim}
+    SYNOPSIS
+        dsort "command1" "command2"
+\end{verbatim}
+
+Schreiben Sie ein Programm, das die beiden Kommandos \osuecmd{command1}
+und \osuecmd{command2} ausführt, deren Ausgaben einliest und in ein
+gemeinsames Array speichert. Dieses Array wird dann sortiert und an
+das Unix-Kommando \osuecmd{uniq -d} weitergegeben. Die Ausgabe Ihres
+Programmes soll also identisch sein mit jener des folgenden
+Shellskripts\footnote{Anmerkung: \$1 und \$2 stehen für command1 und
+command2}:
+
+\begin{verbatim}
+#!/bin/bash
+
+( $1; $2 ) | sort | uniq -d
+\end{verbatim}
+
+\subsection*{Anleitung}
+
+Das Programm soll für die beiden Kommandos jeweils mittels Pipes die
+Ausgabe der Kindprozesse zeilenweise einlesen und in ein Array
+speichern. Die Kindprozesse werden mit \osuefunc{fork(2)} erzeugt und
+sollen die Bourne-Shell mit dem Parameter \osuearg{-c} ausführen (also
+\osuecmd{/bin/bash -c}). Dadurch ist es möglich dem Programm mittels
+Anführungszeichen ein Shellkommando zu übergeben -- die Shell kümmert
+sich um alles Weitere.
+
+Das vom Programm erzeugte Array mit den Ausgaben der Kommandos soll
+dann sortiert werden. Danach wird ein neuer Kindprozess gestartet,
+welcher das Programm \osuecmd{uniq} mit der Option \osuearg{-d} ausführen
+soll. Das sortierte Array wird diesem Prozess über die Standardeingabe
+übergeben (wieder \osuefunc{pipe(2)} verwenden), indem zeilenweise in die
+Pipe geschrieben wird.
+
+Der \osuecmd{uniq}-Prozess sucht im \osuearg{-d}-Modus alle mehrmals
+nacheinander vorkommenden Zeilen heraus und gibt sie auf die
+Standardausgabe aus. \osuecmd{uniq} ist ein
+\textsc{Unix}-Standardprogramm und muss von Ihnen nicht programmiert
+werden.
+
+Beispiel:
+\begin{verbatim}
+  $ ./dsort "cat /etc/passwd" "cat /etc/passwd.tmp"
+\end{verbatim}
+
+Dieser Befehl würde die beiden Dateien /etc/passwd und /etc/passwd.tmp
+vergleichen und alle Zeilen, die in beiden Dateien (oder in einer Datei
+mehrmals) vorhanden sind, auf die Standardausgabe ausgeben.
+
+Beispiel:
+\begin{verbatim}
+  $ ./dsort "seq 0 3 100" "seq 0 11 100"
+\end{verbatim}
+
+Dieser Befehl gibt alle gemeinsamen Teiler von 3 und 11, die zwischen
+0 und 100 liegen, aus.
+
+\subsection*{Hinweise}
+
+Beachten Sie insbesonders folgende Punkte:
+
+\begin{itemize}
+\item Sie müssen sowohl das Array als auch die Strings des Arrays
+dynamisch allozieren und auf eine saubere Freigabe achten. Hierfür
+stehen die Funktionen \osuefunc{malloc(3)}, \osuefunc{realloc(3)},
+\osuefunc{free(3)} und bspw.\ auch \osuefunc{strdup(3)} zur Verfügung.
+\item Zum Sortieren der Zeilen können Sie \osuefunc{qsort(3)} verwenden.
+\item Ihr Programm sollte zeilenweise einlesen (z.B.\ mit
+\osuefunc{fgets(3)}) bzw.\ sortieren.
+\item Sie können davon ausgehen, dass eine Eingabezeile nicht länger
+als 1023 echte Zeichen ist.
+\item Die Funktion \osuefunc{popen(3)} darf nicht verwendet werden.
+\item Achten Sie darauf, dass der Elternprozess sich erst beendet,
+nachdem alle Kindprozesse terminiert haben.
+\item Gewisse Nicht-\textsc{ansi}-Funktionen (wie etwa \osuefunc{strdup(3)})
+werden erst sichtbar, wenn mit\\\osuearg{-D\_BSD\_SOURCE} kompiliert wird.
+\item Achten Sie unbedingt darauf, dass alle Ressourcen auch wieder
+freigegeben werden (besonders im Fehlerfall)!
+\end{itemize}
+
+\osueguidelinestwo
+
+\end{document}

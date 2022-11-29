@@ -1,0 +1,115 @@
+\input{../../../template.ltx}
+
+\begin{document}
+
+\osuetitle{1}
+
+\section*{Aufgabenstellung A -- postfixcalc}
+Schreiben Sie einen Rechner, der Ausdr{\"u}cke in Postfix-Notation interpr{\"a}tiert
+und auswertet.
+Implementieren Sie die vier Grundrechenarten (\(+\), \(-\), \(*\), \(/\)) sowie
+die Winkelfunktionen Sinus und Cosinus. Die Option \osuearg{-i} erzwingt eine
+ganzzahlige Ausgabe. Wird \osuearg{-a} angegeben, ist nach der Berechnung der
+Betrag (Absolutwert) auszugeben. Die maximale Zeilenlänge ist auf 1024 Zeichen
+beschränkt.
+
+\begin{verbatim}
+    SYNOPSIS
+        calc [-i] [-a] [file1 [file2 ...]]
+\end{verbatim}
+
+Postfix ist eine Notation, die ohne Klammerung auskommt und daher für Maschinen
+leicht lesbar ist. Im Gegensatz zur Infix-Notation wird die Operation immer nach
+den Operanden angegeben. Dazu einige Beispiele:
+
+\begin{tabular}{ll}
+\toprule
+Infix           & Postfix \\
+\midrule
+\(1+2\)         & \(1 \: 2 \: +\) \\
+\(2*(1+3)\)     & \(2 \: 1 \: 3 + *\) \\
+\(\sin(1/5)\)   & \(1 \: 5 \: / \sin\) \\
+\((1+2)*(3+4)\) & \(1\:2 + 3\:4 + *\) \\
+\bottomrule
+\end{tabular}
+
+\subsection*{Anleitung}
+Lesen Sie aus der Datei bzw.\ den Dateien zeilenweise bis zum Erreichen von
+\osueglvar{EOF}. Wenn keine Datei angegeben ist, soll von \osueglvar{stdin}
+gelesen werden. Da jede Zeile einer Rechnung entsprechen soll, können Sie die
+Berechnung sofort ausführen.
+
+Verwenden Sie einen Stack um die Ergebnisse zu berechnen. Extrahieren Sie
+wiederholt mit \osuefunc{strtod(3)} eine Zahl aus der Zeile und legen Sie
+diese oben auf den Stack. Konnte keine Zahl konvertiert werden, überprüfen Sie,
+ob ein korrekter Operator angegeben wurde. In diesen Fall nehmen Sie zwei Zahlen
+(für die binären Operatoren \osueinput{+}, \osueinput{-}, \osueinput{/} und
+\osueinput{*}) bzw.\ eine Zahl (für die unären Operatoren \osueinput{s} und
+\osueinput{c}) vom Stack und führen die entsprechende Berechnung durch. Das
+Ergebnis soll dann wiederum auf den Stack gelegt werden.
+Wenn das Zeilenende erreicht wurde, darf sich nur noch ein Element -- das
+Ergebnis -- am Stack befinden.
+
+\subsubsection*{Stack}
+Wir empfehlen f{\"u}r dieses Beispiel eine simple, statische Stackimplementierung.
+Sie k{\"o}nnen sich beispielsweise an diesem Codesnippet orientieren:
+\begin{lstlisting}[language=c,basicstyle=\scriptsize]
+#define STACK_SIZE 1024
+
+static int stack[STACK_SIZE];
+static int stack_top;
+ 
+void stack_push(int a)
+{
+  stack[stack_top] = a;
+  ++stack_top;
+}
+  
+int stack_pop(void)
+{
+  --stack_top;
+  return stack[stack_top];
+}
+\end{lstlisting}
+Versuchen Sie eine m{\"o}glichst knappe maximale Stack Gr{\"o}{\ss}e \verb|STACK_SIZE| zu w{\"a}hlen.
+
+\subsection*{Testen}
+Testen Sie Ihr Programm mit verschieden Eingaben. Erstellen sie zum Beispiel
+eine Testdatei \osuefilename{t1} mit folgenden Zeilen:
+
+\begin{osuefmtcode}
+  2 3 +
+  2 3 * 4 -
+  3 2 s* -4.5 +
+  1.3E-2 100 *
+\end{osuefmtcode}
+
+Rufen Sie Ihr Programm dann wie folgt auf:
+
+\begin{osuefmtcode}
+$ \osueinput{./calc t1}
+  5.000000
+  2.000000
+ -1.772108
+  1.300000
+
+$ \osueinput{./calc < t1}
+  5.000000
+  2.000000
+ -1.772108
+  1.300000
+
+$ \osueinput{./calc -i -a t1}
+  5
+  2
+  1
+  1
+\end{osuefmtcode}
+
+\subsection*{Hinweis}
+Leerzeichen zwischen Operatoren und Zahlen sind erlaubt, aber nicht notwendig. \verb|1 2 -3 + | ist nicht gültig, da das Minus zur \verb|3| gehört und von \osuefunc{strtod(3)} konsumiert wird. \verb|1 2 *3 + | oder \verb|1 2 - 3 + | hingegen ist in Ordnung.
+Für die Winkelfunktionen müssen Sie \osuefilename{math.h} einbinden, sowie beim Linken den Parameter \osuearg{-lm} verwenden.
+
+\osueguidelinesone
+
+\end{document}

@@ -1,0 +1,162 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{fullpage}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{lmodern}
+\usepackage{alltt}
+\usepackage{booktabs}
+\usepackage{nameref}
+\usepackage{listings}
+\usepackage{amssymb}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{10pt}
+
+% place the title
+\newcommand\osuetitle[1]{
+\begin{center}
+\begin{Large}
+OPERATING SYSTEMS EXERCISE #1
+\end{Large}
+\end{center}
+}
+
+% place a code block that accepts formatting
+% (the minipage suppresses additional spacing, the \hfill suppresses
+% underfull hbox warnings)
+\newenvironment{osuefmtcode}{%
+% begin with a paragraph break
+
+\begin{minipage}[c]{\textwidth}
+\begin{alltt}
+}{%
+\end{alltt}
+\end{minipage}\hfill
+
+% end with a paragraph break
+}
+
+% backslash.
+\newcommand\bslash{\char`\\}
+
+% quick commands to insert guideline notices
+\newcommand\osueguidelinesnote{
+\newpage
+\section*{Coding Rules and Guidelines}
+Your score depends upon the compliance of your submission to the presented
+guidelines and rules. Violations result in deductions of points.
+Hence, before submitting your solution, go through the following list
+and check if your program complies.
+}
+
+\newcommand\osueguidelinesone{
+\osueguidelinesnote
+
+\subsection*{Rules}
+\input{../../../guidelines/rules.ltx}
+\subsection*{General Guidelines}
+\input{../../../guidelines/general.ltx}
+\subsection*{Exercise 1 Guidelines}
+\input{../../../guidelines/ex1.ltx}
+}
+
+\newcommand\osueguidelinestwo{
+\osueguidelinesnote
+
+\subsection*{Rules}
+\input{../../guidelines/rules.ltx}
+\subsection*{General Guidelines}
+\input{../../guidelines/general.ltx}
+\subsection*{Exercise 2 Guidelines}
+\input{../../guidelines/ex2.ltx}
+}
+
+\newcommand\osueguidelinesthree{
+\osueguidelinesnote
+
+\subsection*{Rules}
+\input{../../guidelines/rules.ltx}
+\subsection*{General Guidelines}
+\input{../../guidelines/general.ltx}
+\subsection*{Exercise 3 Guidelines}
+\input{../../guidelines/ex3.ltx}
+
+%\subsection*{Hints}
+%Below are several hints regarding this exercise which should help you to ensure
+%the guidelines.
+%
+%\begin{description}
+%\item[Client/server architecture.]
+%  Derive from the exercise if a client/server architecture makes sense. In case
+%  of a client/server architecture (server creates the resources):
+%  \begin{itemize}
+%  \item The client shall terminate with an appropriate error message if the
+%    resources cannot be found.
+%  \item Assume that more than one client can start concurrently. You can assume
+%    only one server runs at the same time.
+%  \item The server should stay functional after error-free termination of a
+%    client.
+%  \end{itemize}
+%  If you don't use a client/server architecture, assume that each process can
+%  be started once in random order.
+%\item[Cleanup resources.]
+%  Resources shall be cleaned up also in case of errors.
+%
+%  Note, shared memory objects and semaphores won't be automatically deleted
+%  after the termination of a program. Hence, these resources have to be
+%  explicitly removed.
+%
+%  Shared memory and semaphores, that haven't been removed due to a program
+%  error or crash, can be listed and removed with the usual commands,
+%  \texttt{ls} and \texttt{rm} respectively, in the folder
+%  \texttt{/dev/shm/}. You can identify your resources by the chosen name
+%  (matriculation number) or ownership of the resource files.
+%\item[Avoid wasting resources.]
+%  Use a shared memory of fixed size. Use a minimum number of semaphores
+%  possible, but ensure correct synchronization (you may ask our tutors during
+%  lab hours).
+%\item[Termination.] After correct program execution (without errors) a
+%  synchronous termination shall be performed, i.e., take care of the
+%  synchronization between running processes when deleting the resources.
+%\end{description}
+}
+
+% semantic markup formatting commands:
+
+% C keywords (if, int, return, ...)
+\newcommand\osuekeyword[1]{\texttt{#1}}
+% C functions (printf, open, seminit, ...)
+\newcommand\osuefunc[1]{\emph{#1}}
+% C global variables (stdin, stderr, errno, ...) and constants (EOF, ...)
+\newcommand\osueglvar[1]{\emph{#1}}
+% C global constants
+\newcommand\osueconst[1]{\emph{#1}}
+% program names (diff, grep, ...)
+\newcommand\osueprog[1]{\texttt{#1}}
+% command-line arguments (-s, FILENAME, ...)
+\newcommand\osuearg[1]{\texttt{#1}}
+% filenames which aren't program names (test.txt, ...)
+\newcommand\osuefilename[1]{\texttt{#1}}
+% command to run
+\newcommand\osuecmd[1]{\texttt{#1}}
+% text to be input on stdin
+\newcommand\osueinput[1]{\emph{#1}}
+% text output on stdout
+\newcommand\osueoutput[1]{\emph{#1}}
+% output format
+\newcommand\osueoutform[1]{\emph{#1}}
+% regular expressions
+\newcommand\osueregex[1]{\texttt{#1}}
+% keystrokes (e.g. Ctrl+D)
+\newcommand\osuekeystroke[1]{\texttt{#1}}
+
+\newcommand\osueadvertise[1]{
+  \subsection*{Weiterführendes}
+  #1
+
+  Haben Sie Interesse an diesem Projekt oder ähnlichen Projekten mitzuarbeiten
+  (zum Beispiel im Rahmen einer Bachelorarbeit)?  Kontaktieren Sie die
+  Cyber-Physical Systems Group am Institut für Technische Informatik:
+  \texttt{denise.ratasich@tuwien.ac.at} }

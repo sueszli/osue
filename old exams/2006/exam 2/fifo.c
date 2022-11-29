@@ -10,6 +10,7 @@
 #define SEM_ME "/mutual_exclusion"
 #define SEM_WRITE "/write"
 
+/*
 struct T_File {
   int[MAX_SIZE] puffer;
   int writePosition;
@@ -39,3 +40,4 @@ int get(int *data) {
 }
 
 int main(argc, char *argv[]) {}
+*/
