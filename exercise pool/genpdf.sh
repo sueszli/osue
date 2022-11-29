@@ -2,7 +2,7 @@
 
 sudo apt-get install latexmk
 
-# find . -name '*.tex' -execdir latexmk -pdf -g -f -silent {} \;
+find . -name '*.tex' -execdir latexmk -pdf -g -silent {} \;
 
 find . -name '*.aux' -execdir rm {} \;
 find . -name '*.fdb_latexmk' -execdir rm {} \;
