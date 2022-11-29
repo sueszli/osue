@@ -8,18 +8,12 @@
 #include <unistd.h>
 
 #define errorHandler(msg) \
-  do {                    \
-    perror(msg);          \
-    exit(EXIT_FAILURE);   \
-  } while (0);
+  do { perror(msg); exit(EXIT_FAILURE); } while (0);
 
-#define errorUsage(msg)                                                       \
-  do {                                                                        \
-    fprintf(stderr,                                                           \
-            "Wrong usage: %s\nUsage:\n\tispalindrome [-s] [-i] [-o outfile] " \
-            "[file...]\n",                                                    \
-            msg);                                                             \
-    exit(EXIT_FAILURE);                                                       \
+#define errorUsage(msg)                                                                                  \
+  do {                                                                                                   \
+    fprintf(stderr, "Wrong usage: %s\nUsage:\n\tispalindrome [-s] [-i] [-o outfile] [file...]\n", msg);  \
+    exit(EXIT_FAILURE);                                                                                  \
   } while (0);
 
 static void removeWhitespace(char line[]) {
@@ -53,8 +47,7 @@ static bool isPalindrome(char line[]) {
   return true;
 }
 
-static void writeResult(char line[], bool ignoreWhitespace,
-                        bool ignoreLetterCasing, FILE *outputStream) {
+static void writeResult(char line[], bool ignoreWhitespace, bool ignoreLetterCasing, FILE *outputStream) {
   // side effect: line
   // line will contain two '\0' characters
   line[strlen(line) - 1] = '\0';
@@ -115,7 +108,7 @@ int main(int argc, char *argv[]) {
     while (getline(&line, &len, inputStream) != -1) {
       writeResult(line, ignoreWhitespace, ignoreLetterCasing, outputStream);
     }
-    if (fclose(inputStream) == -1) {
+    if (fclose(inputStream) == EOF) {
       errorHandler("fclose");
     }
   }
@@ -129,7 +122,7 @@ int main(int argc, char *argv[]) {
 
   free(line);
 
-  if (fclose(outputStream) == -1) {
+  if (fclose(outputStream) == EOF) {
     errorHandler("fclose");
   }
   return EXIT_SUCCESS;

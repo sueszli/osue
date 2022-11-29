@@ -1,9 +1,0 @@
-This is the first line is not a palindrom
-This is the second line is not a palindrom
-This is the third line is not a palindrom
-reacecar is not a palindrom
-raceCAR is a palindrom
-RACeCar is a palindrom
-    r  a   c    e   c   a  r    is a palindrom
-  R    A c   E  c  A  r   is a palindrom
-RACECAR is a palindrom
