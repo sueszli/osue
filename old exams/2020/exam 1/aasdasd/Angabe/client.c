@@ -28,12 +28,11 @@ char SEM_NAME_REQUEST[256] = "/osue_request_";
 char SEM_NAME_CLIENT[256] = "/osue_client_";
 char SEM_NAME_RESPONSE[256] = "/osue_response_";
 
-void initialize_names(void)
-{
-    strcat(SHM_NAME, getlogin());
-    strcat(SEM_NAME_REQUEST, getlogin());
-    strcat(SEM_NAME_CLIENT, getlogin());
-    strcat(SEM_NAME_RESPONSE, getlogin());
+void initialize_names(void) {
+  strcat(SHM_NAME, getlogin());
+  strcat(SEM_NAME_REQUEST, getlogin());
+  strcat(SEM_NAME_CLIENT, getlogin());
+  strcat(SEM_NAME_RESPONSE, getlogin());
 }
 
 /************************
@@ -59,30 +58,24 @@ void initialize_names(void)
  *
  * Hints: getopt(3)
  ************************/
-void parse_arguments(int argc, char *argv[], args_t *args)
-{
+void parse_arguments(int argc, char *argv[], args_t *args) {
+  if (argc != 3) usage("invalid number of positional arguments");
 
-    if (argc != 3)
-        usage("invalid number of positional arguments");
+  int callcount = 0;
 
-    int callcount = 0;
-
-    int option;
-    while ((option = getopt(argc, argv, "p:")) != -1)
-    {
-        switch (option)
-        {
-        case 'p':
-            callcount++;
-            args->password = optarg;
-            break;
-        default:
-            usage("invalid option");
-        }
-    }
-
-    if (callcount != 1)
+  int option;
+  while ((option = getopt(argc, argv, "p:")) != -1) {
+    switch (option) {
+      case 'p':
+        callcount++;
+        args->password = optarg;
+        break;
+      default:
         usage("invalid option");
+    }
+  }
+
+  if (callcount != 1) usage("invalid option");
 }
 
 /***************************
@@ -98,23 +91,22 @@ void parse_arguments(int argc, char *argv[], args_t *args)
  *
  * Hints: shm_overview(7), ftruncate(2), mmap(2), sem_overview(7)
  **************************/
-void allocate_resources(void)
-{
+void allocate_resources(void) {
+  if ((shmfd = shm_open(SHM_NAME, O_RDWR, PERMISSIONS)) == -1)
+    error_exit("could not open shared memory");
 
-    if ((shmfd = shm_open(SHM_NAME, O_RDWR, PERMISSIONS)) == -1)
-        error_exit("could not open shared memory");
+  if ((shmp = mmap(NULL, SHM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd,
+                   0)) == MAP_FAILED)
+    error_exit("mapping failed");
 
-    if ((shmp = mmap(NULL, SHM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0)) == MAP_FAILED)
-        error_exit("mapping failed");
+  if ((sem_request = sem_open(SEM_NAME_REQUEST, 0)) == SEM_FAILED)
+    error_exit("could not open semaphore");
 
-    if ((sem_request = sem_open(SEM_NAME_REQUEST, 0)) == SEM_FAILED)
-        error_exit("could not open semaphore");
+  if ((sem_response = sem_open(SEM_NAME_RESPONSE, 0)) == SEM_FAILED)
+    error_exit("could not open semaphore");
 
-    if ((sem_response = sem_open(SEM_NAME_RESPONSE, 0)) == SEM_FAILED)
-        error_exit("could not open semaphore");
-
-    if ((sem_client = sem_open(SEM_NAME_CLIENT, 0)) == SEM_FAILED)
-        error_exit("could not open semaphore");
+  if ((sem_client = sem_open(SEM_NAME_CLIENT, 0)) == SEM_FAILED)
+    error_exit("could not open semaphore");
 }
 
 /***************************
@@ -145,45 +137,40 @@ void allocate_resources(void)
  * ???
  *
  **************************/
-void process_password(const char *password, char *hash)
-{
+void process_password(const char *password, char *hash) {
+  if (sem_wait(sem_client) == -1) error_exit("signal interruption");
 
-    if (sem_wait(sem_client) == -1)
-        error_exit("signal interruption");
+  strcpy(shmp, password);
 
-    strcpy(shmp, password);
+  sem_post(sem_request);
 
-    sem_post(sem_request);
+  if (sem_wait(sem_response) == -1) error_exit("signal interruption");
 
-    if (sem_wait(sem_response) == -1)
-        error_exit("signal interruption");
+  strcpy(hash, shmp);
 
-    strcpy(hash, shmp);
-
-    sem_post(sem_client);
+  sem_post(sem_client);
 }
 
-int main(int argc, char *argv[])
-{
-    args_t args;
-    program_name = argv[0];
-    char hash[SHM_SIZE] = {0};
-    initialize_names();
+int main(int argc, char *argv[]) {
+  args_t args;
+  program_name = argv[0];
+  char hash[SHM_SIZE] = {0};
+  initialize_names();
 
-    parse_arguments(argc, argv, &args);
-    // DEMO_parse_arguments(argc, argv, &args);
+  parse_arguments(argc, argv, &args);
+  // DEMO_parse_arguments(argc, argv, &args);
 
-    allocate_resources();
-    // DEMO_allocate_resources();
+  allocate_resources();
+  // DEMO_allocate_resources();
 
-    process_password(args.password, hash);
-    // DEMO_process_password(args.password, hash);
+  process_password(args.password, hash);
+  // DEMO_process_password(args.password, hash);
 
-    printf("Hash: %s\n", hash);
+  printf("Hash: %s\n", hash);
 
-    // Free resources.
-    print_message("detach shared memory");
-    free_resources();
+  // Free resources.
+  print_message("detach shared memory");
+  free_resources();
 
-    return 0;
+  return 0;
 }

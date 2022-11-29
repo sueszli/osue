@@ -2,8 +2,8 @@
 #define LIST_H
 
 struct listelem {
-   char *val;
-   struct listelem *next;
+  char *val;
+  struct listelem *next;
 };
 
 struct listelem *init_list(const char *const val);
