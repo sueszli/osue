@@ -1,6 +1,8 @@
 #!/bin/bash
 
-echo -e "\n\n--------- COMPILING ---------"
+clear
+
+echo -e "--------- COMPILING ---------"
 make all
 
 echo -e "\n\n--------- RUNNING WITH VALGRIND ---------"

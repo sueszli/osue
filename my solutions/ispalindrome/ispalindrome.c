@@ -8,12 +8,18 @@
 #include <unistd.h>
 
 #define errorHandler(msg) \
-  do { perror(msg); exit(EXIT_FAILURE); } while (0);
+  do {                    \
+    perror(msg);          \
+    exit(EXIT_FAILURE);   \
+  } while (0);
 
-#define errorUsage(msg)                                                                                  \
-  do {                                                                                                   \
-    fprintf(stderr, "Wrong usage: %s\nUsage:\n\tispalindrome [-s] [-i] [-o outfile] [file...]\n", msg);  \
-    exit(EXIT_FAILURE);                                                                                  \
+#define errorUsage(msg)                                                 \
+  do {                                                                  \
+    fprintf(stderr,                                                     \
+            "Wrong usage: %s\nSYNOPSIS:\n\tispalindrome [-s] [-i] [-o " \
+            "outfile] [file...]\n",                                     \
+            msg);                                                       \
+    exit(EXIT_FAILURE);                                                 \
   } while (0);
 
 static void removeWhitespace(char line[]) {
@@ -47,7 +53,8 @@ static bool isPalindrome(char line[]) {
   return true;
 }
 
-static void writeResult(char line[], bool ignoreWhitespace, bool ignoreLetterCasing, FILE *outputStream) {
+static void writeResult(char line[], bool ignoreWhitespace,
+                        bool ignoreLetterCasing, FILE *outputStream) {
   // side effect: line
   // line will contain two '\0' characters
   line[strlen(line) - 1] = '\0';
