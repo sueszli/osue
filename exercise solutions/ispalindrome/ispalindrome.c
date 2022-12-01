@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
   char *line = NULL;
   size_t len = 0;
 
-  // read from input paths (if there any)
+  // read from input paths (if there are any)
   while (optind < argc) {
     FILE *inputStream = fopen(argv[optind++], "r");
     if (inputStream == NULL) {
