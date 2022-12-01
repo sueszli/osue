@@ -14,11 +14,11 @@ DEFAULT = -std=c99 -pedantic -Wall -g $(defs)
 VERBOSE = -std=c99 -pedantic -Wall -g3 -DDEBUG $(wflags) $(defs)
 
 
-# building ELF-executables
+# building executables
 all: ispalindrome
 
 ispalindrome: ispalindrome.o
-	$(GCC) -o ispalindrome ispalindrome.o $(libraries)
+	$(GCC) -o ispalindrome ispalindrome.o
 
 ispalindrome.o: ispalindrome.c
 	$(GCC) $(VERBOSE) -c -o ispalindrome.o ispalindrome.c
