@@ -1,4 +1,4 @@
-The pool of OSUE exercises. Assignments/specifications are maintained here.
+The pool of OSUE exercises / assignments / specifications.
 
 Topics include (but are not limited to):
 * C programming basics
