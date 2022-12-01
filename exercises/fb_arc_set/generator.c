@@ -9,156 +9,117 @@
 
 #include "common.h"
 
-#pragma region "common.h"
-#define errorUsage(msg)                                                        \
-  do {                                                                         \
-    fprintf(stderr,                                                            \
-            "Wrong usage: %s\nSYNOPSIS:\n\tgenerator "                         \
-            "EDGE1...\nEXAMPLE:\n\tgenerator 0-1 1-2 1-3 1-4 2-4 3-6 4-3 4-5 " \
-            "6-0\n",                                                           \
-            msg);                                                              \
-    exit(EXIT_FAILURE);                                                        \
-  } while (0);
+#pragma region "done"
+static EdgeList parseEdgeList(int argc, char* argv[]) {
+  // post-condition: free returned EdgeList
 
-#define errorHandler(msg) \
-  do {                    \
-    perror(msg);          \
-    exit(EXIT_FAILURE);   \
-  } while (0);
-
-typedef struct {
-  char from;
-  char to;
-} Edge;
-
-typedef struct {
-  Edge* edges;
-  size_t size;
-} EdgeList;
-
-static void printEdgeList(EdgeList edgeList) {
-  printf("Edge list: ");
-  for (size_t i = 0; i < edgeList.size; i++) {
-    Edge e = edgeList.edges[i];
-    printf("%c-%c  ", e.from, e.to);
+  const int size = argc - 1;
+  EdgeList output =
+      (EdgeList){.edges = malloc((size_t)size * sizeof(Edge)), .size = size};
+  if (output.edges == NULL) {
+    errorHandler("malloc");
   }
-  printf("\n");
-}
-#pragma endregion "common.h"
 
-static void parseEdgeList(EdgeList edgeList, char* arguments[],
-                          size_t edgeListSize) {
-  // side effect: initiates edgeList
-  // invariant: edgeList.edges size == arguments size
-  for (size_t i = 0; i < edgeListSize; i++) {
-    if (strlen(arguments[i]) != 3) {
+  for (int i = 1; i < argc; i++) {
+    if (strlen(argv[i]) != 3) {
       errorUsage("argument can only have 3 characters");
     }
-    edgeList.edges[i] = (Edge){.from = arguments[i][0], .to = arguments[i][2]};
+    output.edges[i - 1] = (Edge){.from = argv[i][0], .to = argv[i][2]};
   }
 
-  // check for duplicate edges
-  for (size_t i = 0; i < edgeListSize; i++) {
-    for (size_t j = 0; j < edgeListSize; j++) {
-      Edge iEdge = edgeList.edges[i];
-      Edge jEdge = edgeList.edges[j];
+  // check for duplicates
+  for (int i = 0; i < size; i++) {
+    for (int j = 0; j < size; j++) {
+      Edge iEdge = output.edges[i];
+      Edge jEdge = output.edges[j];
       if ((i != j) && (iEdge.from == jEdge.from) && (iEdge.to == jEdge.to)) {
         errorUsage("no duplicate arguments allowed");
       }
     }
   }
+
+  return output;
 }
 
-static void parseNodeString(char* nodeString, EdgeList edgeList) {
-  // side effect: initiates nodeString
-  // invariant: nodeString size + 1 == edgeList size
-  int node_i = 0;
-  nodeString[node_i] = '\0';
+static char* parseNodeString(EdgeList edgeList) {
+  // post-condition: free returned string
 
-  for (size_t i = 0; i < edgeList.size; i++) {
+  char* output = malloc((size_t)(edgeList.size) * sizeof(char));
+  if (output == NULL) {
+    errorHandler("malloc");
+  }
+
+  int node_i = 0;
+  output[node_i] = '\0';
+
+  for (int i = 0; i < edgeList.size; i++) {
     char from = edgeList.edges[i].from;
     char to = edgeList.edges[i].to;
-    if (index(nodeString, from) == NULL) {
-      nodeString[node_i++] = to;
+    if (index(output, from) == NULL) {
+      output[node_i++] = to;
     }
-    if (index(nodeString, to) == NULL) {
-      nodeString[node_i++] = to;
+    if (index(output, to) == NULL) {
+      output[node_i++] = to;
     }
-
-    nodeString[node_i] = '\0';  // required by index()
+    output[node_i] = '\0';  // required by index()
   }
-}
 
-static void generateSolution(EdgeList* solution, EdgeList edgeList,
-                             char* nodeString) {
-  // side effect: initiates solution
-  // invariant: solution size + 1 = solution size == edgeList size
-  printEdgeList(edgeList);
+  return output;
+}
+#pragma endregion "done"
+
+static EdgeList generateSolution(EdgeList edgeList, char* nodeString) {
+  // side-effect: randomizes nodeString
+  // post-condition: free returned EdgeList
+
+  EdgeList output =
+      (EdgeList){.edges = malloc((size_t)edgeList.size * sizeof(Edge)),
+                 .size = edgeList.size};
+  if (output.edges == NULL) {
+    errorHandler("malloc");
+  }
+
   nodeString = strfry(nodeString);
   printf("Randomized nodes: %s\n", nodeString);
 
-  size_t sEdges_i = 0;
-
   // add
-  for (size_t i = 0; i < edgeList.size; i++) {
+  int counter = 0;
+  for (int i = 0; i < edgeList.size; i++) {
     char from = edgeList.edges[i].from;
     char to = edgeList.edges[i].to;
-    ptrdiff_t posFrom = index(nodeString, from);
-    ptrdiff_t posTo = index(nodeString, to);
+    ptrdiff_t posFrom = (ptrdiff_t)index(nodeString, from);
+    ptrdiff_t posTo = (ptrdiff_t)index(nodeString, to);
 
     if (posFrom > posTo) {
-      (*solution).edges[sEdges_i++] = (Edge){.from = from, .to = to};
+      output.edges[counter++] = (Edge){.from = from, .to = to};
     }
   }
 
   // update size
-  (*solution).size = sEdges_i;
-  (*solution).edges =
-      realloc((*solution).edges, (*solution).size * sizeof(Edge));
-  if ((*solution).edges == NULL) {
+  output.size = counter;
+  output.edges = realloc(output.edges, (size_t)counter * sizeof(Edge));
+  if (output.edges == NULL) {
     errorHandler("realloc");
   }
+
+  return output;
 }
 
 int main(int argc, char* argv[]) {
   printf("\n\n");
 
-  // parse edges
-  const size_t numEdges = (size_t)argc - 1;
-  EdgeList edgeList = {.edges = malloc(numEdges * sizeof(Edge)),
-                       .size = numEdges};
-  if (edgeList.edges == NULL) {
-    errorHandler("malloc");
-  }
-  parseEdgeList(edgeList, argv + 1, numEdges);
+  EdgeList edgeList = parseEdgeList(argc, argv);
+  char* nodeString = parseNodeString(edgeList);
+  printEdgeList("Input", edgeList);
+  printf("Node string: %s\n", nodeString);
 
-  // parse nodes
-  char* nodeString = malloc((numEdges + 1) * sizeof(char));
-  if (nodeString == NULL) {
-    errorHandler("malloc");
-  }
-  parseNodeString(nodeString, edgeList);
-
-  // ---------------------------
-
-  // generate solution
-  EdgeList solution = {.edges = malloc(numEdges * sizeof(Edge)),
-                       .size = numEdges};
-  if (solution.edges == NULL) {
-    errorHandler("malloc");
-  }
-
-  generateSolution(&solution, edgeList, nodeString);
-  printEdgeList(solution);
-
-  // send to server ...
-
-  free(solution.edges);
-
-  // ---------------------------
+  // make sure generated solutions really make sense before proceeding...
+  EdgeList solution = generateSolution(edgeList, nodeString);
+  printEdgeList("Solution", solution);
 
   free(edgeList.edges);
   free(nodeString);
+  free(solution.edges);
 
   printf("\n\n");
   return EXIT_SUCCESS;
