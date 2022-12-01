@@ -1,19 +1,12 @@
 #!/bin/bash
 
-START=$(pwd)
-PDFLATEX="pdflatex -interaction=nonstopmode -halt-on-error"
+# generate pdfs
+sudo apt-get install latexmk
+find . -name '*.tex' -execdir latexmk -pdf -g -silent {} \;
 
-for file in $(find . -name "*.tex" | grep -v BonusExercise); do
-   echo "========================================================================"
-   echo "generate PDF for ${file}"
-   echo "========================================================================"
-
-   cd $(dirname ${file})
-   BASENAME=$(basename ${file})
-
-   for i in {1..3}; do ${PDFLATEX} ${BASENAME} || exit 1; done
-   # or the cooler latexmk
-   #latexmk -pdf ${BASENAME}
-
-   cd ${START}
-done
+# remove everything else
+find . -name '*.aux' -execdir rm {} \;
+find . -name '*.fdb_latexmk' -execdir rm {} \;
+find . -name '*.fls' -execdir rm {} \;
+find . -name '*.log' -execdir rm {} \;
+find . -name '*.out' -execdir rm {} \;

@@ -1,7 +1,8 @@
 *~
 
-# latex outputs
+# latexmk outputs (except .pdf files)
 *.aux
-*.pdf
+*.fdb_latexmk
+*.fls
 *.log
 *.out

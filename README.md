@@ -1,5 +1,3 @@
-# exercises
-
 The pool of OSUE exercises. Assignments/specifications are maintained here.
 
 Topics include (but are not limited to):
@@ -10,9 +8,15 @@ Topics include (but are not limited to):
 * Semaphores
 * Shared memory
 
-## building
+## Generating `pdf` files
 
-To generate the pdf documents, a latex installation is required.
-The script `genpdfs.sh` is provided for convenience. It runs latex
-for all .tex files it finds in the current working directory and below
-(changing into the respective directory).
+To generate the pdf documents, you must install latex first.
+
+The script `genpdfs.sh` is provided for convenience. It recursively runs latexmk
+for all .tex files it finds in the current working directory and all subdirectories.
+
+Install latex on your system with all necessary dependencies and then run the script:
+```bash
+$ sudo chmod +x ./genpdfs.sh
+$ ./genpdfs.sh
+```
