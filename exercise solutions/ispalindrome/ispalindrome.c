@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
         break;
 
       default:
-        errorUsage("invalid input");
+        errorUsage("invalid option");
     }
   }
 
