@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +9,7 @@
 
 #include "common.h"
 
+#pragma region "common.h"
 #define errorUsage(msg)                                                        \
   do {                                                                         \
     fprintf(stderr,                                                            \
@@ -42,8 +44,7 @@ static void printEdgeList(EdgeList edgeList) {
   }
   printf("\n");
 }
-
-// ------------------
+#pragma endregion "common.h"
 
 static void parseEdgeList(EdgeList edgeList, char* arguments[],
                           size_t edgeListSize) {
@@ -88,25 +89,34 @@ static void parseNodeString(char* nodeString, EdgeList edgeList) {
   }
 }
 
-static void generateSolution(EdgeList solution, EdgeList edgeList,
+static void generateSolution(EdgeList* solution, EdgeList edgeList,
                              char* nodeString) {
   // side effect: initiates solution
   // invariant: solution size + 1 = solution size == edgeList size
   printEdgeList(edgeList);
-  printf("Nodes before randomizing: %s\n", nodeString);
   nodeString = strfry(nodeString);
-  printf("Nodes after randomizing: %s\n", nodeString);
+  printf("Randomized nodes: %s\n", nodeString);
 
-  char* p = nodeString;
-  for (size_t i = 0; i < strlen(nodeString); i++) {
-    
-  }
+  size_t sEdges_i = 0;
 
+  // add
   for (size_t i = 0; i < edgeList.size; i++) {
     char from = edgeList.edges[i].from;
     char to = edgeList.edges[i].to;
+    ptrdiff_t posFrom = index(nodeString, from);
+    ptrdiff_t posTo = index(nodeString, to);
 
-    // check if against order
+    if (posFrom > posTo) {
+      (*solution).edges[sEdges_i++] = (Edge){.from = from, .to = to};
+    }
+  }
+
+  // update size
+  (*solution).size = sEdges_i;
+  (*solution).edges =
+      realloc((*solution).edges, (*solution).size * sizeof(Edge));
+  if ((*solution).edges == NULL) {
+    errorHandler("realloc");
   }
 }
 
@@ -138,7 +148,8 @@ int main(int argc, char* argv[]) {
     errorHandler("malloc");
   }
 
-  generateSolution(solution, edgeList, nodeString);
+  generateSolution(&solution, edgeList, nodeString);
+  printEdgeList(solution);
 
   // send to server ...
 
