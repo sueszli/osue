@@ -17,6 +17,6 @@ for all .tex files it finds in the current working directory and all subdirector
 
 Install latex on your system with all necessary dependencies and then run the script:
 ```bash
-$ sudo chmod +x ./genpdfs.sh
+$ chmod +x ./genpdfs.sh
 $ ./genpdfs.sh
 ```
