@@ -5,8 +5,7 @@
 GCC = gcc-12
 
 
-# compile flags
-# see: https://gcc.gnu.org/onlinedocs/gcc-4.3.2/gcc/Warning-Options.html
+# compile flags (see: https://gcc.gnu.org/onlinedocs/gcc-4.3.2/gcc/Warning-Options.html)
 wflags = -Wall -Wextra -Wwrite-strings -Wconversion
 defs = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
 libraries = -lpthread -lrt
