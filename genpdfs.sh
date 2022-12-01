@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# generate pdfs
+# remove all existing pdfs, then generate pdfs
 sudo apt-get install latexmk
+find . -name '*.pdf' -execdir rm {} \;
 find . -name '*.tex' -execdir latexmk -pdf -g -silent {} \;
 
-# remove everything else
+# remove byproducts of pdf generation
 find . -name '*.aux' -execdir rm {} \;
 find . -name '*.fdb_latexmk' -execdir rm {} \;
 find . -name '*.fls' -execdir rm {} \;
