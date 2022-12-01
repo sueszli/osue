@@ -19,18 +19,16 @@ VERBOSE = -std=c99 -pedantic -Wall -g3 -DDEBUG $(wflags) $(defs)
 all: supervisor generator
 
 supervisor: supervisor.o
-	$(GCC) -o $@ $^ $(libraries)
+	$(GCC) -o supervisor supervisor.o $(libraries)
 
 generator: generator.o
-	$(GCC) -o $@ $^ $(libraries)
+	$(GCC) -o generator generator.o $(libraries)
 
-%.o: %.c
-	$(GCC) $(VERBOSE) -c -o $@ $<
-
-
-# dependencies for object files
 supervisor.o: supervisor.c common.h
+	$(GCC) $(VERBOSE) -c -o supervisor.o supervisor.c
+
 generator.o: generator.c common.h
+	$(GCC) $(VERBOSE) -c -o generator.o generator.c
 
 
 # clean up

@@ -21,6 +21,7 @@ ULTRA_VERBOSE_FLAGS = $(SHOW_LOG) -std=c99 -pedantic -Wall -Werror -Wextra -g3 $
 
 
 # build
+# see: https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
 all: ispalindrom
 
 ispalindrom: ispalindrom.o

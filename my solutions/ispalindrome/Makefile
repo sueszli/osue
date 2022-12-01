@@ -18,14 +18,10 @@ VERBOSE = -std=c99 -pedantic -Wall -g3 -DDEBUG $(wflags) $(defs)
 all: ispalindrome
 
 ispalindrome: ispalindrome.o
-	$(GCC) -o $@ $^ $(libraries)
+	$(GCC) -o ispalindrome ispalindrome.o $(libraries)
 
-%.o: %.c
-	$(GCC) $(VERBOSE) -c -o $@ $<
-
-
-# dependencies for object files
-ispalindrome.o: ispalindrome.c 
+ispalindrome.o: ispalindrome.c
+	$(GCC) $(VERBOSE) -c -o ispalindrome.o ispalindrome.c
 
 
 # cleaning up

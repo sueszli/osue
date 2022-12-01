@@ -17,7 +17,6 @@
     exit(EXIT_FAILURE);                                                        \
   } while (0);
 
-// common.h ::
 #define errorHandler(msg) \
   do {                    \
     perror(msg);          \
@@ -34,15 +33,10 @@ typedef struct {
   int size;
 } EdgeList;
 
-// :: common.h
-
 static void printEdgeList(EdgeList edgeList) {
   for (int i = 0; i < edgeList.size; i++) {
-    Edge* es = edgeList.edges;
-    Edge e = *(es + i);
-    char from = e.from;
-    char to = e.to;
-    printf("%c-%c  ", from, to);
+    Edge e = *(edgeList.edges + i);
+    printf("%c-%c  ", e.from, e.to);
   }
   printf("\n");
 }
@@ -60,6 +54,7 @@ static EdgeList parseEdgeList(int argc, char* argv[]) {
     char* str = argv[i];
     edges[i - 1] = (Edge){.from = str[0], .to = str[2]};
   }
+
   return (EdgeList){.edges = edges, .size = argc - 1};
 }
 
