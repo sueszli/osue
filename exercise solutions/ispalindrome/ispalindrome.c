@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  bool hasInputPaths = optind < argc;
+  const bool hasInputPaths = optind < argc;
   char *line = NULL;
   size_t len = 0;
 
