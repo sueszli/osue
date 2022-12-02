@@ -10,3 +10,7 @@ valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./superv
 
 echo -e "\n\n--------- CLEANING ---------"
 make clean
+echo "Content of '/dev/shm':"
+cd "/dev/shm"
+ls -l
+# sudo rm -rf "/dev/shm/"

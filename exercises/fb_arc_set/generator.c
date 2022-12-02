@@ -9,7 +9,16 @@
 
 #include "common.h"
 
-#pragma region "done"
+#define errorUsage(msg)                                                        \
+  do {                                                                         \
+    fprintf(stderr,                                                            \
+            "Wrong usage: %s\nSYNOPSIS:\n\tgenerator "                         \
+            "EDGE1...\nEXAMPLE:\n\tgenerator 0-1 1-2 1-3 1-4 2-4 3-6 4-3 4-5 " \
+            "6-0\n",                                                           \
+            msg);                                                              \
+    exit(EXIT_FAILURE);                                                        \
+  } while (0);
+
 static EdgeList parseEdgeList(int argc, char* argv[]) {
   // post-condition: free returned EdgeList
 
@@ -27,7 +36,6 @@ static EdgeList parseEdgeList(int argc, char* argv[]) {
     output.edges[i - 1] = (Edge){.from = argv[i][0], .to = argv[i][2]};
   }
 
-  // check for duplicates
   for (int i = 0; i < size; i++) {
     for (int j = 0; j < size; j++) {
       Edge iEdge = output.edges[i];
@@ -66,7 +74,6 @@ static char* parseNodeString(EdgeList edgeList) {
 
   return output;
 }
-#pragma endregion "done"
 
 static EdgeList generateSolution(EdgeList edgeList, char* nodeString) {
   // side-effect: randomizes nodeString
@@ -79,10 +86,8 @@ static EdgeList generateSolution(EdgeList edgeList, char* nodeString) {
     errorHandler("malloc");
   }
 
+  // add if edge not in order in randomized nodeString
   nodeString = strfry(nodeString);
-  printf("Randomized nodes: %s\n", nodeString);
-
-  // add
   int counter = 0;
   for (int i = 0; i < edgeList.size; i++) {
     char from = edgeList.edges[i].from;
@@ -95,7 +100,6 @@ static EdgeList generateSolution(EdgeList edgeList, char* nodeString) {
     }
   }
 
-  // update size
   output.size = counter;
   output.edges = realloc(output.edges, (size_t)counter * sizeof(Edge));
   if (output.edges == NULL) {
@@ -110,16 +114,16 @@ int main(int argc, char* argv[]) {
 
   EdgeList edgeList = parseEdgeList(argc, argv);
   char* nodeString = parseNodeString(edgeList);
-  printEdgeList("Input", edgeList);
-  printf("Node string: %s\n", nodeString);
 
-  // make sure generated solutions really make sense before proceeding...
-  EdgeList solution = generateSolution(edgeList, nodeString);
-  printEdgeList("Solution", solution);
+  int i = 100;
+  while (i-- >= 0) {
+    EdgeList solution = generateSolution(edgeList, nodeString);
+    printEdgeList("Solution", solution);
+    free(solution.edges);
+  }
 
   free(edgeList.edges);
   free(nodeString);
-  free(solution.edges);
 
   printf("\n\n");
   return EXIT_SUCCESS;
