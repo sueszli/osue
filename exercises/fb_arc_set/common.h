@@ -42,10 +42,7 @@
   }                                                                 \
   printf("\n");
 
-#define SHM_PATH "/11912007shm"  // full path: '/dev/shm/11912007shm'
-#define MAX_SOLUTION_SIZE (32)   // only write into shm if list size is smaller
-#define EDGELIST_SIZE (64)
-#define BUF_SIZE (32)
+#define MAX_EDGELIST_SIZE (64)  // because we can't use pointers in shm
 
 typedef struct {
   char from;
@@ -53,9 +50,13 @@ typedef struct {
 } Edge;
 
 typedef struct {
-  Edge edges[EDGELIST_SIZE];
+  Edge edges[MAX_EDGELIST_SIZE];
   int size;
 } EdgeList;
+
+#define MAX_SOLUTION_SIZE (32)   // only write into shm if list size is smaller
+#define SHM_PATH "/11912007shm"  // full path: '/dev/shm/11912007shm'
+#define BUF_SIZE (32)
 
 typedef struct {
   bool terminate;  // tell generators to terminate (no mutex needed)
