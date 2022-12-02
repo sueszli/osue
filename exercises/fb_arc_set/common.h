@@ -15,7 +15,19 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
+
+#define usage(msg)                                                             \
+  do {                                                                         \
+    fprintf(stderr,                                                            \
+            "Wrong usage: %s\nSYNOPSIS "                                       \
+            "SUPERVISOR:\n\tsupervisor\nSYNOPSIS GENERATOR:\n\tgenerator "     \
+            "EDGE1...\nEXAMPLE:\n\tgenerator 0-1 1-2 1-3 1-4 2-4 3-6 4-3 4-5 " \
+            "6-0\n",                                                           \
+            msg);                                                              \
+    exit(EXIT_FAILURE);                                                        \
+  } while (0);
 
 #define error(msg)      \
   do {                  \
@@ -34,8 +46,8 @@ typedef struct {
 } EdgeList;
 
 #define SHM_PATH "/11912007shm"  // full path: '/dev/shm/11912007shm'
-#define MAX_THRESHOLD 1024       // maximum accepted solution size (>= 8)
-#define BUF_SIZE 32              // circular buffer size
+#define MAX_THRESHOLD (1024)     // maximum accepted solution size (>= 8)
+#define BUF_SIZE (32)            // circular buffer size
 
 typedef struct {
   bool terminate;  // tell generators to terminate (no mutex needed)

@@ -10,7 +10,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-//#region print macros
 /*
  * Convenience macros for formatting error messages and exiting or
  * printing optional debug messages if the flag -DDEBUG is set.
@@ -66,7 +65,6 @@
   fprintf(stderr, "\t%s\n", "# from vertice 'x' to vertice 'y' in a graph.");  \
   fprintf(stderr, "\t%s\n", "generator 0-1 1-2 1-3 1-4 2-4 3-6 4-3 4-5 6-0");  \
   exit(EXIT_FAILURE);
-//#endregion
 
 /**
  * @brief Number edges that a solution is allowed to have at most to be allowed

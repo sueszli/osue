@@ -1,15 +1,6 @@
 #include "common.h"
 
-#define usage(msg)                                                             \
-  do {                                                                         \
-    fprintf(stderr,                                                            \
-            "Wrong usage: %s\nSYNOPSIS:\n\tgenerator "                         \
-            "EDGE1...\nEXAMPLE:\n\tgenerator 0-1 1-2 1-3 1-4 2-4 3-6 4-3 4-5 " \
-            "6-0\n",                                                           \
-            msg);                                                              \
-    exit(EXIT_FAILURE);                                                        \
-  } while (0);
-
+#pragma region "solving"
 static EdgeList parseEdgeList(int argc, char* argv[]) {
   // post-condition: free returned EdgeList
 
@@ -96,6 +87,7 @@ static EdgeList generateSolution(EdgeList edgeList, char* nodeString) {
   }
   return output;
 }
+#pragma endregion "solving"
 
 static void writeSubmission(ShmStruct* shmp, EdgeList edgeList,
                             char* nodeString) {
@@ -115,7 +107,7 @@ static void writeSubmission(ShmStruct* shmp, EdgeList edgeList,
   }
 }
 
-int main(int argc, char* argv[]) {
+int main2(int argc, char* argv[]) {
   EdgeList edgeList = parseEdgeList(argc, argv);
   char* nodeString = parseNodeString(edgeList);
 

@@ -1,11 +1,5 @@
 #include "common.h"
 
-#define usage(msg)                                                      \
-  do {                                                                  \
-    fprintf(stderr, "Wrong usage: %s\nSYNOPSIS:\n\tsupervisor\n", msg); \
-    exit(EXIT_FAILURE);                                                 \
-  } while (0);
-
 static volatile sig_atomic_t quit = false;
 static void onSignal(int sig, siginfo_t *si, void *unused) { quit = true; }
 
@@ -88,11 +82,13 @@ int main(int argc, char *argv[]) {
   while (!quit) {
     if (sem_wait(&shmp->num_used) == -1) {
       error("sem_wait");
-      if (errno != EINTR) {  // ie. keyboard signal
-        break;
+      if (errno != EINTR) {
+        break;  // ie. keyboard signal
       }
     }
+
     readSubmission(shmp);
+
     if (sem_post(&shmp->num_free) == -1) {
       error("sem_post");
     }

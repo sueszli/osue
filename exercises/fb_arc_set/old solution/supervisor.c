@@ -137,6 +137,15 @@ int main(int argc, char **argv) {
       bestSolution = submission;
       fprintf(stdout, "New best solution: %zu edges\n", bestSolution.numEdges);
       // https://stackoverflow.com/questions/40200227/store-an-string-on-a-shared-memory-c
+      /*
+        Supervisor does not receive any data, because I'm sending pointers to
+        the strings and not the actual chars. The pointers are not the same
+        after being transferred via the shared memory.
+        There is a way to resolve my problem: virtual mapping pointers in shared
+        memory.
+
+        I’ve also got a memory leak. Things don't terminate normally.
+      */
     }
 
     // alternating mutex: signal available space -> sem_post()
