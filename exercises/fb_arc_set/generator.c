@@ -80,14 +80,70 @@ static EdgeList generateSolution(EdgeList edgeList, char* nodeString) {
 }
 #pragma endregion "solving"
 
+static void writeSubmission(ShmStruct* shmp, EdgeList edgeList,
+                            char* nodeString) {
+  // side-effect: writes into shared memory (under mutual exclusion)
+  // side-effect: may change state of static variable 'hasIncrementedCounter'
+
+  if ((sem_wait(&shmp->write_mutex) == -1)) {
+    error("sem_wait");
+  }
+
+  // atomic fetch and increment with mutex
+  static bool hasIncrementedCounter = false;
+  if (!hasIncrementedCounter) {
+    shmp->generator_counter++;
+    hasIncrementedCounter = true;
+  }
+
+  // write into shared memory
+  EdgeList solution = generateSolution(edgeList, nodeString);
+  printEdgeList(solution);
+  if (solution.size <= MAX_SOLUTION_SIZE) {
+    shmp->buf[shmp->write_index] = solution;
+    shmp->write_index = (shmp->write_index + 1) % BUF_SIZE;
+  }
+  free(solution.edges);
+
+  if (sem_post(&shmp->write_mutex) == -1) {
+    error("sem_post");
+  }
+}
+
 int main(int argc, char* argv[]) {
   EdgeList edgeList = parseEdgeList(argc, argv);
   char* nodeString = parseNodeString(edgeList);
 
-  int i = 100;
-  while (i--) {
-    EdgeList solution = generateSolution(edgeList, nodeString);
-    printEdgeList(solution);
+  // open shared memory
+  int fd = shm_open(SHM_PATH, O_RDWR, 0);
+  if (fd == -1) {
+    error("shm_open");
+  }
+  ShmStruct* shmp =
+      mmap(NULL, sizeof(*shmp), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (shmp == MAP_FAILED) {
+    error("mmap");
+  }
+
+  // write into shared memory
+  while (!(shmp->terminate)) {
+    if (sem_wait(&shmp->num_free) == -1) {
+      error("sem_wait");
+    }
+
+    writeSubmission(shmp, edgeList, nodeString);
+
+    if (sem_post(&shmp->num_used) == -1) {
+      error("sem_post");
+    }
+  }
+
+  // close shared memory
+  if (munmap(shmp, sizeof(*shmp)) == -1) {
+    error("munmap");
+  }
+  if (close(fd) == -1) {
+    error("close");
   }
 
   free(nodeString);
