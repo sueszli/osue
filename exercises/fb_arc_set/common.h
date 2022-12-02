@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <semaphore.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -54,17 +55,17 @@ typedef struct {
   int size;
 } EdgeList;
 
-#define MAX_SOLUTION_SIZE (32)   // only write into shm if list size is smaller
+#define MAX_SOLUTION_SIZE (64)   // only write into shm if list size is smaller
 #define SHM_PATH "/11912007shm"  // full path: '/dev/shm/11912007shm'
-#define BUF_SIZE (32)
+#define BUF_SIZE (16)
 
 typedef struct {
   bool terminate;  // tell generators to terminate (no mutex needed)
-  u_int64_t generator_counter;  // count generators (updated with 'write_mutex')
+  u_int64_t generator_counter;  // also uses 'write_mutex'
 
-  EdgeList buf[BUF_SIZE];  // circular buffer for solutions
-  size_t write_index;      // index for next write into buffer
-  size_t read_index;       // index for next read from buffer
+  EdgeList buf[BUF_SIZE];
+  size_t write_index;  // index for next write into buffer
+  size_t read_index;   // index for next read from buffer
 
   sem_t num_free;     // free space - used for alternating reads and writes
   sem_t num_used;     // used space - used for alternating reads and writes

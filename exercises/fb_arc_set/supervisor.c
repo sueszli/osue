@@ -23,19 +23,19 @@ static void readSubmission(ShmStruct *shmp) {
   // side-effect: may change state of static variable 'best'
   // pre-condition: must be called in mutually exclusive zone
 
-  static int best = 0;
-
   EdgeList submission = shmp->buf[shmp->read_index];
   shmp->read_index = (shmp->read_index + 1) % BUF_SIZE;
 
   if (submission.size == 0) {
-    printf("The graph is acyclic!\n");
-    // quit = true;
+    printEdgeList(submission);
+    printf("graph is acyclic\n");
+    quit = true;
   }
 
-  printEdgeList(submission);
+  static int best = INT_MAX;
   if (submission.size < best) {
     best = submission.size;
+    printEdgeList(submission);
   }
 }
 
@@ -43,7 +43,6 @@ int main(int argc, char *argv[]) {
   if (argc > 1) {
     usage("no arguments allowed");
   }
-
   initSignalListener();
 
   // create shared memory

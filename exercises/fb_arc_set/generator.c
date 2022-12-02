@@ -75,7 +75,7 @@ static EdgeList generateSolution(EdgeList edgeList, char* nodeString) {
       output.edges[counter++] = (Edge){.from = from, .to = to};
     }
   }
-  output.size = (counter - 1);
+  output.size = counter;
   return output;
 }
 #pragma endregion "solving"
@@ -98,12 +98,10 @@ static void writeSubmission(ShmStruct* shmp, EdgeList edgeList,
 
   // write into shared memory
   EdgeList solution = generateSolution(edgeList, nodeString);
-  printEdgeList(solution);
-  if (solution.size <= MAX_SOLUTION_SIZE) {
+  if (solution.size < MAX_SOLUTION_SIZE) {
     shmp->buf[shmp->write_index] = solution;
     shmp->write_index = (shmp->write_index + 1) % BUF_SIZE;
   }
-  free(solution.edges);
 
   if (sem_post(&shmp->write_mutex) == -1) {
     error("sem_post");
