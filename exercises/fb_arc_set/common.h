@@ -35,23 +35,31 @@
     exit(EXIT_FAILURE); \
   } while (0);
 
+#define printEdgeList(edgeList)                                     \
+  printf("Solution with %d edges: ", edgeList.size);                \
+  for (int i = 0; i < edgeList.size; i++) {                         \
+    printf("%c-%c ", edgeList.edges[i].from, edgeList.edges[i].to); \
+  }                                                                 \
+  printf("\n");
+
+#define SHM_PATH "/11912007shm"  // full path: '/dev/shm/11912007shm'
+#define MAX_SOLUTION_SIZE (32)   // only write into shm if list size is smaller
+#define EDGELIST_SIZE (64)
+#define BUF_SIZE (32)
+
 typedef struct {
   char from;
   char to;
 } Edge;
 
 typedef struct {
-  Edge* edges;
+  Edge edges[EDGELIST_SIZE];
   int size;
 } EdgeList;
 
-#define SHM_PATH "/11912007shm"  // full path: '/dev/shm/11912007shm'
-#define MAX_THRESHOLD (1024)     // maximum accepted solution size (>= 8)
-#define BUF_SIZE (32)            // circular buffer size
-
 typedef struct {
   bool terminate;  // tell generators to terminate (no mutex needed)
-  // dont use generatorCounter here because it is not atomic
+  u_int64_t generator_counter;  // count generators (updated with 'write_mutex')
 
   EdgeList buf[BUF_SIZE];  // circular buffer for solutions
   size_t write_index;      // index for next write into buffer
