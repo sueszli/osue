@@ -1,6 +1,6 @@
 #include "common.h"
 
-#pragma region "solving"
+//#region "solving"
 static EdgeList parseEdgeList(int argc, char* argv[]) {
   const int size = argc - 1;
   if (size == 0) {
@@ -78,14 +78,14 @@ static EdgeList generateSolution(EdgeList edgeList, char* nodeString) {
   output.size = counter;
   return output;
 }
-#pragma endregion "solving"
+//#endregion "solving"
 
 static void writeSubmission(ShmStruct* shmp, EdgeList edgeList,
                             char* nodeString) {
   // side-effect: writes into shared memory (under mutual exclusion)
   // side-effect: may change state of static variable 'hasIncrementedCounter'
 
-  if ((sem_wait(&shmp->write_mutex) == -1)) {
+  if ((sem_wait(&shmp->write_mutex) == -1) && (errno != EINTR)) {
     error("sem_wait");
   }
 
@@ -125,8 +125,12 @@ int main(int argc, char* argv[]) {
 
   // write into shared memory
   while (!(shmp->terminate)) {
-    if (sem_wait(&shmp->num_free) == -1) {
+    if ((sem_wait(&shmp->num_free) == -1) && (errno != EINTR)) {
       error("sem_wait");
+    }
+    // in case sem_post(num_free) by supervisor during shutdown
+    if (shmp->terminate) {
+      break;
     }
 
     writeSubmission(shmp, edgeList, nodeString);

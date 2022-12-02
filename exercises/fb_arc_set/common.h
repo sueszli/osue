@@ -10,7 +10,6 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,12 +59,12 @@ typedef struct {
 #define BUF_SIZE (16)
 
 typedef struct {
-  bool terminate;  // tell generators to terminate (no mutex needed)
-  u_int64_t generator_counter;  // also uses 'write_mutex'
+  bool terminate;         // tell generators to terminate (no mutex needed)
+  int generator_counter;  // also uses 'write_mutex'
 
   EdgeList buf[BUF_SIZE];
-  size_t write_index;  // index for next write into buffer
-  size_t read_index;   // index for next read from buffer
+  int write_index;  // index for next write into buffer
+  int read_index;   // index for next read from buffer
 
   sem_t num_free;     // free space - used for alternating reads and writes
   sem_t num_used;     // used space - used for alternating reads and writes

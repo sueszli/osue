@@ -1,6 +1,5 @@
 #include "common.h"
 
-#pragma region "sigaction"
 static volatile sig_atomic_t quit = false;
 static void onSignal(int sig, siginfo_t *si, void *unused) { quit = true; }
 
@@ -16,8 +15,10 @@ static void initSignalListener(void) {
   if (sigaction(SIGTERM, &sa, NULL) == -1) {
     error("sigaction");
   }
+  if (sigaction(SIGQUIT, &sa, NULL) == -1) {
+    error("sigaction");
+  }
 }
-#pragma endregion "sigaction"
 
 static void readSubmission(ShmStruct *shmp) {
   // side-effect: may change state of static variable 'best'
@@ -30,6 +31,7 @@ static void readSubmission(ShmStruct *shmp) {
     printEdgeList(submission);
     printf("graph is acyclic\n");
     quit = true;
+    return;
   }
 
   static int best = INT_MAX;
@@ -43,6 +45,7 @@ int main(int argc, char *argv[]) {
   if (argc > 1) {
     usage("no arguments allowed");
   }
+
   initSignalListener();
 
   // create shared memory
@@ -59,7 +62,7 @@ int main(int argc, char *argv[]) {
     error("mmap");
   }
 
-  // initialize shared memory's content
+  // initialize shared memory
   shmp->terminate = false;
   shmp->generator_counter = 0;
   shmp->write_index = 0;
@@ -77,8 +80,8 @@ int main(int argc, char *argv[]) {
   // read shared memory
   while (!quit) {
     if (sem_wait(&shmp->num_used) == -1) {
-      if (errno != EINTR) {
-        fprintf(stderr, "Interruption while in sem_wait()");
+      if ((errno == EINTR) && (shmp->generator_counter == 0)) {
+        perror("Quit before running generators");
         break;
       }
       error("sem_wait");
@@ -86,15 +89,23 @@ int main(int argc, char *argv[]) {
 
     readSubmission(shmp);
 
+    if (quit) {
+      break;
+    }
     if (sem_post(&shmp->num_free) == -1) {
       error("sem_post");
     }
   }
 
-  // shutdown generators
-  printf("Shutting down...\n");
-  printf("Currently active generators: %ld\n", shmp->generator_counter);
+  // terminate generators
+  printf("Currently %d generators are active...\n", shmp->generator_counter);
+  printf("Terminating generators...\n");
   shmp->terminate = true;
+  for (int i = 0; i < shmp->generator_counter; i++) {
+    if (sem_post(&shmp->num_free) == -1) {
+      perror("sem_post - error while freeing waiting generators");
+    }
+  }
 
   // destroy semaphores in shared memory
   if (sem_destroy(&(shmp->num_free)) == -1) {
