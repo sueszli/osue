@@ -84,6 +84,10 @@ int main(int argc, char *argv[]) {
         perror("Quit before running generators");
         break;
       }
+      if (errno == EINTR) {
+        perror("Quit while waiting for read");
+        break;
+      }
       error("sem_wait");
     }
 
@@ -103,7 +107,7 @@ int main(int argc, char *argv[]) {
   shmp->terminate = true;
   for (int i = 0; i < shmp->generator_counter; i++) {
     if (sem_post(&shmp->num_free) == -1) {
-      perror("sem_post - error while freeing waiting generators");
+      perror("sem_post - error while freeing the waiting generators");
     }
   }
 

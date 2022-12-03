@@ -15,7 +15,7 @@ static EdgeList parseEdgeList(int argc, char* argv[]) {
 
   for (int i = 1; i < argc; i++) {
     if (strlen(argv[i]) != 3) {
-      usage("argument can only have 3 characters");
+      usage("argument must have exactly 3 characters");
     }
     output.edges[i - 1] = (Edge){.from = argv[i][0], .to = argv[i][2]};
   }
@@ -25,7 +25,7 @@ static EdgeList parseEdgeList(int argc, char* argv[]) {
       Edge iEdge = output.edges[i];
       Edge jEdge = output.edges[j];
       if ((i != j) && (iEdge.from == jEdge.from) && (iEdge.to == jEdge.to)) {
-        usage("no duplicate arguments allowed");
+        usage("duplicate arguments");
       }
     }
   }
