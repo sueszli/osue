@@ -51,7 +51,7 @@ typedef struct {
 
 typedef struct {
   Edge edges[MAX_EDGELIST_SIZE];
-  int size;
+  int size;  // type is int because of argc
 } EdgeList;
 
 #define MAX_SOLUTION_SIZE (64)   // only write into shm if list size is smaller

@@ -102,12 +102,11 @@ int main(int argc, char *argv[]) {
   }
 
   // terminate generators
-  printf("Currently %d generators are active...\n", shmp->generator_counter);
-  printf("Terminating generators...\n");
+  printf("Terminating the %d active generators...\n", shmp->generator_counter);
   shmp->terminate = true;
   for (int i = 0; i < shmp->generator_counter; i++) {
     if (sem_post(&shmp->num_free) == -1) {
-      perror("sem_post - error while freeing the waiting generators");
+      perror("sem_post - error occured while freeing the waiting generators");
     }
   }
 
