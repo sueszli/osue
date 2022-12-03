@@ -13,4 +13,4 @@ make clean
 echo "Content of '/dev/shm':"
 cd "/dev/shm"
 ls
-# sudo rm -rf "/dev/shm/" # should happen automatically
+# sudo rm -rf "/dev/shm/" # should be done by supervisor if it doesn't crash
