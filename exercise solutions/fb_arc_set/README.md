@@ -1,7 +1,7 @@
 # Why are there 2 versions?
 
-This exercise requires you to parse positive integers with more than one digit as the node names.
+This exercise requires you to parse positive integers with multiple digits as node names.
 
-This is unfortunate because if we had single character names, then we could have made use of lots of functions from the standard library like `strfry()` and `index()` that do exactly what we need for this algorithm.
+This is unfortunate because if we had single character names for the nodes, then we could have made use of many functions from the standard library such as `strfry()` and `index()` which would make everything a lot simpler.
 
-I wrote the (invalid) char version of my solution just to find out how much simpler everything would get if we would have gotten different requirements for this exercise.
+This is why I also created the (invalid) char version as a solution for this exercise.
