@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,7 +53,7 @@ typedef struct {
 
 typedef struct {
   Edge edges[MAX_EDGELIST_SIZE];
-  int size;  // type is int because of argc
+  int size;  // type is signed int because of argc (MAX_EDGELIST_SIZE < INT_MAX)
 } EdgeList;
 
 #define MAX_SOLUTION_SIZE (64)   // only write into shm if list size is smaller
