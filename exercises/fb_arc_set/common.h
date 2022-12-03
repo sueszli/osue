@@ -16,6 +16,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #define usage(msg)                                                             \
@@ -45,8 +46,8 @@
 #define MAX_EDGELIST_SIZE (64)  // because we can't use pointers in shm
 
 typedef struct {
-  unsigned long int from;
-  unsigned long int to;
+  unsigned long from;
+  unsigned long to;
 } Edge;
 
 typedef struct {

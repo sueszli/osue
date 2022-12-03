@@ -1,5 +1,11 @@
 #include "common.h"
 
+//#region "solving"
+typedef struct {
+  unsigned long* nodes;  // can be pointer because not written into shm
+  int size;
+} NodeList;
+
 static void validateInput(int argc, char* argv[]) {
   if ((argc - 1) == 0) {
     usage("no arguments");
@@ -49,7 +55,7 @@ static void validateInput(int argc, char* argv[]) {
   }
 }
 
-static unsigned long int parseStrToLong(char* str) {
+static unsigned long parseStrToLong(char* str) {
   errno = 0;  // make errors visible
   unsigned long val = strtoul(str, NULL, 10);
   if ((errno == ERANGE) || (val == ULONG_MAX)) {
@@ -58,7 +64,6 @@ static unsigned long int parseStrToLong(char* str) {
   if ((errno != 0) && (errno != EINVAL)) {
     error("strtoul");
   }
-
   return val;
 }
 
@@ -70,34 +75,91 @@ static EdgeList parseEdgeList(int argc, char* argv[]) {
   for (int i = 1; i < argc; i++) {
     char* fst = strtok_r(argv[i], "-", &saveptr);
     char* snd = strtok_r(NULL, "-", &saveptr);
-    unsigned long int fstLong = parseStrToLong(fst);
-    unsigned long int sndLong = parseStrToLong(snd);
+    unsigned long fstLong = parseStrToLong(fst);
+    unsigned long sndLong = parseStrToLong(snd);
     output.edges[i - 1] = (Edge){.from = fstLong, .to = sndLong};
   }
-
   return output;
 }
 
-static unsigned long int* parseNodeList(EdgeList edgeList) {
-  // post-condition: free returned pointer
-
-  unsigned long int* output = malloc(edgeList.size * sizeof(*output));
-  size_t counter = 0;
-
-  unsigned long int* reallocOut = realloc(output, counter * sizeof(*output));
-  if (reallocOut == NULL) {
-    error("realloc");
+static void printNodeList(NodeList nodeList) {
+  for (int i = 0; i < nodeList.size; i++) {
+    printf("%ld ", nodeList.nodes[i]);
   }
-
-  return reallocOut;
+  printf("\n");
 }
 
+static bool nodeListContains(NodeList nodeList, unsigned long elem) {
+  for (int i = 0; i < nodeList.size; i++) {
+    if (nodeList.nodes[i] == elem) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static NodeList parseNodeList(EdgeList edgeList) {
+  // post-condition: free returned list
+
+  NodeList output;
+  output.nodes = malloc((size_t)(2 * edgeList.size) * sizeof(*output.nodes));
+  if (output.nodes == NULL) {
+    error("malloc");
+  }
+
+  int counter = 0;
+  for (int i = 0; i < edgeList.size; i++) {
+    unsigned long from = edgeList.edges[i].from;
+    unsigned long to = edgeList.edges[i].to;
+    output.size = counter;
+    if (!nodeListContains(output, from)) {
+      output.nodes[counter++] = from;
+    }
+    if (!nodeListContains(output, to)) {
+      output.nodes[counter++] = to;
+    }
+  }
+  output.size = counter;
+
+  NodeList reallocedOutput;
+  reallocedOutput.size = counter;
+  reallocedOutput.nodes =
+      realloc(output.nodes, (size_t)counter * sizeof(*output.nodes));
+  if (reallocedOutput.nodes == NULL) {
+    error("realloc");
+  }
+  return reallocedOutput;
+}
+
+static void shuffleNodeList(NodeList nodeList) {
+  // side-effect: shuffles nodeList.nodes
+
+  unsigned long* nodes = nodeList.nodes;
+  int size = nodeList.size;
+  for (int i = size - 1; i >= 1; i--) {
+    int j = rand() % (i + 1);
+    unsigned long t = nodes[j];
+    nodes[j] = nodes[i];
+    nodes[i] = t;
+  }
+}
+
+static void generateSolution(EdgeList edgeList, NodeList nodeList) {
+  printNodeList(nodeList);
+  shuffleNodeList(nodeList);
+  printNodeList(nodeList);
+}
+//#endregion "solving"
+
 int main(int argc, char* argv[]) {
+  srand((unsigned int)time(NULL));
+
   validateInput(argc, argv);
   EdgeList edgeList = parseEdgeList(argc, argv);
-  unsigned long int* nodeList = parseNodeList(edgeList);
+  NodeList nodeList = parseNodeList(edgeList);
 
-  // can i malloc a long list and then read its size like strlen()?
+  generateSolution(edgeList, nodeList);
 
+  free(nodeList.nodes);
   return EXIT_SUCCESS;
 }
