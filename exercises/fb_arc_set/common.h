@@ -35,18 +35,18 @@
     exit(EXIT_FAILURE); \
   } while (0);
 
-#define printEdgeList(edgeList)                                     \
-  printf("Solution with %d edges: ", edgeList.size);                \
-  for (int i = 0; i < edgeList.size; i++) {                         \
-    printf("%c-%c ", edgeList.edges[i].from, edgeList.edges[i].to); \
-  }                                                                 \
+#define printEdgeList(edgeList)                                       \
+  printf("Solution with %d edges: ", edgeList.size);                  \
+  for (int i = 0; i < edgeList.size; i++) {                           \
+    printf("%ld-%ld ", edgeList.edges[i].from, edgeList.edges[i].to); \
+  }                                                                   \
   printf("\n");
 
 #define MAX_EDGELIST_SIZE (64)  // because we can't use pointers in shm
 
 typedef struct {
-  char from;
-  char to;
+  unsigned long int from;
+  unsigned long int to;
 } Edge;
 
 typedef struct {
