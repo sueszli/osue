@@ -28,7 +28,6 @@ static void readSubmission(ShmStruct *shmp) {
   shmp->read_index = (shmp->read_index + 1) % BUF_SIZE;
 
   if (submission.size == 0) {
-    printEdgeList(submission);
     printf("graph is acyclic\n");
     quit = true;
     return;
