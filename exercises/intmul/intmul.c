@@ -146,10 +146,8 @@ static HexStringQuad splitInHalf(HexStringPair pair) {
   // lower digits
   quad.hex1_l = malloc(size * sizeof(char));
   quad.hex2_l = malloc(size * sizeof(char));
-  memcpy(quad.hex1_l, (pair.hex1 + len), len);
-  memcpy(quad.hex2_l, (pair.hex2 + len), len);
-  quad.hex1_l[len] = '\0';
-  quad.hex2_l[len] = '\0';
+  memcpy(quad.hex1_l, (pair.hex1 + len), size);
+  memcpy(quad.hex2_l, (pair.hex2 + len), size);
 
   quad.len = len;
   return quad;
@@ -161,8 +159,8 @@ int main(int argc, char* argv[]) {
   }
 
   HexStringPair pair = getInput();
-  printf("hex1: %s\n", pair.hex1);
-  printf("hex2: %s\n", pair.hex2);
+  printf("hex1 pair: %s\n", pair.hex1);
+  printf("hex2 pair: %s\n", pair.hex2);
   printf("len: %ld\n", pair.len);
 
   // base case
@@ -176,10 +174,12 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
   }
 
+  printf("\n");
+
   // call self recursively
   HexStringQuad quad = splitInHalf(pair);
-  printf("hex1: %s %s\n", quad.hex1_h, quad.hex1_l);
-  printf("hex2: %s %s\n", quad.hex2_h, quad.hex2_l);
+  printf("hex1 quad: %s %s\n", quad.hex1_h, quad.hex1_l);
+  printf("hex2 quad: %s %s\n", quad.hex2_h, quad.hex2_l);
   printf("len: %ld\n", quad.len);
 
   free(quad.hex1_h);
