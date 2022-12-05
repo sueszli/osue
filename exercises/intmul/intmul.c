@@ -64,16 +64,18 @@ static void validateInput(HexStringPair pair) {
 
   if (strlen(pair.hex1) < strlen(pair.hex2)) {
     size_t diff = strlen(pair.hex2) - strlen(pair.hex1);
-    addLeadingZeros(pair.hex1, diff);
+    printf("hex2 is larger\n");
+    // pair.hex1 = addLeadingZeros(pair.hex1, diff);
 
   } else if (strlen(pair.hex1) > strlen(pair.hex2)) {
     size_t diff = strlen(pair.hex1) - strlen(pair.hex2);
-    addLeadingZeros(pair.hex2, diff);
+    printf("hex1 is larger\n");
+    // pair.hex2 = addLeadingZeros(pair.hex2, diff);
   }
 
   // add leading zeros if their size is not 2^n
 
-  pair.len = strlen(pair.hex1);
+  // pair.len = strlen(pair.hex1);
 }
 
 static HexStringPair getInput(void) {
@@ -105,7 +107,7 @@ static HexStringPair getInput(void) {
     usage("only 1 argument");
   }
 
-  // validateInput(hexStringPair);
+  validateInput(hexStringPair);
   return hexStringPair;
 }
 
