@@ -11,23 +11,17 @@
     exit(EXIT_FAILURE); \
   } while (true);
 
-#define usage(msg)                                                             \
-  do {                                                                         \
-    fprintf(                                                                   \
-        stderr,                                                                \
-        "Invalid input: %s\nIntmul calculates the product of 2 hex numbers.\n" \
-        "SYNOPSIS: ./intmul\n",                                                \
-        msg);                                                                  \
-    exit(EXIT_FAILURE);                                                        \
+#define usage(msg)                                                   \
+  do {                                                               \
+    fprintf(stderr, "Invalid input: %s\nSYNOPSIS: ./intmul\n", msg); \
+    exit(EXIT_FAILURE);                                              \
   } while (true);
 
 typedef struct {
   char* hex1;
   char* hex2;
-  size_t len;  // same for both
+  size_t len;
 } HexStringPair;
-
-//#region parsing
 
 static void addLeadingZeroes(char** strp, size_t num) {
   // pre-condition: str must be allocated dynamically
@@ -42,16 +36,10 @@ static void addLeadingZeroes(char** strp, size_t num) {
   if (rStr == NULL) {
     error("realloc");
   }
-
-  // memset(&rStr, '0', num);
-  for (size_t i = 0; i < num; i++) {
-    rStr[i] = '0';
-  }
-  for (size_t i = 0; i < oldSize; i++) {
-    rStr[i + num] = oldCopy[i];
-  }
-  *strp = rStr;
+  memset(rStr, '0', num);
+  memcpy((rStr + num), oldCopy, oldSize);
   free(oldCopy);
+  *strp = rStr;
 }
 
 static HexStringPair getInput(void) {
@@ -67,14 +55,11 @@ static HexStringPair getInput(void) {
     if (nLines == 0) {
       line[strlen(line) - 1] = '\0';
       pair.hex1 = strdup(line);
-      nLines++;
     } else if (nLines == 1) {
       line[strlen(line) - 1] = '\0';
       pair.hex2 = strdup(line);
-      nLines++;
-    } else {
-      break;
     }
+    nLines++;
   }
   free(line);
 
@@ -82,6 +67,16 @@ static HexStringPair getInput(void) {
   if (nLines == 1) {
     free(pair.hex1);
     usage("missing 1 argument");
+  }
+  if (nLines > 2) {
+    free(pair.hex1);
+    free(pair.hex2);
+    usage("too many arguments");
+  }
+  if ((strlen(pair.hex1) == 0) || (strlen(pair.hex2) == 0)) {
+    free(pair.hex1);
+    free(pair.hex2);
+    usage("empty argument");
   }
   const char* valid = "0123456789abcdefABCDEF";
   if ((strspn(pair.hex1, valid) != strlen(pair.hex1)) ||
@@ -108,10 +103,8 @@ static HexStringPair getInput(void) {
     addLeadingZeroes(&(pair.hex2), 1);
   }
   pair.len = strlen(pair.hex1);
-
   return pair;
 }
-//#endregion parsing
 
 int main(int argc, char* argv[]) {
   if (argc > 1) {
