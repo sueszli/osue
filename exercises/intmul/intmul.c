@@ -93,23 +93,10 @@ static void validateInput(HexStringPair* pair) {
   const bool increaseHex1 = strlen(pair->hex1) < strlen(pair->hex2);
 
   if (increaseHex2) {
-    printf("increasing hex2 size\n");
-
   } else if (increaseHex1) {
-    printf("increasing hex1 size\n");
-    char* newHex = generateLeadingZeroes(pair->hex1, diff);
-    size_t newSize = (strlen(pair->hex1) + diff + 1);
-
-    printf("new hex1: %s\n", newHex);
-    printf("new hex1 size: %ld\n", newSize);
-
-    // copy into ralloc
-    char* r = realloc(pair->hex1, newSize * sizeof(char));
-    if (r == NULL) {
-      error("realloc");
-    }
-    pair->hex1 = newHex;
-    // free(newHex);
+    char* gen = generateLeadingZeroes(pair->hex1, diff);
+    free(pair->hex1);
+    pair->hex1 = gen;
   }
   pair->len = strlen(pair->hex1);
 
