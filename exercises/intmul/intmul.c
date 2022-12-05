@@ -26,58 +26,6 @@ typedef struct {
   size_t len;  // same for both
 } HexStringPair;
 
-static char* addLeadingZeros(char* str, size_t diff) {
-  // pre-condition: str must be dynamically allocated
-  // post-condition: output must be freed (str must not be freed)
-
-  size_t oldSize = strlen(str) + 1;
-  size_t newSize = oldSize + diff;
-
-  char* oldStrCopy = strdup(str);
-  if (oldStrCopy == NULL) {
-    error("strdup");
-  }
-  char* newStr = realloc(str, newSize * sizeof(*str));
-  if (newStr == NULL) {
-    error("realloc");
-  }
-
-  for (size_t i = 0; i < oldSize; i++) {
-    newStr[i] = '0';
-    newStr[i + diff] = oldStrCopy[i];
-  }
-
-  free(oldStrCopy);
-  return newStr;
-}
-
-static void validateInput(HexStringPair pair) {
-  // side-effect: adds leading zeros such that pair has same length
-
-  const char* valid = "0123456789abcdefABCDEF";
-  if ((strspn(pair.hex1, valid) != strlen(pair.hex1)) ||
-      (strspn(pair.hex2, valid) != strlen(pair.hex2))) {
-    free(pair.hex1);
-    free(pair.hex2);
-    usage("argument is not a hexadecimal number")
-  }
-
-  if (strlen(pair.hex1) < strlen(pair.hex2)) {
-    size_t diff = strlen(pair.hex2) - strlen(pair.hex1);
-    printf("hex2 is larger\n");
-    // pair.hex1 = addLeadingZeros(pair.hex1, diff);
-
-  } else if (strlen(pair.hex1) > strlen(pair.hex2)) {
-    size_t diff = strlen(pair.hex1) - strlen(pair.hex2);
-    printf("hex1 is larger\n");
-    // pair.hex2 = addLeadingZeros(pair.hex2, diff);
-  }
-
-  // add leading zeros if their size is not 2^n
-
-  // pair.len = strlen(pair.hex1);
-}
-
 static HexStringPair getInput(void) {
   // post-condition: free returned HexStringPair
 
@@ -107,8 +55,65 @@ static HexStringPair getInput(void) {
     usage("only 1 argument");
   }
 
-  validateInput(hexStringPair);
   return hexStringPair;
+}
+
+static char* generateLeadingZeroes(char* str, size_t num) {
+  // post-condition: free returned string
+
+  size_t oldSize = strlen(str) + 1;
+  size_t newSize = oldSize + num;
+  char* output = malloc(newSize * sizeof(char));
+  if (output == NULL) {
+    error("malloc");
+  }
+
+  for (size_t i = 0; i < oldSize; i++) {
+    output[i] = '0';
+    output[i + num] = str[i];
+  }
+  return output;
+}
+
+static void validateInput(HexStringPair* pair) {
+  // side-effect: adds leading zeros such that pair has same length
+
+  const char* valid = "0123456789abcdefABCDEF";
+  if ((strspn(pair->hex1, valid) != strlen(pair->hex1)) ||
+      (strspn(pair->hex2, valid) != strlen(pair->hex2))) {
+    free(pair->hex1);
+    free(pair->hex2);
+    usage("one argument is not a hexadecimal number")
+  }
+
+  // get to same size
+  const size_t diff =
+      (size_t)labs((long)(strlen(pair->hex2) - strlen(pair->hex1)));
+  const bool increaseHex2 = strlen(pair->hex1) > strlen(pair->hex2);
+  const bool increaseHex1 = strlen(pair->hex1) < strlen(pair->hex2);
+
+  if (increaseHex2) {
+    printf("increasing hex2 size\n");
+
+  } else if (increaseHex1) {
+    printf("increasing hex1 size\n");
+    char* newHex = generateLeadingZeroes(pair->hex1, diff);
+    size_t newSize = (strlen(pair->hex1) + diff + 1);
+
+    printf("new hex1: %s\n", newHex);
+    printf("new hex1 size: %ld\n", newSize);
+
+    // copy into ralloc
+    char* r = realloc(pair->hex1, newSize * sizeof(char));
+    if (r == NULL) {
+      error("realloc");
+    }
+    pair->hex1 = newHex;
+    // free(newHex);
+  }
+  pair->len = strlen(pair->hex1);
+
+  // add leading zeros if their size is not 2^n (ie. if size is 3)
 }
 
 int main(int argc, char* argv[]) {
@@ -116,10 +121,13 @@ int main(int argc, char* argv[]) {
     usage("no arguments allowed");
   }
   HexStringPair hexStringPair = getInput();
+  printf("hex1 before validation: %s\n", hexStringPair.hex1);
+  printf("hex2 before validation: %s\n", hexStringPair.hex2);
 
-  printf("hex1: %s\n", hexStringPair.hex1);
-  printf("hex2: %s\n", hexStringPair.hex2);
-  // printf("len: %d\n", hexStringPair.len);
+  validateInput(&hexStringPair);
+  printf("hex1 after validation: %s\n", hexStringPair.hex1);
+  printf("hex2 after validation: %s\n", hexStringPair.hex2);
+  printf("len: %ld\n", hexStringPair.len);
 
   free(hexStringPair.hex1);
   free(hexStringPair.hex2);
