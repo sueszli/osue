@@ -63,28 +63,21 @@ static void generateLeadingZeroes(char** strp, size_t num) {
   // side-effect: adds leading zeroes to str and reallocates it
 
   size_t oldSize = strlen(*strp) + 1;
-  size_t newSize = oldSize + num;
-  printf("input: %s\n", *strp);
-  printf("oldSize: %lu\n", oldSize);
-  printf("newSize: %lu\n", newSize);
-
   char* oldCopy = strdup(*strp);
   if (oldCopy == NULL) {
     error("strdup");
   }
-  printf("old copy: %s\n", oldCopy);
-
-  char* rStr = realloc(*strp, newSize * sizeof(char));
+  char* rStr = realloc(*strp, (oldSize + num) * sizeof(char));
   if (rStr == NULL) {
     error("realloc");
   }
-  printf("reallocation successful\n");
 
-  for (size_t i = 0; i < oldSize; i++) {
+  for (size_t i = 0; i < num; i++) {
     rStr[i] = '0';
+  }
+  for (size_t i = 0; i < oldSize; i++) {
     rStr[i + num] = oldCopy[i];
   }
-
   *strp = rStr;
   free(oldCopy);
 }
@@ -103,17 +96,21 @@ static void validateInput(HexStringPair* pair) {
   // get both args to same size
   const size_t diff =
       (size_t)labs((long)(strlen(pair->hex2) - strlen(pair->hex1)));
-  const bool increaseHex2 = strlen(pair->hex1) > strlen(pair->hex2);
   const bool increaseHex1 = strlen(pair->hex1) < strlen(pair->hex2);
-
-  if (increaseHex2) {
-  } else if (increaseHex1) {
-    printf("input: %s\n", pair->hex1);
+  const bool increaseHex2 = strlen(pair->hex1) > strlen(pair->hex2);
+  if (increaseHex1) {
     generateLeadingZeroes(&(pair->hex1), diff);
+  } else if (increaseHex2) {
+    generateLeadingZeroes(&(pair->hex2), diff);
   }
   pair->len = strlen(pair->hex1);
 
-  // get both args to 2^n (ie. if size is 3)
+  // make arg length divisible by 2
+  if (pair->len % 2 != 0) {
+    generateLeadingZeroes(&(pair->hex1), 1);
+    generateLeadingZeroes(&(pair->hex2), 1);
+    pair->len = (pair->len) + 1;
+  }
 }
 
 int main(int argc, char* argv[]) {
@@ -121,24 +118,15 @@ int main(int argc, char* argv[]) {
     usage("no arguments allowed");
   }
   HexStringPair hexStringPair = getInput();
-  // printf("hex1 before validation: %s\n", hexStringPair.hex1);
-  // printf("hex2 before validation: %s\n", hexStringPair.hex2);
+  printf("hex1 before validation: %s\n", hexStringPair.hex1);
+  printf("hex2 before validation: %s\n", hexStringPair.hex2);
 
-  // validateInput(&hexStringPair);
-  // printf("hex1 after validation: %s\n", hexStringPair.hex1);
-  // printf("hex2 after validation: %s\n", hexStringPair.hex2);
-  // printf("len: %ld\n", hexStringPair.len);
+  validateInput(&hexStringPair);
+  printf("hex1 after validation: %s\n", hexStringPair.hex1);
+  printf("hex2 after validation: %s\n", hexStringPair.hex2);
+  printf("len: %ld\n", hexStringPair.len);
 
   free(hexStringPair.hex1);
   free(hexStringPair.hex2);
-
-  char* test = malloc(3 * sizeof(char));
-  strncpy(test, "aa\0", 3);
-  printf("test before: %s\n", test);
-
-  generateLeadingZeroes(&test, 2);
-  printf("test after: %s\n", test);
-  free(test);
-
   return EXIT_SUCCESS;
 }

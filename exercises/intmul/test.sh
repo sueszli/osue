@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGS="A\nAB3"
+ARGS="AA\nBBB"
 
 # examples
 #ARGS="3\n3"
