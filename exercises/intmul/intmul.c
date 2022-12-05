@@ -25,6 +25,14 @@ typedef struct {
   size_t len;
 } HexStringPair;
 
+typedef struct {
+  char* hex1_h;
+  char* hex1_l;
+  char* hex2_h;
+  char* hex2_l;
+  size_t len;
+} HexStringQuad;
+
 static void addLeadingZeroes(char** strp, size_t num) {
   // pre-condition: str must be allocated dynamically
   // side-effect: adds leading zeroes to str and reallocates it
@@ -87,7 +95,7 @@ static HexStringPair getInput(void) {
     usage("one argument is not a hexadecimal number")
   }
 
-  // get len to the same size in pair
+  // get len to the same in pair
   const size_t len1 = strlen(pair.hex1);
   const size_t len2 = strlen(pair.hex2);
   const size_t diff = (size_t)labs((long)(len2 - len1));
@@ -97,9 +105,9 @@ static HexStringPair getInput(void) {
     addLeadingZeroes(&(pair.hex2), diff);
   }
   assert(strlen(pair.hex1) == strlen(pair.hex2));
-  const size_t len = strlen(pair.hex1);
 
   // get len to be a power of 2
+  const size_t len = strlen(pair.hex1);
   if ((len & (len - 1)) != 0) {
     const size_t newLen = 1 << (size_t)ceill(log2l((long double)len));
     addLeadingZeroes(&(pair.hex1), newLen - len);
@@ -120,26 +128,64 @@ static unsigned long long parseHexStr(char* hexStr) {
   return out;
 }
 
+static HexStringQuad splitInHalf(HexStringPair pair) {
+  // post-condition: free returned quad
+  HexStringQuad quad;
+
+  size_t len = pair.len / 2;
+  size_t size = (pair.len / 2) + 1;
+
+  // higher digits
+  quad.hex1_h = malloc(size * sizeof(char));
+  quad.hex2_h = malloc(size * sizeof(char));
+  memcpy(quad.hex1_h, pair.hex1, len);
+  memcpy(quad.hex2_h, pair.hex2, len);
+  quad.hex1_h[len] = '\0';
+  quad.hex2_h[len] = '\0';
+
+  // lower digits
+  quad.hex1_l = malloc(size * sizeof(char));
+  quad.hex2_l = malloc(size * sizeof(char));
+  memcpy(quad.hex1_l, (pair.hex1 + len), len);
+  memcpy(quad.hex2_l, (pair.hex2 + len), len);
+  quad.hex1_l[len] = '\0';
+  quad.hex2_l[len] = '\0';
+
+  quad.len = len;
+  return quad;
+}
+
 int main(int argc, char* argv[]) {
   if (argc > 1) {
     usage("no arguments allowed");
   }
-  HexStringPair pair = getInput();
 
+  HexStringPair pair = getInput();
   printf("hex1: %s\n", pair.hex1);
   printf("hex2: %s\n", pair.hex2);
+  printf("len: %ld\n", pair.len);
 
+  // base case
   if (pair.len == 1) {
-    // base case
-    unsigned long long fst = parseHexStr(pair.hex1);
-    unsigned long long snd = parseHexStr(pair.hex2);
-    unsigned long long result = fst * snd;
-    fprintf(stdout, "%llx\n", result);
-    fflush(stdout);
+    unsigned long long result = parseHexStr(pair.hex1) * parseHexStr(pair.hex2);
+    fprintf(stdout, "RESULT: %llx\n", result);
 
-  } else {
-    // call self recursively
+    fflush(stdout);
+    free(pair.hex1);
+    free(pair.hex2);
+    return EXIT_SUCCESS;
   }
+
+  // call self recursively
+  HexStringQuad quad = splitInHalf(pair);
+  printf("hex1: %s %s\n", quad.hex1_h, quad.hex1_l);
+  printf("hex2: %s %s\n", quad.hex2_h, quad.hex2_l);
+  printf("len: %ld\n", quad.len);
+
+  free(quad.hex1_h);
+  free(quad.hex1_l);
+  free(quad.hex2_h);
+  free(quad.hex2_l);
 
   free(pair.hex1);
   free(pair.hex2);
