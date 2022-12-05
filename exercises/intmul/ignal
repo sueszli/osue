@@ -1,0 +1,350 @@
+WAIT(2)                                       Linux Programmer's Manual                                       WAIT(2)
+
+NNAAMMEE
+       wait, waitpid, waitid - wait for process to change state
+
+SSYYNNOOPPSSIISS
+       ##iinncclluuddee <<ssyyss//ttyyppeess..hh>>
+       ##iinncclluuddee <<ssyyss//wwaaiitt..hh>>
+
+       ppiidd__tt wwaaiitt((iinntt **_w_s_t_a_t_u_s));;
+
+       ppiidd__tt wwaaiittppiidd((ppiidd__tt _p_i_d,, iinntt **_w_s_t_a_t_u_s,, iinntt _o_p_t_i_o_n_s));;
+
+       iinntt wwaaiittiidd((iiddttyyppee__tt _i_d_t_y_p_e,, iidd__tt _i_d,, ssiiggiinnffoo__tt **_i_n_f_o_p,, iinntt _o_p_t_i_o_n_s));;
+                       /* This is the glibc and POSIX interface; see
+                          NOTES for information on the raw system call. */
+
+   Feature Test Macro Requirements for glibc (see ffeeaattuurree__tteesstt__mmaaccrrooss(7)):
+
+       wwaaiittiidd():
+           Since glibc 2.26: _XOPEN_SOURCE >= 500 ||
+               _POSIX_C_SOURCE >= 200809L
+           Glibc 2.25 and earlier:
+               _XOPEN_SOURCE
+                   || /* Since glibc 2.12: */ _POSIX_C_SOURCE >= 200809L
+                   || /* Glibc versions <= 2.19: */ _BSD_SOURCE
+
+DDEESSCCRRIIPPTTIIOONN
+       All of these system calls are used to wait for state changes in a child of the calling process, and obtain in‐
+       formation about the child whose state has changed.  A state change is considered to be: the child  terminated;
+       the  child  was stopped by a signal; or the child was resumed by a signal.  In the case of a terminated child,
+       performing a wait allows the system to release the resources associated with the child; if a wait is not  per‐
+       formed, then the terminated child remains in a "zombie" state (see NOTES below).
+
+       If a child has already changed state, then these calls return immediately.  Otherwise, they block until either
+       a child changes state or a signal handler interrupts the call (assuming that system calls  are  not  automati‐
+       cally  restarted  using  the  SSAA__RREESSTTAARRTT  flag of ssiiggaaccttiioonn(2)).  In the remainder of this page, a child whose
+       state has changed and which has not yet been waited upon by one of these system calls is termed _w_a_i_t_a_b_l_e.
+
+   wwaaiitt(()) aanndd wwaaiittppiidd(())
+       The wwaaiitt() system call suspends execution of the calling thread until one of  its  children  terminates.   The
+       call _w_a_i_t_(_&_w_s_t_a_t_u_s_) is equivalent to:
+
+           waitpid(-1, &wstatus, 0);
+
+       The wwaaiittppiidd() system call suspends execution of the calling thread until a child specified by _p_i_d argument has
+       changed state.  By default, wwaaiittppiidd() waits only for terminated children, but this behavior is modifiable  via
+       the _o_p_t_i_o_n_s argument, as described below.
+
+       The value of _p_i_d can be:
+
+       < -1   meaning wait for any child process whose process group ID is equal to the absolute value of _p_i_d.
+
+       -1     meaning wait for any child process.
+
+       0      meaning  wait  for  any child process whose process group ID is equal to that of the calling process at
+              the time of the call to wwaaiittppiidd().
+
+       > 0    meaning wait for the child whose process ID is equal to the value of _p_i_d.
+
+       The value of _o_p_t_i_o_n_s is an OR of zero or more of the following constants:
+
+       WWNNOOHHAANNGG
+              return immediately if no child has exited.
+
+       WWUUNNTTRRAACCEEDD
+              also return if a child has stopped (but not traced via ppttrraaccee(2)).  Status for  _t_r_a_c_e_d  children  which
+              have stopped is provided even if this option is not specified.
+
+       WWCCOONNTTIINNUUEEDD (since Linux 2.6.10)
+              also return if a stopped child has been resumed by delivery of SSIIGGCCOONNTT.
+
+       (For Linux-only options, see below.)
+
+       If _w_s_t_a_t_u_s is not NULL, wwaaiitt() and wwaaiittppiidd() store status information in the _i_n_t to which it points.  This in‐
+       teger can be inspected with the following macros (which take the integer itself as an argument, not a  pointer
+       to it, as is done in wwaaiitt() and wwaaiittppiidd()!):
+
+       WWIIFFEEXXIITTEEDD((_w_s_t_a_t_u_s))
+              returns true if the child terminated normally, that is, by calling eexxiitt(3) or __eexxiitt(2), or by returning
+              from main().
+
+       WWEEXXIITTSSTTAATTUUSS((_w_s_t_a_t_u_s))
+              returns the exit status of the child.  This consists of the least significant 8 bits of the _s_t_a_t_u_s  ar‐
+              gument that the child specified in a call to eexxiitt(3) or __eexxiitt(2) or as the argument for a return state‐
+              ment in main().  This macro should be employed only if WWIIFFEEXXIITTEEDD returned true.
+
+       WWIIFFSSIIGGNNAALLEEDD((_w_s_t_a_t_u_s))
+              returns true if the child process was terminated by a signal.
+
+       WWTTEERRMMSSIIGG((_w_s_t_a_t_u_s))
+              returns the number of the signal that caused the child process to terminate.  This macro should be  em‐
+              ployed only if WWIIFFSSIIGGNNAALLEEDD returned true.
+
+       WWCCOORREEDDUUMMPP((_w_s_t_a_t_u_s))
+              returns  true  if  the child produced a core dump (see ccoorree(5)).  This macro should be employed only if
+              WWIIFFSSIIGGNNAALLEEDD returned true.
+
+              This macro is not specified in POSIX.1-2001 and is not available on some  UNIX  implementations  (e.g.,
+              AIX, SunOS).  Therefore, enclose its use inside _#_i_f_d_e_f _W_C_O_R_E_D_U_M_P _._._. _#_e_n_d_i_f.
+
+       WWIIFFSSTTOOPPPPEEDD((_w_s_t_a_t_u_s))
+              returns  true  if  the  child process was stopped by delivery of a signal; this is possible only if the
+              call was done using WWUUNNTTRRAACCEEDD or when the child is being traced (see ppttrraaccee(2)).
+
+       WWSSTTOOPPSSIIGG((_w_s_t_a_t_u_s))
+              returns the number of the signal which caused the child to stop.  This macro should be employed only if
+              WWIIFFSSTTOOPPPPEEDD returned true.
+
+       WWIIFFCCOONNTTIINNUUEEDD((_w_s_t_a_t_u_s))
+              (since Linux 2.6.10) returns true if the child process was resumed by delivery of SSIIGGCCOONNTT.
+
+   wwaaiittiidd(())
+       The  wwaaiittiidd()  system  call (available since Linux 2.6.9) provides more precise control over which child state
+       changes to wait for.
+
+       The _i_d_t_y_p_e and _i_d arguments select the child(ren) to wait for, as follows:
+
+       _i_d_t_y_p_e == PP__PPIIDD
+              Wait for the child whose process ID matches _i_d.
+
+       _i_d_t_y_p_e == PP__PPIIDDFFDD (since Linux 5.4)
+              Wait for the child referred to by the PID file descriptor specified in _i_d.  (See ppiiddffdd__ooppeenn(2) for fur‐
+              ther information on PID file descriptors.)
+
+       _i_d_t_y_p_e == PP__PPGGIIDD
+              Wait  for  any  child whose process group ID matches _i_d.  Since Linux 5.4, if _i_d is zero, then wait for
+              any child that is in the same process group as the caller's process group at the time of the call.
+
+       _i_d_t_y_p_e == PP__AALLLL
+              Wait for any child; _i_d is ignored.
+
+       The child state changes to wait for are specified by ORing one or more of the following flags in _o_p_t_i_o_n_s:
+
+       WWEEXXIITTEEDD
+              Wait for children that have terminated.
+
+       WWSSTTOOPPPPEEDD
+              Wait for children that have been stopped by delivery of a signal.
+
+       WWCCOONNTTIINNUUEEDD
+              Wait for (previously stopped) children that have been resumed by delivery of SSIIGGCCOONNTT.
+
+       The following flags may additionally be ORed in _o_p_t_i_o_n_s:
+
+       WWNNOOHHAANNGG
+              As for wwaaiittppiidd().
+
+       WWNNOOWWAAIITT
+              Leave the child in a waitable state; a later wait call can be used to again retrieve the  child  status
+              information.
+
+       Upon successful return, wwaaiittiidd() fills in the following fields of the _s_i_g_i_n_f_o___t structure pointed to by _i_n_f_o_p:
+
+       _s_i___p_i_d The process ID of the child.
+
+       _s_i___u_i_d The real user ID of the child.  (This field is not set on most other implementations.)
+
+       _s_i___s_i_g_n_o
+              Always set to SSIIGGCCHHLLDD.
+
+       _s_i___s_t_a_t_u_s
+              Either  the  exit status of the child, as given to __eexxiitt(2) (or eexxiitt(3)), or the signal that caused the
+              child to terminate, stop, or continue.  The _s_i___c_o_d_e field can be used to  determine  how  to  interpret
+              this field.
+
+       _s_i___c_o_d_e
+              Set  to  one  of:  CCLLDD__EEXXIITTEEDD  (child called __eexxiitt(2)); CCLLDD__KKIILLLLEEDD (child killed by signal); CCLLDD__DDUUMMPPEEDD
+              (child killed by signal, and dumped core); CCLLDD__SSTTOOPPPPEEDD (child stopped by signal);  CCLLDD__TTRRAAPPPPEEDD  (traced
+              child has trapped); or CCLLDD__CCOONNTTIINNUUEEDD (child continued by SSIIGGCCOONNTT).
+
+       If  WWNNOOHHAANNGG  was  specified in _o_p_t_i_o_n_s and there were no children in a waitable state, then wwaaiittiidd() returns 0
+       immediately and the state of the _s_i_g_i_n_f_o___t structure pointed to by _i_n_f_o_p depends on  the  implementation.   To
+       (portably)  distinguish  this  case from that where a child was in a waitable state, zero out the _s_i___p_i_d field
+       before the call and check for a nonzero value in this field after the call returns.
+
+       POSIX.1-2008 Technical Corrigendum 1 (2013) adds the requirement that when WWNNOOHHAANNGG is specified in _o_p_t_i_o_n_s and
+       there  were  no  children in a waitable state, then wwaaiittiidd() should zero out the _s_i___p_i_d and _s_i___s_i_g_n_o fields of
+       the structure.  On Linux and other implementations that adhere to this requirement, it  is  not  necessary  to
+       zero out the _s_i___p_i_d field before calling wwaaiittiidd().  However, not all implementations follow the POSIX.1 speci‐
+       fication on this point.
+
+RREETTUURRNN VVAALLUUEE
+       wwaaiitt(): on success, returns the process ID of the terminated child; on error, -1 is returned.
+
+       wwaaiittppiidd(): on success, returns the process ID of the child whose state has changed; if WWNNOOHHAANNGG  was  specified
+       and one or more child(ren) specified by _p_i_d exist, but have not yet changed state, then 0 is returned.  On er‐
+       ror, -1 is returned.
+
+       wwaaiittiidd(): returns 0 on success or if WWNNOOHHAANNGG was specified and no child(ren) specified by _i_d has  yet  changed
+       state; on error, -1 is returned.
+
+       Each of these calls sets _e_r_r_n_o to an appropriate value in the case of an error.
+
+EERRRROORRSS
+       EECCHHIILLDD (for wwaaiitt()) The calling process does not have any unwaited-for children.
+
+       EECCHHIILLDD (for  wwaaiittppiidd()  or wwaaiittiidd()) The process specified by _p_i_d (wwaaiittppiidd()) or _i_d_t_y_p_e and _i_d (wwaaiittiidd()) does
+              not exist or is not a child of the calling process.  (This can happen for one's own child if the action
+              for SSIIGGCCHHLLDD is set to SSIIGG__IIGGNN.  See also the _L_i_n_u_x _N_o_t_e_s section about threads.)
+
+       EEIINNTTRR  WWNNOOHHAANNGG was not set and an unblocked signal or a SSIIGGCCHHLLDD was caught; see ssiiggnnaall(7).
+
+       EEIINNVVAALL The _o_p_t_i_o_n_s argument was invalid.
+
+CCOONNFFOORRMMIINNGG TTOO
+       SVr4, 4.3BSD, POSIX.1-2001.
+
+NNOOTTEESS
+       A  child  that terminates, but has not been waited for becomes a "zombie".  The kernel maintains a minimal set
+       of information about the zombie process (PID, termination status, resource usage information) in order to  al‐
+       low  the parent to later perform a wait to obtain information about the child.  As long as a zombie is not re‐
+       moved from the system via a wait, it will consume a slot in the kernel process table, and if this table fills,
+       it  will not be possible to create further processes.  If a parent process terminates, then its "zombie" chil‐
+       dren (if any) are adopted by iinniitt(1), (or by the nearest "subreaper" process as defined through the use of the
+       pprrccttll(2) PPRR__SSEETT__CCHHIILLDD__SSUUBBRREEAAPPEERR operation); iinniitt(1) automatically performs a wait to remove the zombies.
+
+       POSIX.1-2001  specifies  that  if the disposition of SSIIGGCCHHLLDD is set to SSIIGG__IIGGNN or the SSAA__NNOOCCLLDDWWAAIITT flag is set
+       for SSIIGGCCHHLLDD (see ssiiggaaccttiioonn(2)), then children that terminate do not become zombies and a  call  to  wwaaiitt()  or
+       wwaaiittppiidd()  will block until all children have terminated, and then fail with _e_r_r_n_o set to EECCHHIILLDD.  (The origi‐
+       nal POSIX standard left the behavior of setting SSIIGGCCHHLLDD to SSIIGG__IIGGNN unspecified.  Note that even though the de‐
+       fault  disposition  of SSIIGGCCHHLLDD is "ignore", explicitly setting the disposition to SSIIGG__IIGGNN results in different
+       treatment of zombie process children.)
+
+       Linux 2.6 conforms to the POSIX requirements.  However, Linux 2.4 (and earlier) does not: if a wwaaiitt() or wwaaiitt‐‐
+       ppiidd()  call is made while SSIIGGCCHHLLDD is being ignored, the call behaves just as though SSIIGGCCHHLLDD were not being ig‐
+       nored, that is, the call blocks until the next child terminates and then returns the process ID and status  of
+       that child.
+
+   LLiinnuuxx nnootteess
+       In  the Linux kernel, a kernel-scheduled thread is not a distinct construct from a process.  Instead, a thread
+       is simply a process that is created using the Linux-unique cclloonnee(2) system call; other routines  such  as  the
+       portable pptthhrreeaadd__ccrreeaattee(3) call are implemented using cclloonnee(2).  Before Linux 2.4, a thread was just a special
+       case of a process, and as a consequence one thread could not wait on the children of another thread, even when
+       the  latter  belongs  to the same thread group.  However, POSIX prescribes such functionality, and since Linux
+       2.4 a thread can, and by default will, wait on children of other threads in the same thread group.
+
+       The following Linux-specific _o_p_t_i_o_n_s are for use with children created using cclloonnee(2); they  can  also,  since
+       Linux 4.7, be used with wwaaiittiidd():
+
+       ____WWCCLLOONNEE
+              Wait for "clone" children only.  If omitted, then wait for "non-clone" children only.  (A "clone" child
+              is one which delivers no signal, or a signal other than SSIIGGCCHHLLDD to its parent upon termination.)   This
+              option is ignored if ____WWAALLLL is also specified.
+
+       ____WWAALLLL (since Linux 2.4)
+              Wait for all children, regardless of type ("clone" or "non-clone").
+
+       ____WWNNOOTTHHRREEAADD (since Linux 2.4)
+              Do  not wait for children of other threads in the same thread group.  This was the default before Linux
+              2.4.
+
+       Since Linux 4.7, the ____WWAALLLL flag is automatically implied if the child is being ptraced.
+
+   CC lliibbrraarryy//kkeerrnneell ddiiffffeerreenncceess
+       wwaaiitt() is actually a library function that (in glibc) is implemented as a call to wwaaiitt44(2).
+
+       On some architectures, there is no wwaaiittppiidd() system call; instead, this interface is implemented via a  C  li‐
+       brary wrapper function that calls wwaaiitt44(2).
+
+       The  raw  wwaaiittiidd() system call takes a fifth argument, of type _s_t_r_u_c_t _r_u_s_a_g_e _*.  If this argument is non-NULL,
+       then it is used to return resource usage information about the child, in the same  manner  as  wwaaiitt44(2).   See
+       ggeettrruussaaggee(2) for details.
+
+BBUUGGSS
+       According to POSIX.1-2008, an application calling wwaaiittiidd() must ensure that _i_n_f_o_p points to a _s_i_g_i_n_f_o___t struc‐
+       ture (i.e., that it is a non-null pointer).  On Linux, if _i_n_f_o_p is NULL, wwaaiittiidd() succeeds,  and  returns  the
+       process  ID of the waited-for child.  Applications should avoid relying on this inconsistent, nonstandard, and
+       unnecessary feature.
+
+EEXXAAMMPPLLEESS
+       The following program demonstrates the use of ffoorrkk(2) and wwaaiittppiidd().  The program creates a child process.  If
+       no  command-line argument is supplied to the program, then the child suspends its execution using ppaauussee(2), to
+       allow the user to send signals to the child.  Otherwise, if a command-line  argument  is  supplied,  then  the
+       child  exits  immediately,  using  the  integer  supplied  on the command line as the exit status.  The parent
+       process executes a loop that monitors the child using wwaaiittppiidd(), and uses the W*() macros described  above  to
+       analyze the wait status value.
+
+       The following shell session demonstrates the use of the program:
+
+           $ ..//aa..oouutt &&
+           Child PID is 32360
+           [1] 32359
+           $ kkiillll --SSTTOOPP 3322336600
+           stopped by signal 19
+           $ kkiillll --CCOONNTT 3322336600
+           continued
+           $ kkiillll --TTEERRMM 3322336600
+           killed by signal 15
+           [1]+  Done                    ./a.out
+           $
+
+   PPrrooggrraamm ssoouurrccee
+
+       #include <sys/wait.h>
+       #include <stdint.h>
+       #include <stdlib.h>
+       #include <unistd.h>
+       #include <stdio.h>
+
+       int
+       main(int argc, char *argv[])
+       {
+           pid_t cpid, w;
+           int wstatus;
+
+           cpid = fork();
+           if (cpid == -1) {
+               perror("fork");
+               exit(EXIT_FAILURE);
+           }
+
+           if (cpid == 0) {            /* Code executed by child */
+               printf("Child PID is %jd\n", (intmax_t) getpid());
+               if (argc == 1)
+                   pause();                    /* Wait for signals */
+               _exit(atoi(argv[1]));
+
+           } else {                    /* Code executed by parent */
+               do {
+                   w = waitpid(cpid, &wstatus, WUNTRACED | WCONTINUED);
+                   if (w == -1) {
+                       perror("waitpid");
+                       exit(EXIT_FAILURE);
+                   }
+
+                   if (WIFEXITED(wstatus)) {
+                       printf("exited, status=%d\n", WEXITSTATUS(wstatus));
+                   } else if (WIFSIGNALED(wstatus)) {
+                       printf("killed by signal %d\n", WTERMSIG(wstatus));
+                   } else if (WIFSTOPPED(wstatus)) {
+                       printf("stopped by signal %d\n", WSTOPSIG(wstatus));
+                   } else if (WIFCONTINUED(wstatus)) {
+                       printf("continued\n");
+                   }
+               } while (!WIFEXITED(wstatus) && !WIFSIGNALED(wstatus));
+               exit(EXIT_SUCCESS);
+           }
+       }
+
+SSEEEE AALLSSOO
+       __eexxiitt(2),  cclloonnee(2),  ffoorrkk(2),  kkiillll(2),  ppttrraaccee(2),  ssiiggaaccttiioonn(2),  ssiiggnnaall(2),  wwaaiitt44(2),  pptthhrreeaadd__ccrreeaattee(3),
+       ccoorree(5), ccrreeddeennttiiaallss(7), ssiiggnnaall(7)
+
+CCOOLLOOPPHHOONN
+       This page is part of release 5.10 of the Linux _m_a_n_-_p_a_g_e_s project.  A description of the  project,  information
+       about    reporting    bugs,    and    the    latest    version    of    this    page,    can   be   found   at
+       https://www.kernel.org/doc/man-pages/.
+
+Linux                                                 2020-11-01                                              WAIT(2)
