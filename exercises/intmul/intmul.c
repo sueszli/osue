@@ -37,8 +37,9 @@ typedef struct {
   size_t len;
 } HexStringQuad;
 
-static void addZeroes(char** strp, size_t num, bool leading) {
-  // if !leading, then trailing
+#pragma region done
+static void addChars(char** strp, size_t num, char c, bool addToStart) {
+  // if !addToStart, then it will add it to the start of strp
   // pre-condition: str must be allocated dynamically
   // side-effect: adds leading zeroes to str and reallocates it
 
@@ -52,12 +53,12 @@ static void addZeroes(char** strp, size_t num, bool leading) {
     error("realloc");
   }
 
-  if (leading) {
-    memset(rStr, '0', num);
+  if (addToStart) {
+    memset(rStr, c, num);
     memcpy((rStr + num), oldCopy, oldSize);
   } else {
     memcpy(rStr, oldCopy, oldSize - 1);
-    memset((rStr + oldSize - 1), '0', num);
+    memset((rStr + oldSize - 1), c, num);
     rStr[oldSize - 1 + num] = '\0';
   }
 
@@ -113,9 +114,9 @@ static HexStringPair getInput(void) {
   const size_t len2 = strlen(pair.b);
   const size_t diff = (size_t)labs((long)(len2 - len1));
   if (len1 < len2) {
-    addZeroes(&(pair.a), diff, true);
+    addChars(&(pair.a), diff, '0', true);
   } else if (len1 > len2) {
-    addZeroes(&(pair.b), diff, true);
+    addChars(&(pair.b), diff, '0', true);
   }
   assert(strlen(pair.a) == strlen(pair.b));
 
@@ -123,8 +124,8 @@ static HexStringPair getInput(void) {
   const size_t len = strlen(pair.a);
   if ((len & (len - 1)) != 0) {
     const size_t newLen = 1 << (size_t)ceill(log2l((long double)len));
-    addZeroes(&(pair.a), newLen - len, true);
-    addZeroes(&(pair.b), newLen - len, true);
+    addChars(&(pair.a), newLen - len, '0', true);
+    addChars(&(pair.b), newLen - len, '0', true);
   }
 
   pair.len = strlen(pair.a);
@@ -135,35 +136,29 @@ static HexStringQuad getHexStringQuad(HexStringPair pair) {
   // post-condition: free returned quad
 
   HexStringQuad quad;
-  size_t size = (pair.len / 2) + 2;  // +2 for '\n\0'
+  size_t size = (pair.len / 2) + 1;  // includes '\0'
 
   quad.aH = malloc(size * sizeof(char));
   quad.bH = malloc(size * sizeof(char));
   quad.aL = malloc(size * sizeof(char));
   quad.bL = malloc(size * sizeof(char));
 
-  memcpy(quad.aH, pair.a, size - 2);  // high digits
-  memcpy(quad.bH, pair.b, size - 2);
-  memcpy(quad.aL, (pair.a + size - 2), size - 2);  // low digits
-  memcpy(quad.bL, (pair.b + size - 2), size - 2);
-
-  quad.aH[size - 2] = '\n';
-  quad.bH[size - 2] = '\n';
-  quad.aL[size - 2] = '\n';
-  quad.bL[size - 2] = '\n';
+  memcpy(quad.aH, pair.a, size - 1);  // high digits (left side)
+  memcpy(quad.bH, pair.b, size - 1);
+  memcpy(quad.aL, (pair.a + size - 2), size - 1);  // low digits (right side)
+  memcpy(quad.bL, (pair.b + size - 2), size - 1);
 
   quad.aH[size - 1] = '\0';
   quad.bH[size - 1] = '\0';
   quad.aL[size - 1] = '\0';
   quad.bL[size - 1] = '\0';
-
   quad.len = size - 1;
+
   return quad;
 }
+#pragma endregion done
 
 static unsigned long long parseHexStr(char* hexStr) {
-  // note: this is an overkill for the base case: we only multiply one digit
-
   errno = 0;  // make errors visible
   char* endptr = NULL;
   unsigned long long out = strtoull(hexStr, &endptr, 16);
@@ -194,6 +189,8 @@ int main(int argc, char* argv[]) {
 
   // base case
   HexStringPair pair = getInput();
+  printf("a: %s\n", pair.a);
+  printf("b: %s\n", pair.b);
   if (pair.len == 1) {
     fprintf(stdout, "%llx\n", parseHexStr(pair.a) * parseHexStr(pair.b));
     free(pair.a);
@@ -203,45 +200,36 @@ int main(int argc, char* argv[]) {
 
   // split input into 4 parts
   HexStringQuad quad = getHexStringQuad(pair);
-  printf("a: %s\n", pair.a);
-  printf("b: %s\n", pair.b);
-  printf("aH: %saL: %s", quad.aH, quad.aL);
-  printf("bH: %sbL: %s", quad.bH, quad.bL);
+  printf("aH: %s\naL: %s\n", quad.aH, quad.aL);
+  printf("bH: %s\nbL: %s\n", quad.bH, quad.bL);
 
   /*
   // open 8 pipes
   int pipefd[8][2];
   for (int i = 0; i < 8; i++) {
-    if (pipe(pipefd[i][2]) == -1) {
+    if (pipe(pipefd[i]) == -1) {
       error("pipe");
     }
   }
-
-  const enum {
-    // parent to child pipes
-    p2c_HH = 0,
+  enum pipefd_index {
+    p2c_HH = 0,  // parent to child
     p2c_HL = 1,
     p2c_LH = 2,
     p2c_LL = 3,
-
-    // child to parent pipes
-    c2p_HH = 4,
+    c2p_HH = 4,  // child to parent
     c2p_HL = 5,
     c2p_LH = 6,
     c2p_LL = 7
-  } pipe_index;
+  };
+  enum pipefd_end { READ_END = 0, WRITE_END = 1 };
 
-#define READ_END (0)   // pipefd[0] meaning
-#define WRITE_END (1)  // pipefd[1] meaning
-
-
-  // close p2c read ends
+  // close p2c read-ends
   if (close(pipefd[p2c_HH][READ_END]) == -1) error("close");
   if (close(pipefd[p2c_HL][READ_END]) == -1) error("close");
   if (close(pipefd[p2c_LH][READ_END]) == -1) error("close");
   if (close(pipefd[p2c_LL][READ_END]) == -1) error("close");
 
-  // close c2p write ends
+  // close c2p write-ends
   if (close(pipefd[c2p_HH][WRITE_END]) == -1) error("close");
   if (close(pipefd[c2p_HL][WRITE_END]) == -1) error("close");
   if (close(pipefd[c2p_LH][WRITE_END]) == -1) error("close");
@@ -249,24 +237,31 @@ int main(int argc, char* argv[]) {
 
   // spawn 4 children
   pid_t pid[4];
+  enum pid_index { HH = 0, HL = 1, LH = 2, LL = 3 };
   for (int i = 0; i < 4; i++) {
-    pid[i] = fork();
+    pid[i] = fork();  // also duplicates the pipes for child
 
     if (pid[i] == -1) {
       error("fork");
+    }
 
-    } else if (pid[i] == 0) {  // < spawned child continues here
+    if (pid[i] == 0) {  // < child continues here
       for (int j = 0; j < 8; j++) {
+        // p2c-read-end == child's stdin
         if (j <= p2c_LL) {
-          // p2c read end -> child's stdin
-          if (dup2(pipefd[j][READ_END], STDIN_FILENO) == -1) error("dup2");
+          if (dup2(pipefd[j][READ_END], STDIN_FILENO) == -1) {
+            error("dup2");
+          }
         }
 
+        // c2p-write-end == child's stdout
         if (j >= c2p_HH) {
-          // c2p write end -> child's stdout
-          if (dup2(pipefd[j][WRITE_END], STDOUT_FILENO) == -1) error("dup2");
+          if (dup2(pipefd[j][WRITE_END], STDOUT_FILENO) == -1) {
+            error("dup2");
+          }
         }
 
+        // close all
         if (close(pipefd[j][READ_END]) == -1) error("close");
         if (close(pipefd[j][WRITE_END]) == -1) error("close");
       }
@@ -277,20 +272,65 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  // write into p2c
-  // ...
+  // write into p2c HH
+  if ((write(pipefd[p2c_HH][WRITE_END], quad.aH, quad.len) == -1) &&
+      (errno != EINTR))
+    error("write");
+  if ((write(pipefd[p2c_HH][WRITE_END], quad.bH, quad.len) == -1) &&
+      (errno != EINTR))
+    error("write");
+  if (close(pipefd[p2c_HH][WRITE_END]) == -1) error("close");
 
-  // wait at c2p
-  // ...
+  // write into p2c HL
+  if ((write(pipefd[p2c_HL][WRITE_END], quad.aH, quad.len) == -1) &&
+      (errno != EINTR))
+    error("write");
+  if ((write(pipefd[p2c_HL][WRITE_END], quad.bL, quad.len) == -1) &&
+      (errno != EINTR))
+    error("write");
+  if (close(pipefd[p2c_HL][WRITE_END]) == -1) error("close");
+
+  // write into p2c LH
+  if ((write(pipefd[p2c_LH][WRITE_END], quad.aL, quad.len) == -1) &&
+      (errno != EINTR))
+    error("write");
+  if ((write(pipefd[p2c_LH][WRITE_END], quad.bH, quad.len) == -1) &&
+      (errno != EINTR))
+    error("write");
+  if (close(pipefd[p2c_LH][WRITE_END]) == -1) error("close");
+
+  // write into p2c LL
+  if ((write(pipefd[p2c_LL][WRITE_END], quad.aL, quad.len) == -1) &&
+      (errno != EINTR))
+    error("write");
+  if ((write(pipefd[p2c_LL][WRITE_END], quad.bL, quad.len) == -1) &&
+      (errno != EINTR))
+    error("write");
+  if (close(pipefd[p2c_LL][WRITE_END]) == -1) error("close");
+
+  // wait
+  int status[4];
+  if (waitpid(pid[HH], &status[HH], 0) == -1) error("waitpid");
+  if (waitpid(pid[HL], &status[HL], 0) == -1) error("waitpid");
+  if (waitpid(pid[LH], &status[LH], 0) == -1) error("waitpid");
+  if (waitpid(pid[LL], &status[LL], 0) == -1) error("waitpid");
+  if (WEXITSTATUS(status[HH]) != 0 || WEXITSTATUS(status[HL]) != 0 ||
+      WEXITSTATUS(status[LH]) != 0 || WEXITSTATUS(status[LL]) != 0) {
+    error("child didn't return EXIT_SUCCESS");
+  }
+
+  // read from c2p
+  HexStringQuad childOutput;
   */
+
+  // free resources
+  free(pair.a);
+  free(pair.b);
 
   free(quad.aH);
   free(quad.aL);
   free(quad.bH);
   free(quad.bL);
-
-  free(pair.a);
-  free(pair.b);
 
   exit(EXIT_SUCCESS);
 }

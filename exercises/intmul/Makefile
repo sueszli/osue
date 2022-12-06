@@ -6,12 +6,13 @@ GCC = gcc-12
 
 
 # compile flags (see: https://gcc.gnu.org/onlinedocs/gcc-4.3.2/gcc/Warning-Options.html)
-wflags = -Wall -Wextra -Wwrite-strings -Wconversion
+ignorePragma = -Wno-unknown-pragmas
+wflags = -Wall -Wextra -Wwrite-strings -Wconversion $(ignorePragma)
 defs = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
 libraries = -lm
 
-DEFAULT = -std=c99 -pedantic -Wall -g $(defs)
-VERBOSE = -std=c99 -pedantic -Wall -g3 -DOSUETREE -DDEBUG $(wflags) $(defs)
+DEFAULT = -std=c99 -pedantic -Wall -g $(defs) 
+VERBOSE = -std=c99 -pedantic -Wall -g3 -DOSUETREE -DDEBUG $(wflags)
 
 
 # building executables
