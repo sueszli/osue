@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGS="A42\nCC"
+ARGS="4\nf"
 
 # examples
 #ARGS="3\n3"

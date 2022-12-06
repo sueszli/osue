@@ -27,7 +27,7 @@ typedef struct {
   char* a;
   char* b;
   size_t len;
-} HexStringPair;
+} StringPair;
 
 typedef struct {
   char* aH;
@@ -35,12 +35,10 @@ typedef struct {
   char* bH;
   char* bL;
   size_t len;
-} HexStringQuad;
-
-#pragma region done
+} StringQuad;
 
 static void addChars(char** strp, size_t num, char c, bool addToStart) {
-  // if !addToStart, then it will add it to the start of strp
+  // if !addToStart, then it will add it to the end of strp
   // pre-condition: str must be allocated dynamically
   // side-effect: adds leading zeroes to str and reallocates it
 
@@ -67,10 +65,10 @@ static void addChars(char** strp, size_t num, char c, bool addToStart) {
   *strp = rStr;
 }
 
-static HexStringPair getInput(void) {
-  // post-condition: free returned HexStringPair
+static StringPair getInput(void) {
+  // post-condition: free returned StringPair
 
-  HexStringPair pair;
+  StringPair pair;
   char* line = NULL;
   size_t lineLen = 0;
   ssize_t nChars;
@@ -133,10 +131,10 @@ static HexStringPair getInput(void) {
   return pair;
 }
 
-static HexStringQuad getHexStringQuad(HexStringPair pair) {
+static StringQuad splitToQuad(StringPair pair) {
   // post-condition: free returned quad
 
-  HexStringQuad quad;
+  StringQuad quad;
   size_t size = (pair.len / 2) + 1;
 
   quad.aH = malloc(size * sizeof(char));
@@ -158,20 +156,18 @@ static HexStringQuad getHexStringQuad(HexStringPair pair) {
   return quad;
 }
 
-#pragma endregion done
-
 int main(int argc, char* argv[]) {
   if (argc > 1) {
     usage("no arguments allowed");
   }
 
   // base case
-  HexStringPair pair = getInput();
-  printf("a: %s\n", pair.a);
-  printf("b: %s\n", pair.b);
+  StringPair pair = getInput();
   if (pair.len == 1) {
     errno = 0;
-    printf("%lx\n", strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16));
+    fprintf(stdout, "%lx\n",
+            strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16));
+    fflush(stdout);
     if (errno != 0) {
       error("strtoull");
     }
@@ -180,141 +176,154 @@ int main(int argc, char* argv[]) {
     exit(EXIT_SUCCESS);
   }
 
-  // split input into 4 parts
-  HexStringQuad quad = getHexStringQuad(pair);
+  /*
+  printf("a: %s\n", pair.a);
+  printf("b: %s\n", pair.b);
+  StringQuad quad = splitToQuad(pair);
   printf("aH: %s\n", quad.aH);
   printf("aL: %s\n", quad.aL);
   printf("bH: %s\n", quad.bH);
   printf("bL: %s\n", quad.bL);
+  free(pair.a);
+  free(pair.b);
+  free(quad.aH);
+  free(quad.aL);
+  free(quad.bH);
+  free(quad.bL);
+  */
 
-  /*
-  // open 8 pipes
-  int pipefd[8][2];
-  for (int i = 0; i < 8; i++) {
-    if (pipe(pipefd[i]) == -1) {
+  enum child_index { aH_bH = 0, aH_bL = 1, aL_bH = 2, aL_bL = 3 };
+  enum pipe_end { READ_END = 0, WRITE_END = 1 };
+
+  // open pipes, only keep necessary fd
+  int parent2child[4][2];
+  int child2parent[4][2];
+  for (int i = 0; i < 4; i++) {
+    if ((pipe(parent2child[i]) == -1) || (pipe(child2parent[i]) == -1)) {
       error("pipe");
     }
+    if ((close(parent2child[i][READ_END]) == -1) ||
+        (close(child2parent[i][WRITE_END]) == -1)) {
+      error("close");
+    }
   }
-  enum pipefd_index {
-    p2c_HH = 0,  // parent to child
-    p2c_HL = 1,
-    p2c_LH = 2,
-    p2c_LL = 3,
-    c2p_HH = 4,  // child to parent
-    c2p_HL = 5,
-    c2p_LH = 6,
-    c2p_LL = 7
-  };
-  enum pipefd_end { READ_END = 0, WRITE_END = 1 };
 
-  // close p2c read-ends
-  if (close(pipefd[p2c_HH][READ_END]) == -1) error("close");
-  if (close(pipefd[p2c_HL][READ_END]) == -1) error("close");
-  if (close(pipefd[p2c_LH][READ_END]) == -1) error("close");
-  if (close(pipefd[p2c_LL][READ_END]) == -1) error("close");
-
-  // close c2p write-ends
-  if (close(pipefd[c2p_HH][WRITE_END]) == -1) error("close");
-  if (close(pipefd[c2p_HL][WRITE_END]) == -1) error("close");
-  if (close(pipefd[c2p_LH][WRITE_END]) == -1) error("close");
-  if (close(pipefd[c2p_LL][WRITE_END]) == -1) error("close");
-
-  // spawn 4 children
-  pid_t pid[4];
-  enum pid_index { HH = 0, HL = 1, LH = 2, LL = 3 };
+  // fork 4 children
+  pid_t cpid[4];
   for (int i = 0; i < 4; i++) {
-    pid[i] = fork();  // also duplicates the pipes for child
-
-    if (pid[i] == -1) {
+    cpid[i] = fork();
+    if (cpid[i] == -1) {
       error("fork");
     }
-
-    if (pid[i] == 0) {  // < child continues here
-      for (int j = 0; j < 8; j++) {
-        // p2c-read-end == child's stdin
-        if (j <= p2c_LL) {
-          if (dup2(pipefd[j][READ_END], STDIN_FILENO) == -1) {
-            error("dup2");
-          }
+    if (cpid[i] == 0) {
+      // child redirects stdin and stdout (fork duplicates pipes for child)
+      for (int j = 0; j < 4; i++) {
+        if ((dup2(parent2child[j][READ_END], STDIN_FILENO) == -1) ||
+            (dup2(child2parent[j][WRITE_END], STDOUT_FILENO) == -1)) {
+          error("dup2");
         }
-
-        // c2p-write-end == child's stdout
-        if (j >= c2p_HH) {
-          if (dup2(pipefd[j][WRITE_END], STDOUT_FILENO) == -1) {
-            error("dup2");
-          }
+        if ((close(parent2child[j][READ_END]) == -1) ||
+            (close(parent2child[j][WRITE_END]) == -1) ||
+            (close(child2parent[j][READ_END]) == -1) ||
+            (close(child2parent[j][WRITE_END]) == -1)) {
+          error("close");
         }
-
-        // close all
-        if (close(pipefd[j][READ_END]) == -1) error("close");
-        if (close(pipefd[j][WRITE_END]) == -1) error("close");
       }
 
-      // run intmul
+      // child runs intmul, waits for arguments in stdin
       execlp("./intmul", "./intmul", NULL);
       error("execlp");
     }
   }
 
-  // write into p2c HH
-  if ((write(pipefd[p2c_HH][WRITE_END], quad.aH, quad.len) == -1) &&
-      (errno != EINTR))
-    error("write");
-  if ((write(pipefd[p2c_HH][WRITE_END], quad.bH, quad.len) == -1) &&
-      (errno != EINTR))
-    error("write");
-  if (close(pipefd[p2c_HH][WRITE_END]) == -1) error("close");
-
-  // write into p2c HL
-  if ((write(pipefd[p2c_HL][WRITE_END], quad.aH, quad.len) == -1) &&
-      (errno != EINTR))
-    error("write");
-  if ((write(pipefd[p2c_HL][WRITE_END], quad.bL, quad.len) == -1) &&
-      (errno != EINTR))
-    error("write");
-  if (close(pipefd[p2c_HL][WRITE_END]) == -1) error("close");
-
-  // write into p2c LH
-  if ((write(pipefd[p2c_LH][WRITE_END], quad.aL, quad.len) == -1) &&
-      (errno != EINTR))
-    error("write");
-  if ((write(pipefd[p2c_LH][WRITE_END], quad.bH, quad.len) == -1) &&
-      (errno != EINTR))
-    error("write");
-  if (close(pipefd[p2c_LH][WRITE_END]) == -1) error("close");
-
-  // write into p2c LL
-  if ((write(pipefd[p2c_LL][WRITE_END], quad.aL, quad.len) == -1) &&
-      (errno != EINTR))
-    error("write");
-  if ((write(pipefd[p2c_LL][WRITE_END], quad.bL, quad.len) == -1) &&
-      (errno != EINTR))
-    error("write");
-  if (close(pipefd[p2c_LL][WRITE_END]) == -1) error("close");
-
-  // wait
-  int status[4];
-  if (waitpid(pid[HH], &status[HH], 0) == -1) error("waitpid");
-  if (waitpid(pid[HL], &status[HL], 0) == -1) error("waitpid");
-  if (waitpid(pid[LH], &status[LH], 0) == -1) error("waitpid");
-  if (waitpid(pid[LL], &status[LL], 0) == -1) error("waitpid");
-  if (WEXITSTATUS(status[HH]) != 0 || WEXITSTATUS(status[HL]) != 0 ||
-      WEXITSTATUS(status[LH]) != 0 || WEXITSTATUS(status[LL]) != 0) {
-    error("child didn't return EXIT_SUCCESS");
-  }
-
-  // read from c2p
-  HexStringQuad childOutput;
-  */
-
-  // free resources
+  // write into p2c
+  StringQuad quad = splitToQuad(pair);
   free(pair.a);
   free(pair.b);
+  for (int i = 0; i < 4; i++) {
+    char* arg1;
+    char* arg2;
+    switch (i) {
+      case aH_bH:
+        arg1 = quad.aH;
+        arg2 = quad.bH;
+        break;
 
+      case aH_bL:
+        arg1 = quad.aH;
+        arg2 = quad.bL;
+        break;
+
+      case aL_bH:
+        arg1 = quad.aL;
+        arg2 = quad.bH;
+        break;
+
+      case aL_bL:
+        arg1 = quad.aL;
+        arg2 = quad.bL;
+        break;
+    }
+    if (((write(parent2child[i][WRITE_END], arg1, quad.len) == -1) ||
+         (write(parent2child[i][WRITE_END], arg2, quad.len) == -1)) &&
+        (errno != EINTR)) {
+      error("write");
+    }
+    if (close(parent2child[i][WRITE_END]) == -1) {
+      error("close")
+    }
+  }
   free(quad.aH);
   free(quad.aL);
   free(quad.bH);
   free(quad.bL);
+
+  // wait for child to exit
+  int status[4];
+  for (int i = 0; i < 4; i++) {
+    if (waitpid(cpid[i], &status[i], 0) == -1) {
+      error("waitpid");
+    }
+    if (WEXITSTATUS(status[i]) != 0) {
+      error("child didn't return EXIT_SUCCESS");
+    }
+  }
+
+  // read from c2p
+  /*
+  StringQuad childOutput;
+  for (int i = 0; i < 4; i++) {
+    char* output = malloc(quad.len + 1);
+    if (output == NULL) {
+      error("malloc");
+    }
+    if ((read(child2parent[i][READ_END], output, quad.len) == -1) &&
+        (errno != EINTR)) {
+      error("read");
+    }
+    if (close(child2parent[i][READ_END]) == -1) {
+      error("close");
+    }
+    output[quad.len] = '\0';
+    switch (i) {
+      case aH_bH:
+        childOutput.aH = output;
+        break;
+
+      case aH_bL:
+        childOutput.aL = output;
+        break;
+
+      case aL_bH:
+        childOutput.bH = output;
+        break;
+
+      case aL_bL:
+        childOutput.bL = output;
+        break;
+    }
+  }
+  */
 
   exit(EXIT_SUCCESS);
 }
