@@ -38,6 +38,7 @@ typedef struct {
 } HexStringQuad;
 
 #pragma region done
+
 static void addChars(char** strp, size_t num, char c, bool addToStart) {
   // if !addToStart, then it will add it to the start of strp
   // pre-condition: str must be allocated dynamically
@@ -89,7 +90,7 @@ static HexStringPair getInput(void) {
   // validate input
   if (nLines == 1) {
     free(pair.a);
-    usage("too few argument");
+    usage("too few arguments");
   }
   if (nLines > 2) {
     free(pair.a);
@@ -136,7 +137,7 @@ static HexStringQuad getHexStringQuad(HexStringPair pair) {
   // post-condition: free returned quad
 
   HexStringQuad quad;
-  size_t size = (pair.len / 2) + 1;  // includes '\0'
+  size_t size = (pair.len / 2) + 1;
 
   quad.aH = malloc(size * sizeof(char));
   quad.bH = malloc(size * sizeof(char));
@@ -145,43 +146,20 @@ static HexStringQuad getHexStringQuad(HexStringPair pair) {
 
   memcpy(quad.aH, pair.a, size - 1);  // high digits (left side)
   memcpy(quad.bH, pair.b, size - 1);
-  memcpy(quad.aL, (pair.a + size - 2), size - 1);  // low digits (right side)
-  memcpy(quad.bL, (pair.b + size - 2), size - 1);
+  memcpy(quad.aL, (pair.a + size - 1), size - 1);  // low digits (right side)
+  memcpy(quad.bL, (pair.b + size - 1), size - 1);
 
   quad.aH[size - 1] = '\0';
   quad.bH[size - 1] = '\0';
   quad.aL[size - 1] = '\0';
   quad.bL[size - 1] = '\0';
-  quad.len = size - 1;
 
+  quad.len = size - 1;
   return quad;
 }
+
 #pragma endregion done
 
-static unsigned long long parseHexStr(char* hexStr) {
-  errno = 0;  // make errors visible
-  char* endptr = NULL;
-  unsigned long long out = strtoull(hexStr, &endptr, 16);
-  if ((errno == ERANGE) || (errno == EINVAL) || (endptr == hexStr)) {
-    error("strtoull");
-  }
-  return out;
-}
-
-/*
- * Base case: print product of single digit multiplication to stdout.
- * General case: create 4 children, each responsible for one product.
- *
- *   a · b =
- *      + aH · bH · 16^n       -> done by HH child
- *      + aH · bL · 16^(n/2)   -> done by HL child
- *      + aL · bH · 16^(n/2)   -> done by LH child
- *      + aL · bL              -> done by LL child
- *
- * Each of the 4 children requires 2 pipes. The 8 fd for pipes are in pipefd[].
- * Write into the p2c pipes and wait for a response in the c2p pipes.
- * Then add the 4 responses from the children together and print on stdout.
- */
 int main(int argc, char* argv[]) {
   if (argc > 1) {
     usage("no arguments allowed");
@@ -192,7 +170,11 @@ int main(int argc, char* argv[]) {
   printf("a: %s\n", pair.a);
   printf("b: %s\n", pair.b);
   if (pair.len == 1) {
-    fprintf(stdout, "%llx\n", parseHexStr(pair.a) * parseHexStr(pair.b));
+    errno = 0;
+    printf("%lx\n", strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16));
+    if (errno != 0) {
+      error("strtoull");
+    }
     free(pair.a);
     free(pair.b);
     exit(EXIT_SUCCESS);
@@ -200,8 +182,10 @@ int main(int argc, char* argv[]) {
 
   // split input into 4 parts
   HexStringQuad quad = getHexStringQuad(pair);
-  printf("aH: %s\naL: %s\n", quad.aH, quad.aL);
-  printf("bH: %s\nbL: %s\n", quad.bH, quad.bL);
+  printf("aH: %s\n", quad.aH);
+  printf("aL: %s\n", quad.aL);
+  printf("bH: %s\n", quad.bH);
+  printf("bL: %s\n", quad.bL);
 
   /*
   // open 8 pipes

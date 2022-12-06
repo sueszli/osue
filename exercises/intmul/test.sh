@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGS="ABA\nCD"
+ARGS="A42\nCC"
 
 # examples
 #ARGS="3\n3"
