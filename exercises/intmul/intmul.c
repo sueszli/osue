@@ -1,11 +1,15 @@
 #define _GNU_SOURCE
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #define error(msg)      \
   do {                  \
@@ -26,10 +30,10 @@ typedef struct {
 } HexStringPair;
 
 typedef struct {
-  char* hex1_h;
-  char* hex1_l;
-  char* hex2_h;
-  char* hex2_l;
+  char* hex1H;
+  char* hex1L;
+  char* hex2H;
+  char* hex2L;
   size_t len;
 } HexStringQuad;
 
@@ -128,26 +132,27 @@ static unsigned long long parseHexStr(char* hexStr) {
   return out;
 }
 
-static HexStringQuad splitInHalf(HexStringPair pair) {
+static HexStringQuad getHexStringPair(HexStringPair pair) {
   // post-condition: free returned quad
+
   HexStringQuad quad;
 
   size_t len = pair.len / 2;
-  size_t size = (pair.len / 2) + 1;
+  size_t size = len + 1;  // includes '\0'
 
-  // higher digits
-  quad.hex1_h = malloc(size * sizeof(char));
-  quad.hex2_h = malloc(size * sizeof(char));
-  memcpy(quad.hex1_h, pair.hex1, len);
-  memcpy(quad.hex2_h, pair.hex2, len);
-  quad.hex1_h[len] = '\0';
-  quad.hex2_h[len] = '\0';
+  // high digits
+  quad.hex1H = malloc(size * sizeof(char));
+  quad.hex2H = malloc(size * sizeof(char));
+  memcpy(quad.hex1H, pair.hex1, len);
+  memcpy(quad.hex2H, pair.hex2, len);
+  quad.hex1H[size - 1] = '\0';
+  quad.hex2H[size - 1] = '\0';
 
-  // lower digits
-  quad.hex1_l = malloc(size * sizeof(char));
-  quad.hex2_l = malloc(size * sizeof(char));
-  memcpy(quad.hex1_l, (pair.hex1 + len), size);
-  memcpy(quad.hex2_l, (pair.hex2 + len), size);
+  // low digits
+  quad.hex1L = malloc(size * sizeof(char));
+  quad.hex2L = malloc(size * sizeof(char));
+  memcpy(quad.hex1L, (pair.hex1 + len), size);
+  memcpy(quad.hex2L, (pair.hex2 + len), size);
 
   quad.len = len;
   return quad;
@@ -158,6 +163,7 @@ int main(int argc, char* argv[]) {
     usage("no arguments allowed");
   }
 
+  // read input
   HexStringPair pair = getInput();
   printf("hex1 pair: %s\n", pair.hex1);
   printf("hex2 pair: %s\n", pair.hex2);
@@ -167,8 +173,8 @@ int main(int argc, char* argv[]) {
   if (pair.len == 1) {
     unsigned long long result = parseHexStr(pair.hex1) * parseHexStr(pair.hex2);
     fprintf(stdout, "RESULT: %llx\n", result);
-
     fflush(stdout);
+
     free(pair.hex1);
     free(pair.hex2);
     return EXIT_SUCCESS;
@@ -176,18 +182,32 @@ int main(int argc, char* argv[]) {
 
   printf("\n");
 
-  // call self recursively
-  HexStringQuad quad = splitInHalf(pair);
-  printf("hex1 quad: %s %s\n", quad.hex1_h, quad.hex1_l);
-  printf("hex2 quad: %s %s\n", quad.hex2_h, quad.hex2_l);
+  // general case
+  HexStringQuad quad = getHexStringPair(pair);
+  printf("hex1 quad: %s %s\n", quad.hex1H, quad.hex1L);
+  printf("hex2 quad: %s %s\n", quad.hex2H, quad.hex2L);
   printf("len: %ld\n", quad.len);
 
-  free(quad.hex1_h);
-  free(quad.hex1_l);
-  free(quad.hex2_h);
-  free(quad.hex2_l);
+  const int READ_INDEX = 0;
+  const int WRITE_INDEX = 1;
+
+  const int READ_1H = 0;
+  const int WRITE_1H = 1;
+  const int READ_1L = 4;
+  const int WRITE_1L = 4;
+
+  const int READ_2H = 2;
+  const int WRITE_2H = 3;
+  const int READ_2L = 6;
+  const int WRITE_2L = 5;
+
+  free(quad.hex1H);
+  free(quad.hex1L);
+  free(quad.hex2H);
+  free(quad.hex2L);
 
   free(pair.hex1);
   free(pair.hex2);
+
   return EXIT_SUCCESS;
 }
