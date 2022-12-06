@@ -132,6 +132,8 @@ static HexStringPair getInput(void) {
 }
 
 static unsigned long long parseHexStr(char* hexStr) {
+  // note: this is an overkill for the base case: we only multiply one digit
+
   errno = 0;  // make errors visible
   char* endptr = NULL;
   unsigned long long out = strtoull(hexStr, &endptr, 16);
@@ -165,55 +167,53 @@ static HexStringQuad getHexStringQuad(HexStringPair pair) {
   return quad;
 }
 
+/*
+ * Base case: print product of single digit multiplication to stdout.
+ * General case: create 4 children, each responsible for one product.
+ *
+ *    [aH aL] · [bH bL] =
+ *       + aH · bH · 16^n       -> done by HH_child
+ *       + aH · bL · 16^(n/2)   -> done by HL_child
+ *       + aL · bH · 16^(n/2)   -> done by LH_child
+ *       + aL · bL              -> done by LL_child
+ */
 int main(int argc, char* argv[]) {
   if (argc > 1) {
     usage("no arguments allowed");
   }
 
-  // read input
-  HexStringPair pair = getInput();
-  printf("a pair: %s\n", pair.a);
-  printf("b pair: %s\n", pair.b);
-  printf("len: %ld\n\n", pair.len);
-
   // base case
+  HexStringPair pair = getInput();
   if (pair.len == 1) {
-    unsigned long long result = parseHexStr(pair.a) * parseHexStr(pair.b);
-    fprintf(stdout, "RESULT: %llx\n", result);
-    fflush(stdout);
-
+    fprintf(stdout, "%llx\n", parseHexStr(pair.a) * parseHexStr(pair.b));
     free(pair.a);
     free(pair.b);
-    return EXIT_SUCCESS;
+    exit(EXIT_SUCCESS);
   }
 
-  // split input into 4 parts to pass to children
-  /*
-    [aH aL] * [bH bL] =
-      + aH * bH * 16^n       -> sent to HH child
-      + aH * bL * 16^(n/2)   -> sent to HL child
-      + aL * bH * 16^(n/2)   -> sent to LH child
-      + aL * bL              -> sent to LL child
-  */
+  // general case
   HexStringQuad quad = getHexStringQuad(pair);
+  printf("a: %s\n", pair.a);
+  printf("b: %s\n", pair.b);
   printf("a pair: %s %s\n", quad.aH, quad.aL);
   printf("b pair: %s %s\n", quad.bH, quad.bL);
-  printf("len: %ld\n", quad.len);
 
-  // open 2 pipes per child
+  // open 2 pipes per child (reading from child, writing to child)
   int pipefd[8][2];
-  const int READ_1H = 0;
-  const int WRITE_1H = 1;
-  const int READ_1L = 2;
-  const int WRITE_1L = 3;
-  const int READ_2H = 4;
-  const int WRITE_2H = 5;
-  const int READ_2L = 6;
-  const int WRITE_2L = 7;
-  if (pipe(pipefd[READ_1H]) == -1 || pipe(pipefd[WRITE_1H]) == -1 ||
-      pipe(pipefd[READ_1L]) == -1 || pipe(pipefd[WRITE_1L]) == -1 ||
-      pipe(pipefd[READ_2H]) == -1 || pipe(pipefd[WRITE_2H]) == -1 ||
-      pipe(pipefd[READ_2L]) == -1 || pipe(pipefd[WRITE_2L]) == -1) {
+
+  const int HH_READ = 0;
+  const int HH_WRITE = 1;
+  const int HL_READ = 2;
+  const int HL_WRITE = 3;
+  const int LH_READ = 4;
+  const int LH_WRITE = 5;
+  const int LL_READ = 6;
+  const int LL_WRITE = 7;
+
+  if (pipe(pipefd[HH_READ]) == -1 || pipe(pipefd[HH_WRITE]) == -1 ||
+      pipe(pipefd[HL_READ]) == -1 || pipe(pipefd[HL_WRITE]) == -1 ||
+      pipe(pipefd[LH_READ]) == -1 || pipe(pipefd[LH_WRITE]) == -1 ||
+      pipe(pipefd[LL_READ]) == -1 || pipe(pipefd[LL_WRITE]) == -1) {
     error("pipe");
   }
 
@@ -232,5 +232,5 @@ int main(int argc, char* argv[]) {
   free(pair.a);
   free(pair.b);
 
-  return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 }

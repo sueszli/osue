@@ -111,12 +111,13 @@ static void add_X_zeros(char *a, int count) {
 }
 
 int main(int argc, char *argv[]) {
+#pragma region done
+
   if (argc != 1) {
     USAGE();
   }
 
-#pragma region region
-  // read in input -> get hex pair
+  // read input
   int length;
   char firstString[MAXLENGTH];
   char secondString[MAXLENGTH];
@@ -171,7 +172,7 @@ int main(int argc, char *argv[]) {
     ERROR_EXIT("Error when opening pipes");
   }
 
-#pragma endregion region
+#pragma endregion done
 
   // create child processes
   int pid[4];
