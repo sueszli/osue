@@ -23,9 +23,6 @@
     exit(EXIT_FAILURE);                                              \
   } while (true);
 
-#define READ_END (0)   // pipefd[0] meaning
-#define WRITE_END (1)  // pipefd[1] meaning
-
 typedef struct {
   char* a;
   char* b;
@@ -66,11 +63,6 @@ static void addZeroes(char** strp, size_t num, bool leading) {
 
   free(oldCopy);
   *strp = rStr;
-}
-
-static void addNewLine(char** strp) {
-  // add newLine to every single argument passed to children
-  // then you dont have to write 2 things
 }
 
 static HexStringPair getInput(void) {
@@ -139,6 +131,36 @@ static HexStringPair getInput(void) {
   return pair;
 }
 
+static HexStringQuad getHexStringQuad(HexStringPair pair) {
+  // post-condition: free returned quad
+
+  HexStringQuad quad;
+  size_t size = (pair.len / 2) + 2;  // +2 for '\n\0'
+
+  quad.aH = malloc(size * sizeof(char));
+  quad.bH = malloc(size * sizeof(char));
+  quad.aL = malloc(size * sizeof(char));
+  quad.bL = malloc(size * sizeof(char));
+
+  memcpy(quad.aH, pair.a, size - 2);  // high digits
+  memcpy(quad.bH, pair.b, size - 2);
+  memcpy(quad.aL, (pair.a + size - 2), size - 2);  // low digits
+  memcpy(quad.bL, (pair.b + size - 2), size - 2);
+
+  quad.aH[size - 2] = '\n';
+  quad.bH[size - 2] = '\n';
+  quad.aL[size - 2] = '\n';
+  quad.bL[size - 2] = '\n';
+
+  quad.aH[size - 1] = '\0';
+  quad.bH[size - 1] = '\0';
+  quad.aL[size - 1] = '\0';
+  quad.bL[size - 1] = '\0';
+
+  quad.len = size - 1;
+  return quad;
+}
+
 static unsigned long long parseHexStr(char* hexStr) {
   // note: this is an overkill for the base case: we only multiply one digit
 
@@ -151,46 +173,17 @@ static unsigned long long parseHexStr(char* hexStr) {
   return out;
 }
 
-static HexStringQuad getHexStringQuad(HexStringPair pair) {
-  // post-condition: free returned quad
-
-  HexStringQuad quad;
-  size_t size = pair.len / 2 + 1;
-
-  // high digits
-  quad.aH = malloc(size * sizeof(char));
-  quad.bH = malloc(size * sizeof(char));
-  memcpy(quad.aH, pair.a, size - 1);
-  memcpy(quad.bH, pair.b, size - 1);
-  quad.aH[size - 1] = '\0';
-  quad.bH[size - 1] = '\0';
-
-  // low digits
-  quad.aL = malloc(size * sizeof(char));
-  quad.bL = malloc(size * sizeof(char));
-  memcpy(quad.aL, (pair.a + size - 1), size);
-  memcpy(quad.bL, (pair.b + size - 1), size);
-
-  quad.len = size - 1;
-  return quad;
-}
-
 /*
  * Base case: print product of single digit multiplication to stdout.
  * General case: create 4 children, each responsible for one product.
  *
- *   [aH aL] · [bH bL] =
- *      + aH · bH · 16^n       -> done by HH
- *      + aH · bL · 16^(n/2)   -> done by HL
- *      + aL · bH · 16^(n/2)   -> done by LH
- *      + aL · bL              -> done by LL
+ *   a · b =
+ *      + aH · bH · 16^n       -> done by HH child
+ *      + aH · bL · 16^(n/2)   -> done by HL child
+ *      + aL · bH · 16^(n/2)   -> done by LH child
+ *      + aL · bL              -> done by LL child
  *
- * Each of the 4 children requires 2 pipes.
- * The pipefd array has the file descriptors for our 8 pipes:
- *
- *   p2c / parent 2 child pipes: parent reads, child writes
- *   c2p / child 2 parent pipes: parent writes, child reads
- *
+ * Each of the 4 children requires 2 pipes. The 8 fd for pipes are in pipefd[].
  * Write into the p2c pipes and wait for a response in the c2p pipes.
  * Then add the 4 responses from the children together and print on stdout.
  */
@@ -212,9 +205,10 @@ int main(int argc, char* argv[]) {
   HexStringQuad quad = getHexStringQuad(pair);
   printf("a: %s\n", pair.a);
   printf("b: %s\n", pair.b);
-  printf("a pair: %s %s\n", quad.aH, quad.aL);
-  printf("b pair: %s %s\n", quad.bH, quad.bL);
+  printf("aH: %saL: %s", quad.aH, quad.aL);
+  printf("bH: %sbL: %s", quad.bH, quad.bL);
 
+  /*
   // open 8 pipes
   int pipefd[8][2];
   for (int i = 0; i < 8; i++) {
@@ -222,14 +216,24 @@ int main(int argc, char* argv[]) {
       error("pipe");
     }
   }
-  const int p2c_HH = 0;
-  const int p2c_HL = 1;
-  const int p2c_LH = 2;
-  const int p2c_LL = 3;
-  const int c2p_HH = 4;
-  const int c2p_HL = 5;
-  const int c2p_LH = 6;
-  const int c2p_LL = 7;
+
+  const enum {
+    // parent to child pipes
+    p2c_HH = 0,
+    p2c_HL = 1,
+    p2c_LH = 2,
+    p2c_LL = 3,
+
+    // child to parent pipes
+    c2p_HH = 4,
+    c2p_HL = 5,
+    c2p_LH = 6,
+    c2p_LL = 7
+  } pipe_index;
+
+#define READ_END (0)   // pipefd[0] meaning
+#define WRITE_END (1)  // pipefd[1] meaning
+
 
   // close p2c read ends
   if (close(pipefd[p2c_HH][READ_END]) == -1) error("close");
@@ -253,10 +257,12 @@ int main(int argc, char* argv[]) {
 
     } else if (pid[i] == 0) {  // < spawned child continues here
       for (int j = 0; j < 8; j++) {
-        if (j <= 3) {
+        if (j <= p2c_LL) {
           // p2c read end -> child's stdin
           if (dup2(pipefd[j][READ_END], STDIN_FILENO) == -1) error("dup2");
-        } else {
+        }
+
+        if (j >= c2p_HH) {
           // c2p write end -> child's stdout
           if (dup2(pipefd[j][WRITE_END], STDOUT_FILENO) == -1) error("dup2");
         }
@@ -276,6 +282,7 @@ int main(int argc, char* argv[]) {
 
   // wait at c2p
   // ...
+  */
 
   free(quad.aH);
   free(quad.aL);
