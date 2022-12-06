@@ -170,13 +170,9 @@ int main(int argc, char* argv[]) {
     usage("no arguments allowed");
   }
 
-  // read input -> get hex pair
+  // read input
   HexStringPair pair = getInput();
   printf("hex1 pair: %s\n", pair.hex1);
-
-  addZeroes(&(pair.hex2), 4, false);
-  // addZeroes(&(pair.hex2), 2, false);
-
   printf("hex2 pair: %s\n", pair.hex2);
   printf("len: %ld\n\n", pair.len);
 
@@ -191,14 +187,20 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
   }
 
-  // get hex quad
-  // HexStringQuad quad = getHexStringQuad(pair);
-  // printf("hex1 quad: %s %s\n", quad.hex1H, quad.hex1L);
-  // printf("hex2 quad: %s %s\n", quad.hex2H, quad.hex2L);
-  // printf("len: %ld\n", quad.len);
-
-  // open pipes for children, close unnecessary ends
+  // split input into 4 parts to pass to children
   /*
+    [aH aL] * [bH bL] =
+      + aH * bH * 16^n       -> sent to HH child
+      + aH * bL * 16^(n/2)   -> sent to HL child
+      + aL * bH * 16^(n/2)   -> sent to LH child
+      + aL * bL              -> sent to LL child
+  */
+  HexStringQuad quad = getHexStringQuad(pair);
+  printf("hex1 quad: %s %s\n", quad.hex1H, quad.hex1L);
+  printf("hex2 quad: %s %s\n", quad.hex2H, quad.hex2L);
+  printf("len: %ld\n", quad.len);
+
+  // open 2 pipes per child
   int pipefd[8][2];
   const int READ_1H = 0;
   const int WRITE_1H = 1;
@@ -208,7 +210,6 @@ int main(int argc, char* argv[]) {
   const int WRITE_2H = 5;
   const int READ_2L = 6;
   const int WRITE_2L = 7;
-
   if (pipe(pipefd[READ_1H]) == -1 || pipe(pipefd[WRITE_1H]) == -1 ||
       pipe(pipefd[READ_1L]) == -1 || pipe(pipefd[WRITE_1L]) == -1 ||
       pipe(pipefd[READ_2H]) == -1 || pipe(pipefd[WRITE_2H]) == -1 ||
@@ -218,14 +219,15 @@ int main(int argc, char* argv[]) {
 
   // spawn 4 children
 
+  // redirect pipes
+
   const int READ_END = 0;
   const int WRITE_END = 1;
-  */
 
-  // free(quad.hex1H);
-  // free(quad.hex1L);
-  // free(quad.hex2H);
-  // free(quad.hex2L);
+  free(quad.hex1H);
+  free(quad.hex1L);
+  free(quad.hex2H);
+  free(quad.hex2L);
 
   free(pair.hex1);
   free(pair.hex2);

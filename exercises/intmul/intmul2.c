@@ -22,7 +22,6 @@
   } while (0)
 
 #define MAXLENGTH 1024
-#define HEXDIGITS "0123456789ABCDEFabcdef"
 
 #define WRITE 1
 #define READ 0
@@ -32,6 +31,8 @@ static void read_input(char *firstString, char *secondString) {
   fgets(secondString, MAXLENGTH, stdin);
   firstString[strlen(firstString) - 1] = '\0';
   secondString[strlen(secondString) - 1] = '\0';
+
+  const char *HEXDIGITS = "0123456789ABCDEFabcdef";
 
   if ((strspn(secondString, HEXDIGITS) != strlen(secondString)) ||
       (strspn(firstString, HEXDIGITS) != strlen(firstString))) {
@@ -109,26 +110,6 @@ static void add_X_zeros(char *a, int count) {
   a[length] = '\0';
 }
 
-// pipes, i * 2, i * 2 + 1
-static void dup_needed_pipes(int pipes[8][2], int neededReadPipe,
-                             int neededWritePipe) {
-  for (int i = 0; i < 8; i++) {
-    if (i == neededReadPipe) {
-      if (dup2(pipes[i][1], STDOUT_FILENO) == -1) {
-        ERROR_EXIT("dup-Error");
-      }
-
-    } else if (i == neededWritePipe) {
-      if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
-        ERROR_EXIT("dup-Error");
-      }
-    }
-
-    close(pipes[i][1]);
-    close(pipes[i][0]);
-  }
-}
-
 int main(int argc, char *argv[]) {
   if (argc != 1) {
     USAGE();
@@ -199,8 +180,25 @@ int main(int argc, char *argv[]) {
     if (pid[i] < 0) {
       ERROR_EXIT("Error at forking");
     } else if (pid[i] == 0) {
-      dup_needed_pipes(pipes, i * 2, i * 2 + 1);
+      // .
+      // dup needed pipes
+      for (int j = 0; j < 8; j++) {
+        if (j == i * 2) {
+          // read pipes
+          if (dup2(pipes[j][1], STDOUT_FILENO) == -1) {
+            ERROR_EXIT("dup-Error");
+          }
 
+        } else if (j == i * 2 + 1) {
+          // write pipes
+          if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
+            ERROR_EXIT("dup-Error");
+          }
+        }
+
+        close(pipes[j][1]);
+        close(pipes[j][0]);
+      }
       if (execlp(argv[0], argv[0], NULL) == -1) {
         ERROR_EXIT("Error on execlp");
       }
