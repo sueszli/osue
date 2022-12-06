@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGS="ABABABA\nCD"
+ARGS="ABA\nCD"
 
 # examples
 #ARGS="3\n3"

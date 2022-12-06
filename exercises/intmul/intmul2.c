@@ -27,15 +27,6 @@
 #define WRITE 1
 #define READ 0
 
-#define READ_CHILD_HH 0
-#define WRITE_CHILD_HH (READ_CHILD_HH + 1)
-#define READ_CHILD_LH 2
-#define WRITE_CHILD_LH (READ_CHILD_LH + 1)
-#define READ_CHILD_HL 4
-#define WRITE_CHILD_HL (READ_CHILD_HL + 1)
-#define READ_CHILD_LL 6
-#define WRITE_CHILD_LL (READ_CHILD_LL + 1)
-
 static void read_input(char *firstString, char *secondString) {
   fgets(firstString, MAXLENGTH, stdin);
   fgets(secondString, MAXLENGTH, stdin);
@@ -118,13 +109,15 @@ static void add_X_zeros(char *a, int count) {
   a[length] = '\0';
 }
 
-static void dup_needed_pipes(int pipeAmount, int pipes[pipeAmount][2],
-                             int neededReadPipe, int neededWritePipe) {
-  for (int i = 0; i < pipeAmount; i++) {
+// pipes, i * 2, i * 2 + 1
+static void dup_needed_pipes(int pipes[8][2], int neededReadPipe,
+                             int neededWritePipe) {
+  for (int i = 0; i < 8; i++) {
     if (i == neededReadPipe) {
       if (dup2(pipes[i][1], STDOUT_FILENO) == -1) {
         ERROR_EXIT("dup-Error");
       }
+
     } else if (i == neededWritePipe) {
       if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
         ERROR_EXIT("dup-Error");
@@ -141,7 +134,8 @@ int main(int argc, char *argv[]) {
     USAGE();
   }
 
-  // read in input
+#pragma region region
+  // read in input -> get hex pair
   int length;
   char firstString[MAXLENGTH];
   char secondString[MAXLENGTH];
@@ -157,11 +151,11 @@ int main(int argc, char *argv[]) {
     SUCCESS_EXIT();
   }
 
+  // get hex quad
   char Al[length + 2];
   char Bh[length + 2];
   char Bl[length + 2];
   char Ah[length + 2];
-
   int i = 0;
   for (; i < length; i++) {
     Ah[i] = firstString[i];
@@ -169,20 +163,25 @@ int main(int argc, char *argv[]) {
     Al[i] = firstString[length + i];
     Bl[i] = secondString[length + i];
   }
-
   Ah[i] = '\n';
   Bh[i] = '\n';
   Al[i] = '\n';
   Bl[i] = '\n';
-
   Ah[i + 1] = '\0';
   Bh[i + 1] = '\0';
   Al[i + 1] = '\0';
   Bl[i + 1] = '\0';
 
+  // open pipes
+  const int READ_CHILD_HH = 0;
+  const int WRITE_CHILD_HH = 1;
+  const int READ_CHILD_LH = 2;
+  const int WRITE_CHILD_LH = 3;
+  const int READ_CHILD_HL = 4;
+  const int WRITE_CHILD_HL = 5;
+  const int READ_CHILD_LL = 6;
+  const int WRITE_CHILD_LL = 7;
   int pipes[8][2];
-
-  int pid[4];
 
   if (pipe(pipes[READ_CHILD_HH]) == -1 || pipe(pipes[WRITE_CHILD_HH]) == -1 ||
       pipe(pipes[READ_CHILD_HL]) == -1 || pipe(pipes[WRITE_CHILD_HL]) == -1 ||
@@ -191,13 +190,16 @@ int main(int argc, char *argv[]) {
     ERROR_EXIT("Error when opening pipes");
   }
 
+#pragma endregion region
+
   // create child processes
+  int pid[4];
   for (int i = 0; i < 4; i++) {
     pid[i] = fork();
     if (pid[i] < 0) {
       ERROR_EXIT("Error at forking");
     } else if (pid[i] == 0) {
-      dup_needed_pipes(8, pipes, i * 2, i * 2 + 1);
+      dup_needed_pipes(pipes, i * 2, i * 2 + 1);
 
       if (execlp(argv[0], argv[0], NULL) == -1) {
         ERROR_EXIT("Error on execlp");
@@ -206,7 +208,7 @@ int main(int argc, char *argv[]) {
   }
 
   {
-    // close all reading ends of writing pipe
+    // close all unnecessary ends
     close(pipes[WRITE_CHILD_HH][READ]);
     close(pipes[READ_CHILD_HH][WRITE]);
     close(pipes[WRITE_CHILD_HL][READ]);
@@ -217,7 +219,6 @@ int main(int argc, char *argv[]) {
     close(pipes[READ_CHILD_LL][WRITE]);
 
     // writing
-
     write(pipes[WRITE_CHILD_HH][WRITE], Ah, strlen(Ah));
     write(pipes[WRITE_CHILD_HH][WRITE], Bh, strlen(Bh));
     close(pipes[WRITE_CHILD_HH][WRITE]);

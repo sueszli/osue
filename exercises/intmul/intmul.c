@@ -37,7 +37,8 @@ typedef struct {
   size_t len;
 } HexStringQuad;
 
-static void addLeadingZeroes(char** strp, size_t num) {
+static void addZeroes(char** strp, size_t num, bool leading) {
+  // if !leading, then trailing
   // pre-condition: str must be allocated dynamically
   // side-effect: adds leading zeroes to str and reallocates it
 
@@ -50,8 +51,16 @@ static void addLeadingZeroes(char** strp, size_t num) {
   if (rStr == NULL) {
     error("realloc");
   }
-  memset(rStr, '0', num);
-  memcpy((rStr + num), oldCopy, oldSize);
+
+  if (leading) {
+    memset(rStr, '0', num);
+    memcpy((rStr + num), oldCopy, oldSize);
+  } else {
+    memcpy(rStr, oldCopy, oldSize - 1);
+    memset((rStr + oldSize - 1), '0', num);
+    rStr[oldSize - 1 + num] = '\0';
+  }
+
   free(oldCopy);
   *strp = rStr;
 }
@@ -104,9 +113,9 @@ static HexStringPair getInput(void) {
   const size_t len2 = strlen(pair.hex2);
   const size_t diff = (size_t)labs((long)(len2 - len1));
   if (len1 < len2) {
-    addLeadingZeroes(&(pair.hex1), diff);
+    addZeroes(&(pair.hex1), diff, true);
   } else if (len1 > len2) {
-    addLeadingZeroes(&(pair.hex2), diff);
+    addZeroes(&(pair.hex2), diff, true);
   }
   assert(strlen(pair.hex1) == strlen(pair.hex2));
 
@@ -114,8 +123,8 @@ static HexStringPair getInput(void) {
   const size_t len = strlen(pair.hex1);
   if ((len & (len - 1)) != 0) {
     const size_t newLen = 1 << (size_t)ceill(log2l((long double)len));
-    addLeadingZeroes(&(pair.hex1), newLen - len);
-    addLeadingZeroes(&(pair.hex2), newLen - len);
+    addZeroes(&(pair.hex1), newLen - len, true);
+    addZeroes(&(pair.hex2), newLen - len, true);
   }
 
   pair.len = strlen(pair.hex1);
@@ -132,29 +141,27 @@ static unsigned long long parseHexStr(char* hexStr) {
   return out;
 }
 
-static HexStringQuad getHexStringPair(HexStringPair pair) {
+static HexStringQuad getHexStringQuad(HexStringPair pair) {
   // post-condition: free returned quad
 
   HexStringQuad quad;
-
-  size_t len = pair.len / 2;
-  size_t size = len + 1;  // includes '\0'
+  size_t size = pair.len / 2 + 1;
 
   // high digits
   quad.hex1H = malloc(size * sizeof(char));
   quad.hex2H = malloc(size * sizeof(char));
-  memcpy(quad.hex1H, pair.hex1, len);
-  memcpy(quad.hex2H, pair.hex2, len);
+  memcpy(quad.hex1H, pair.hex1, size - 1);
+  memcpy(quad.hex2H, pair.hex2, size - 1);
   quad.hex1H[size - 1] = '\0';
   quad.hex2H[size - 1] = '\0';
 
   // low digits
   quad.hex1L = malloc(size * sizeof(char));
   quad.hex2L = malloc(size * sizeof(char));
-  memcpy(quad.hex1L, (pair.hex1 + len), size);
-  memcpy(quad.hex2L, (pair.hex2 + len), size);
+  memcpy(quad.hex1L, (pair.hex1 + size - 1), size);
+  memcpy(quad.hex2L, (pair.hex2 + size - 1), size);
 
-  quad.len = len;
+  quad.len = size - 1;
   return quad;
 }
 
@@ -163,11 +170,15 @@ int main(int argc, char* argv[]) {
     usage("no arguments allowed");
   }
 
-  // read input
+  // read input -> get hex pair
   HexStringPair pair = getInput();
   printf("hex1 pair: %s\n", pair.hex1);
+
+  addZeroes(&(pair.hex2), 4, false);
+  // addZeroes(&(pair.hex2), 2, false);
+
   printf("hex2 pair: %s\n", pair.hex2);
-  printf("len: %ld\n", pair.len);
+  printf("len: %ld\n\n", pair.len);
 
   // base case
   if (pair.len == 1) {
@@ -180,31 +191,41 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
   }
 
-  printf("\n");
+  // get hex quad
+  // HexStringQuad quad = getHexStringQuad(pair);
+  // printf("hex1 quad: %s %s\n", quad.hex1H, quad.hex1L);
+  // printf("hex2 quad: %s %s\n", quad.hex2H, quad.hex2L);
+  // printf("len: %ld\n", quad.len);
 
-  // general case
-  HexStringQuad quad = getHexStringPair(pair);
-  printf("hex1 quad: %s %s\n", quad.hex1H, quad.hex1L);
-  printf("hex2 quad: %s %s\n", quad.hex2H, quad.hex2L);
-  printf("len: %ld\n", quad.len);
-
-  const int READ_INDEX = 0;
-  const int WRITE_INDEX = 1;
-
+  // open pipes for children, close unnecessary ends
+  /*
+  int pipefd[8][2];
   const int READ_1H = 0;
   const int WRITE_1H = 1;
-  const int READ_1L = 4;
-  const int WRITE_1L = 4;
-
-  const int READ_2H = 2;
-  const int WRITE_2H = 3;
+  const int READ_1L = 2;
+  const int WRITE_1L = 3;
+  const int READ_2H = 4;
+  const int WRITE_2H = 5;
   const int READ_2L = 6;
-  const int WRITE_2L = 5;
+  const int WRITE_2L = 7;
 
-  free(quad.hex1H);
-  free(quad.hex1L);
-  free(quad.hex2H);
-  free(quad.hex2L);
+  if (pipe(pipefd[READ_1H]) == -1 || pipe(pipefd[WRITE_1H]) == -1 ||
+      pipe(pipefd[READ_1L]) == -1 || pipe(pipefd[WRITE_1L]) == -1 ||
+      pipe(pipefd[READ_2H]) == -1 || pipe(pipefd[WRITE_2H]) == -1 ||
+      pipe(pipefd[READ_2L]) == -1 || pipe(pipefd[WRITE_2L]) == -1) {
+    error("pipe");
+  }
+
+  // spawn 4 children
+
+  const int READ_END = 0;
+  const int WRITE_END = 1;
+  */
+
+  // free(quad.hex1H);
+  // free(quad.hex1L);
+  // free(quad.hex2H);
+  // free(quad.hex2L);
 
   free(pair.hex1);
   free(pair.hex2);
