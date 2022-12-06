@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -111,8 +112,6 @@ static void add_X_zeros(char *a, int count) {
 }
 
 int main(int argc, char *argv[]) {
-#pragma region done
-
   if (argc != 1) {
     USAGE();
   }
@@ -171,8 +170,6 @@ int main(int argc, char *argv[]) {
       pipe(pipes[READ_CHILD_LL]) == -1 || pipe(pipes[WRITE_CHILD_LL]) == -1) {
     ERROR_EXIT("Error when opening pipes");
   }
-
-#pragma endregion done
 
   // create child processes
   int pid[4];

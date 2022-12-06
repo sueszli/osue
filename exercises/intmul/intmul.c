@@ -23,6 +23,9 @@
     exit(EXIT_FAILURE);                                              \
   } while (true);
 
+#define READ_END (0)   // pipefd[0] meaning
+#define WRITE_END (1)  // pipefd[1] meaning
+
 typedef struct {
   char* a;
   char* b;
@@ -172,10 +175,19 @@ static HexStringQuad getHexStringQuad(HexStringPair pair) {
  * General case: create 4 children, each responsible for one product.
  *
  *    [aH aL] · [bH bL] =
- *       + aH · bH · 16^n       -> done by HH_child
- *       + aH · bL · 16^(n/2)   -> done by HL_child
- *       + aL · bH · 16^(n/2)   -> done by LH_child
- *       + aL · bL              -> done by LL_child
+ *       + aH · bH · 16^n       -> done by HH (index 0)
+ *       + aH · bL · 16^(n/2)   -> done by HL (index 1)
+ *       + aL · bH · 16^(n/2)   -> done by LH (index 2)
+ *       + aL · bL              -> done by LL (index 3)
+ *
+ * Each of the 4 children requires 2 pipes.
+ * The pipefd array has the file descriptors for our 8 pipes.
+ *
+ *    PARENT_TO_CHILD pipes  -> parent reads, child writes (child-index * 2)
+ *    CHILD_TO_PARENT pipes  -> parent writes, child reads (child-index * 2 + 1)
+ *
+ * Write into the P2C pipes and wait for a response in the C2P pipes.
+ * Then add the 4 responses from the children together and print on stdout.
  */
 int main(int argc, char* argv[]) {
   if (argc > 1) {
@@ -191,38 +203,78 @@ int main(int argc, char* argv[]) {
     exit(EXIT_SUCCESS);
   }
 
-  // general case
+  // split input into 4 parts
   HexStringQuad quad = getHexStringQuad(pair);
   printf("a: %s\n", pair.a);
   printf("b: %s\n", pair.b);
   printf("a pair: %s %s\n", quad.aH, quad.aL);
   printf("b pair: %s %s\n", quad.bH, quad.bL);
 
-  // open 2 pipes per child (reading from child, writing to child)
+  // open 8 pipes
   int pipefd[8][2];
-
-  const int HH_READ = 0;
-  const int HH_WRITE = 1;
-  const int HL_READ = 2;
-  const int HL_WRITE = 3;
-  const int LH_READ = 4;
-  const int LH_WRITE = 5;
-  const int LL_READ = 6;
-  const int LL_WRITE = 7;
-
-  if (pipe(pipefd[HH_READ]) == -1 || pipe(pipefd[HH_WRITE]) == -1 ||
-      pipe(pipefd[HL_READ]) == -1 || pipe(pipefd[HL_WRITE]) == -1 ||
-      pipe(pipefd[LH_READ]) == -1 || pipe(pipefd[LH_WRITE]) == -1 ||
-      pipe(pipefd[LL_READ]) == -1 || pipe(pipefd[LL_WRITE]) == -1) {
+  bool hasFailed = false;
+  for (int i = 0; i < 8; i++) {
+    hasFailed = hasFailed || (pipe(pipefd[i]) == -1);
+  }
+  if (hasFailed) {
     error("pipe");
   }
 
   // spawn 4 children
+  pid_t pid[4];
+  for (int i = 0; i < 4; i++) {
+    pid[i] = fork();
+    if (pid[i] == -1) {
+      error("fork");
+    } else if (pid[i] == 0) {  // spawned child continues here
+      for (int j = 0; j < 8; j++) {
+        bool PARENT_TO_CHILD = (i % 2 == 0);
+        bool CHILD_TO_PARENT = (i % 2 != 0);
 
-  // redirect pipes
+        // p2c read end -> child's stdin
+        if (PARENT_TO_CHILD) {
+          if (dup2(pipefd[j][READ_END], STDIN_FILENO) == -1) {
+            error("dup2");
+          }
+        }
 
-  const int READ_END = 0;
-  const int WRITE_END = 1;
+        // c2p write end -> child's stdout
+        if (CHILD_TO_PARENT) {
+          if (dup2(pipefd[j][WRITE_END], STDOUT_FILENO) == -1) {
+            error("dup2");
+          }
+        }
+
+        // close everything
+        if (close(pipefd[j][0]) == -1 || close(pipefd[j][0]) == -1) {
+          error("close");
+        }
+      }
+
+      // run intmul
+      execlp("./intmul", "./intmul", NULL);
+      error("execlp");
+    }
+  }
+
+  for (int j = 0; j < 8; j++) {
+    bool PARENT_TO_CHILD = (i % 2 == 0);
+    bool CHILD_TO_PARENT = (i % 2 != 0);
+
+    // close p2c read ends
+    if (PARENT_TO_CHILD) {
+      if (close(pipefd[j][READ_END]) == -1) {
+        error("close");
+      }
+    }
+
+    // close c2p write ends
+    if (CHILD_TO_PARENT) {
+      if (close(pipefd[j][WRITE_END]) == -1) {
+        error("close");
+      }
+    }
+  }
 
   free(quad.aH);
   free(quad.aL);
