@@ -158,19 +158,22 @@ static StringQuad splitToQuad(StringPair pair) {
 }
 #pragma endregion "reliable"
 
-static char* addHexStrings(char** strp1, char** strp2) {
-  // post-condition: free returned string
+static char* addHexStrings(char* str1, char* str2) {
+  // post-condition: free output
 
-  if (*strp1 != NULL) {  // first call in main()
-    free(*strp1);
-  }
-  free(*strp2);
   return "test";
 }
 
 int main(int argc, char* argv[]) {
   StringPair pair = getInput();
   StringQuad quad = splitToQuad(pair);
+
+  printf("a-pair before: %s\n", pair.a);
+  addChars(&(quad.aH), 1, 'X', false);
+  addChars(&(quad.aH), 1, 'X', true);
+
+  printf("a-pair after: %s\n", pair.a);
+  printf("changed aH: %s\n", quad.aH);
 
   free(pair.a);
   free(pair.b);
@@ -322,15 +325,19 @@ int main2(int argc, char* argv[]) {
   }
 
   // shift and calculate sum
-  addChars(&childResult[aH_bH], quad.len * 2, '0', false);
-  addChars(&childResult[aH_bL], quad.len, '0', false);
-  addChars(&childResult[aL_bH], quad.len, '0', false);
-  char* sum = NULL;
-  for (int i = 0; i < 4; i++) {
-    addHexStrings(&sum, &childResult[i]);
-  }
-  fprintf(stdout, "%s\n", sum);
-  fflush(stdout);
-  free(sum);
+  const int n = pair.len;
+  addChars(&childResult[aH_bH], n, '0', false);
+  addChars(&childResult[aH_bL], n / 2, '0', false);
+  addChars(&childResult[aL_bH], n / 2, '0', false);
+
+  // char* sum = NULL;
+  // for (int i = 0; i < 4; i++) {
+  //   addHexStrings(&sum, &childResult[i]);
+  //   free(childResult[i]);
+  // }
+  // fprintf(stdout, "%s\n", sum);
+  // fflush(stdout);
+  // free(sum);
+
   exit(EXIT_SUCCESS);
 }

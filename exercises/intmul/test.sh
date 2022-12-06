@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGS="4\nf"
+ARGS="cccCCccCCc\nf"
 
 # examples
 #ARGS="3\n3"
