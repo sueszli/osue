@@ -161,21 +161,6 @@ int main(int argc, char* argv[]) {
     usage("no arguments allowed");
   }
 
-  // base case
-  StringPair pair = getInput();
-  if (pair.len == 1) {
-    errno = 0;
-    fprintf(stdout, "%lx\n",
-            strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16));
-    fflush(stdout);
-    if (errno != 0) {
-      error("strtoull");
-    }
-    free(pair.a);
-    free(pair.b);
-    exit(EXIT_SUCCESS);
-  }
-
   /*
   printf("a: %s\n", pair.a);
   printf("b: %s\n", pair.b);
@@ -191,6 +176,21 @@ int main(int argc, char* argv[]) {
   free(quad.bH);
   free(quad.bL);
   */
+
+  // base case
+  StringPair pair = getInput();
+  if (pair.len == 1) {
+    errno = 0;
+    fprintf(stdout, "%lx\n",
+            strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16));
+    fflush(stdout);
+    if (errno != 0) {
+      error("strtoull");
+    }
+    free(pair.a);
+    free(pair.b);
+    exit(EXIT_SUCCESS);
+  }
 
   enum child_index { aH_bH = 0, aH_bL = 1, aL_bH = 2, aL_bL = 3 };
   enum pipe_end { READ_END = 0, WRITE_END = 1 };
@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  // write into p2c
+  // write into p2c pipes
   StringQuad quad = splitToQuad(pair);
   free(pair.a);
   free(pair.b);
@@ -279,51 +279,34 @@ int main(int argc, char* argv[]) {
   free(quad.bL);
 
   // wait for child to exit
-  int status[4];
   for (int i = 0; i < 4; i++) {
-    if (waitpid(cpid[i], &status[i], 0) == -1) {
+    int status;
+    if (waitpid(cpid[i], &status, 0) == -1) {
       error("waitpid");
     }
-    if (WEXITSTATUS(status[i]) != 0) {
-      error("child didn't return EXIT_SUCCESS");
+    if (WEXITSTATUS(status) == EXIT_FAILURE) {
+      error("child failed");
     }
   }
 
-  // read from c2p
-  /*
-  StringQuad childOutput;
+  // read from c2p pipes with getline
+  char* result[4];
+  size_t len[4];
   for (int i = 0; i < 4; i++) {
-    char* output = malloc(quad.len + 1);
-    if (output == NULL) {
-      error("malloc");
-    }
-    if ((read(child2parent[i][READ_END], output, quad.len) == -1) &&
-        (errno != EINTR)) {
-      error("read");
+    if (getline(&result[i], &len[i], child2parent[i][READ_END]) == -1) {
+      error("getline");
     }
     if (close(child2parent[i][READ_END]) == -1) {
       error("close");
     }
-    output[quad.len] = '\0';
-    switch (i) {
-      case aH_bH:
-        childOutput.aH = output;
-        break;
-
-      case aH_bL:
-        childOutput.aL = output;
-        break;
-
-      case aL_bH:
-        childOutput.bH = output;
-        break;
-
-      case aL_bL:
-        childOutput.bL = output;
-        break;
-    }
   }
-  */
+
+  // add results together
+
+  // free
+  for (int i = 0; i < 4; i++) {
+    free(result[i]);
+  }
 
   exit(EXIT_SUCCESS);
 }
