@@ -68,6 +68,11 @@ static void addZeroes(char** strp, size_t num, bool leading) {
   *strp = rStr;
 }
 
+static void addNewLine(char** strp) {
+  // add newLine to every single argument passed to children
+  // then you dont have to write 2 things
+}
+
 static HexStringPair getInput(void) {
   // post-condition: free returned HexStringPair
 
@@ -174,19 +179,19 @@ static HexStringQuad getHexStringQuad(HexStringPair pair) {
  * Base case: print product of single digit multiplication to stdout.
  * General case: create 4 children, each responsible for one product.
  *
- *    [aH aL] · [bH bL] =
- *       + aH · bH · 16^n       -> done by HH (index 0)
- *       + aH · bL · 16^(n/2)   -> done by HL (index 1)
- *       + aL · bH · 16^(n/2)   -> done by LH (index 2)
- *       + aL · bL              -> done by LL (index 3)
+ *   [aH aL] · [bH bL] =
+ *      + aH · bH · 16^n       -> done by HH
+ *      + aH · bL · 16^(n/2)   -> done by HL
+ *      + aL · bH · 16^(n/2)   -> done by LH
+ *      + aL · bL              -> done by LL
  *
  * Each of the 4 children requires 2 pipes.
- * The pipefd array has the file descriptors for our 8 pipes.
+ * The pipefd array has the file descriptors for our 8 pipes:
  *
- *    PARENT_TO_CHILD pipes  -> parent reads, child writes (child-index * 2)
- *    CHILD_TO_PARENT pipes  -> parent writes, child reads (child-index * 2 + 1)
+ *   p2c / parent 2 child pipes: parent reads, child writes
+ *   c2p / child 2 parent pipes: parent writes, child reads
  *
- * Write into the P2C pipes and wait for a response in the C2P pipes.
+ * Write into the p2c pipes and wait for a response in the c2p pipes.
  * Then add the 4 responses from the children together and print on stdout.
  */
 int main(int argc, char* argv[]) {
@@ -212,43 +217,52 @@ int main(int argc, char* argv[]) {
 
   // open 8 pipes
   int pipefd[8][2];
-  bool hasFailed = false;
   for (int i = 0; i < 8; i++) {
-    hasFailed = hasFailed || (pipe(pipefd[i]) == -1);
+    if (pipe(pipefd[i][2]) == -1) {
+      error("pipe");
+    }
   }
-  if (hasFailed) {
-    error("pipe");
-  }
+  const int p2c_HH = 0;
+  const int p2c_HL = 1;
+  const int p2c_LH = 2;
+  const int p2c_LL = 3;
+  const int c2p_HH = 4;
+  const int c2p_HL = 5;
+  const int c2p_LH = 6;
+  const int c2p_LL = 7;
+
+  // close p2c read ends
+  if (close(pipefd[p2c_HH][READ_END]) == -1) error("close");
+  if (close(pipefd[p2c_HL][READ_END]) == -1) error("close");
+  if (close(pipefd[p2c_LH][READ_END]) == -1) error("close");
+  if (close(pipefd[p2c_LL][READ_END]) == -1) error("close");
+
+  // close c2p write ends
+  if (close(pipefd[c2p_HH][WRITE_END]) == -1) error("close");
+  if (close(pipefd[c2p_HL][WRITE_END]) == -1) error("close");
+  if (close(pipefd[c2p_LH][WRITE_END]) == -1) error("close");
+  if (close(pipefd[c2p_LL][WRITE_END]) == -1) error("close");
 
   // spawn 4 children
   pid_t pid[4];
   for (int i = 0; i < 4; i++) {
     pid[i] = fork();
+
     if (pid[i] == -1) {
       error("fork");
-    } else if (pid[i] == 0) {  // spawned child continues here
+
+    } else if (pid[i] == 0) {  // < spawned child continues here
       for (int j = 0; j < 8; j++) {
-        bool PARENT_TO_CHILD = (i % 2 == 0);
-        bool CHILD_TO_PARENT = (i % 2 != 0);
-
-        // p2c read end -> child's stdin
-        if (PARENT_TO_CHILD) {
-          if (dup2(pipefd[j][READ_END], STDIN_FILENO) == -1) {
-            error("dup2");
-          }
+        if (j <= 3) {
+          // p2c read end -> child's stdin
+          if (dup2(pipefd[j][READ_END], STDIN_FILENO) == -1) error("dup2");
+        } else {
+          // c2p write end -> child's stdout
+          if (dup2(pipefd[j][WRITE_END], STDOUT_FILENO) == -1) error("dup2");
         }
 
-        // c2p write end -> child's stdout
-        if (CHILD_TO_PARENT) {
-          if (dup2(pipefd[j][WRITE_END], STDOUT_FILENO) == -1) {
-            error("dup2");
-          }
-        }
-
-        // close everything
-        if (close(pipefd[j][0]) == -1 || close(pipefd[j][0]) == -1) {
-          error("close");
-        }
+        if (close(pipefd[j][READ_END]) == -1) error("close");
+        if (close(pipefd[j][WRITE_END]) == -1) error("close");
       }
 
       // run intmul
@@ -257,24 +271,11 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  for (int j = 0; j < 8; j++) {
-    bool PARENT_TO_CHILD = (i % 2 == 0);
-    bool CHILD_TO_PARENT = (i % 2 != 0);
+  // write into p2c
+  // ...
 
-    // close p2c read ends
-    if (PARENT_TO_CHILD) {
-      if (close(pipefd[j][READ_END]) == -1) {
-        error("close");
-      }
-    }
-
-    // close c2p write ends
-    if (CHILD_TO_PARENT) {
-      if (close(pipefd[j][WRITE_END]) == -1) {
-        error("close");
-      }
-    }
-  }
+  // wait at c2p
+  // ...
 
   free(quad.aH);
   free(quad.aL);
