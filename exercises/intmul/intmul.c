@@ -37,6 +37,7 @@ typedef struct {
   size_t len;
 } StringQuad;
 
+#pragma region "reliable"
 static void addChars(char** strp, size_t num, char c, bool addToStart) {
   // if !addToStart, then it will add it to the end of strp
   // pre-condition: str must be allocated dynamically
@@ -155,27 +156,37 @@ static StringQuad splitToQuad(StringPair pair) {
   quad.len = size - 1;
   return quad;
 }
+#pragma endregion "reliable"
+
+static char* addHexStrings(char** strp1, char** strp2) {
+  // post-condition: free returned string
+
+  if (*strp1 != NULL) {  // first call in main()
+    free(*strp1);
+  }
+  free(*strp2);
+  return "test";
+}
 
 int main(int argc, char* argv[]) {
-  if (argc > 1) {
-    usage("no arguments allowed");
-  }
-
-  /*
-  printf("a: %s\n", pair.a);
-  printf("b: %s\n", pair.b);
+  StringPair pair = getInput();
   StringQuad quad = splitToQuad(pair);
-  printf("aH: %s\n", quad.aH);
-  printf("aL: %s\n", quad.aL);
-  printf("bH: %s\n", quad.bH);
-  printf("bL: %s\n", quad.bL);
+
   free(pair.a);
   free(pair.b);
+
   free(quad.aH);
   free(quad.aL);
   free(quad.bH);
   free(quad.bL);
-  */
+
+  exit(EXIT_SUCCESS);
+}
+
+int main2(int argc, char* argv[]) {
+  if (argc > 1) {
+    usage("no arguments allowed");
+  }
 
   // base case
   StringPair pair = getInput();
@@ -195,7 +206,7 @@ int main(int argc, char* argv[]) {
   enum child_index { aH_bH = 0, aH_bL = 1, aL_bH = 2, aL_bL = 3 };
   enum pipe_end { READ_END = 0, WRITE_END = 1 };
 
-  // open pipes, only keep necessary fd
+  // open 8 pipes
   int parent2child[4][2];
   int child2parent[4][2];
   for (int i = 0; i < 4; i++) {
@@ -230,7 +241,7 @@ int main(int argc, char* argv[]) {
         }
       }
 
-      // child runs intmul, waits for arguments in stdin
+      // child runs intmul (waits for arguments in stdin)
       execlp("./intmul", "./intmul", NULL);
       error("execlp");
     }
@@ -248,22 +259,21 @@ int main(int argc, char* argv[]) {
         arg1 = quad.aH;
         arg2 = quad.bH;
         break;
-
       case aH_bL:
         arg1 = quad.aH;
         arg2 = quad.bL;
         break;
-
       case aL_bH:
         arg1 = quad.aL;
         arg2 = quad.bH;
         break;
-
       case aL_bL:
         arg1 = quad.aL;
         arg2 = quad.bL;
         break;
     }
+    addChars(&arg1, 1, '\n', false);
+    addChars(&arg2, 1, '\n', false);
     if (((write(parent2child[i][WRITE_END], arg1, quad.len) == -1) ||
          (write(parent2child[i][WRITE_END], arg2, quad.len) == -1)) &&
         (errno != EINTR)) {
@@ -289,24 +299,38 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  // read from c2p pipes with getline
-  char* result[4];
-  size_t len[4];
+  // read from c2p pipes
+  char* childResult[4];
   for (int i = 0; i < 4; i++) {
-    if (getline(&result[i], &len[i], child2parent[i][READ_END]) == -1) {
+    size_t len;
+
+    // can i write into fp
+    FILE* stream = fdopen(child2parent[i][READ_END], "r");
+    if (stream == NULL) {
+      error("fdopen");
+    }
+    if (getline(&childResult[i], &len, stream) == -1) {
       error("getline");
     }
+    addChars(&childResult[i], 1, '\0', false);
     if (close(child2parent[i][READ_END]) == -1) {
       error("close");
     }
+    if (fclose(stream) == -1) {
+      error("fclose");
+    }
   }
 
-  // add results together
-
-  // free
+  // shift and calculate sum
+  addChars(&childResult[aH_bH], quad.len * 2, '0', false);
+  addChars(&childResult[aH_bL], quad.len, '0', false);
+  addChars(&childResult[aL_bH], quad.len, '0', false);
+  char* sum = NULL;
   for (int i = 0; i < 4; i++) {
-    free(result[i]);
+    addHexStrings(&sum, &childResult[i]);
   }
-
+  fprintf(stdout, "%s\n", sum);
+  fflush(stdout);
+  free(sum);
   exit(EXIT_SUCCESS);
 }
