@@ -181,10 +181,10 @@ static void addHexStrings(char* str1, char* str2) {
   for (i = 0; i < maxLen; i++) {
     char tmp1[2] = {'0', '\0'};
     char tmp2[2] = {'0', '\0'};
-    if (indexStr1 != -1) {
+    if (indexStr1 != (size_t)-1) {
       tmp1[0] = str1[indexStr1--];
     }
-    if (indexStr2 != -1) {
+    if (indexStr2 != (size_t)-1) {
       tmp2[0] = str2[indexStr2--];
     }
 
@@ -228,9 +228,6 @@ static void addHexStrings(char* str1, char* str2) {
   }
   output[j] = '\0';
   printf("OUTPUT: %s\n\n", output);
-  return output;
-
-  return "nothing";
 }
 
 int main(int argc, char* argv[]) {
