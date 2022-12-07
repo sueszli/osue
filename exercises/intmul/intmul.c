@@ -37,7 +37,6 @@ typedef struct {
   size_t len;
 } HexStringQuad;
 
-#pragma region "reliable"
 static void addChars(char** strp, size_t num, char c, bool addToStart) {
   // if !addToStart, then it will add it to the end of strp
   // pre-condition: str must be allocated dynamically
@@ -133,6 +132,7 @@ static HexStringPair getInput(void) {
 }
 
 static HexStringQuad splitToQuad(HexStringPair pair) {
+  // also adds a '\n' at the end so content can be directly sent to children
   // post-condition: free returned quad
 
   HexStringQuad quad;
@@ -152,8 +152,14 @@ static HexStringQuad splitToQuad(HexStringPair pair) {
   quad.bH[size - 1] = '\0';
   quad.aL[size - 1] = '\0';
   quad.bL[size - 1] = '\0';
-
   quad.len = size - 1;
+
+  addChars(&(quad.aH), 1, '\n', false);
+  addChars(&(quad.aL), 1, '\n', false);
+  addChars(&(quad.bH), 1, '\n', false);
+  addChars(&(quad.bL), 1, '\n', false);
+  quad.len++;
+
   return quad;
 }
 
@@ -225,7 +231,6 @@ static char* addHexStrings(char str1[], char str2[]) {
   output[j] = '\0';
   return output;
 }
-#pragma endregion "reliable"
 
 int main(int argc, char* argv[]) {
   if (argc > 1) {
@@ -246,23 +251,18 @@ int main(int argc, char* argv[]) {
     exit(EXIT_SUCCESS);
   }
 
+  // general case
   enum child_index { aH_bH = 0, aH_bL = 1, aL_bH = 2, aL_bL = 3 };
   enum pipe_end { READ_END = 0, WRITE_END = 1 };
 
-  // open 8 pipes
   int parent2child[4][2];
   int child2parent[4][2];
   for (int i = 0; i < 4; i++) {
     if ((pipe(parent2child[i]) == -1) || (pipe(child2parent[i]) == -1)) {
       error("pipe");
     }
-    if ((close(parent2child[i][READ_END]) == -1) ||
-        (close(child2parent[i][WRITE_END]) == -1)) {
-      error("close");
-    }
   }
 
-  // fork 4 children
   pid_t cpid[4];
   for (int i = 0; i < 4; i++) {
     cpid[i] = fork();
@@ -271,17 +271,15 @@ int main(int argc, char* argv[]) {
     }
     if (cpid[i] == 0) {
       // child redirects stdin and stdout (fork duplicates pipes for child)
-      for (int j = 0; j < 4; i++) {
-        if ((dup2(parent2child[j][READ_END], STDIN_FILENO) == -1) ||
-            (dup2(child2parent[j][WRITE_END], STDOUT_FILENO) == -1)) {
-          error("dup2");
-        }
-        if ((close(parent2child[j][READ_END]) == -1) ||
-            (close(parent2child[j][WRITE_END]) == -1) ||
-            (close(child2parent[j][READ_END]) == -1) ||
-            (close(child2parent[j][WRITE_END]) == -1)) {
-          error("close");
-        }
+      if ((dup2(parent2child[i][READ_END], STDIN_FILENO) == -1) ||
+          (dup2(child2parent[i][WRITE_END], STDOUT_FILENO) == -1)) {
+        error("dup2");
+      }
+      if ((close(parent2child[i][READ_END]) == -1) ||
+          (close(parent2child[i][WRITE_END]) == -1) ||
+          (close(child2parent[i][READ_END]) == -1) ||
+          (close(child2parent[i][WRITE_END]) == -1)) {
+        error("close");
       }
 
       // child runs intmul (waits for arguments in stdin)
@@ -290,10 +288,19 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  // close unnecessary fds for parent
+  for (int i = 0; i < 4; i++) {
+    if ((close(parent2child[i][READ_END]) == -1) ||
+        (close(child2parent[i][WRITE_END]) == -1)) {
+      error("close");
+    }
+  }
+
   // write into parent2child
   HexStringQuad quad = splitToQuad(pair);
   free(pair.a);
   free(pair.b);
+
   for (int i = 0; i < 4; i++) {
     char* arg1;
     char* arg2;
@@ -315,9 +322,6 @@ int main(int argc, char* argv[]) {
         arg2 = quad.bL;
         break;
     }
-    addChars(&arg1, 1, '\n', false);
-    addChars(&arg2, 1, '\n', false);
-    quad.len++;
     if (((write(parent2child[i][WRITE_END], arg1, quad.len) == -1) ||
          (write(parent2child[i][WRITE_END], arg2, quad.len) == -1)) &&
         (errno != EINTR)) {
@@ -332,8 +336,12 @@ int main(int argc, char* argv[]) {
   free(quad.bH);
   free(quad.bL);
 
+  // <--------- EVERYTHING WORKS UNTIL HERE
+  fprintf(stderr, "arrived here lol\n");
+
   // wait for child to exit
   for (int i = 0; i < 4; i++) {
+    fprintf(stderr, "processing index %d\n", i);
     int status;
     if (waitpid(cpid[i], &status, 0) == -1) {
       error("waitpid");
@@ -363,7 +371,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  // shift and calculate sum
+  // print total sum
   const size_t n = pair.len;
   addChars(&childResult[aH_bH], n, '0', false);
   addChars(&childResult[aH_bL], n / 2, '0', false);

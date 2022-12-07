@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGS="ffffacffffacacaca\nffffee"
+ARGS="ff\nf"
 
 # examples
 #ARGS="3\n3"
