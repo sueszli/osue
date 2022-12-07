@@ -158,7 +158,9 @@ static StringQuad splitToQuad(StringPair pair) {
 }
 #pragma endregion "reliable"
 
-static void addHexStrings(char* str1, char* str2) {
+static char* addHexStrings(char str1[], char str2[]) {
+  // post-condition: output must be freed
+
   // remove leading zeroes
   while (*str1 == '0') {
     str1++;
@@ -166,7 +168,6 @@ static void addHexStrings(char* str1, char* str2) {
   while (*str2 == '0') {
     str2++;
   }
-  printf("\nInput: %s + %s\n\n", str1, str2);
 
   // add bit wise
   const size_t maxLen =
@@ -195,9 +196,6 @@ static void addHexStrings(char* str1, char* str2) {
       error("strtoul");
     }
 
-    printf("prev carry + str1[%ld] + str2[%ld] = %s + %s + %s\n", i, i,
-           carryStr, tmp1, tmp2);
-
     unsigned long write = sum % 16;
     carry = sum / 16;
 
@@ -208,7 +206,6 @@ static void addHexStrings(char* str1, char* str2) {
     assert(carry <= 15);
     sprintf(carryStr, "%lx", carry);
 
-    printf("write: %s --> carry: %s\n\n", writeStr, carryStr);
     reversedOutput[i] = writeStr[0];
   }
   if (carry == 0) {
@@ -217,23 +214,25 @@ static void addHexStrings(char* str1, char* str2) {
     reversedOutput[i] = carryStr[0];
     reversedOutput[i + 1] = '\0';
   }
-  printf("\nREVERSED OUTPUT: %s\n\n", reversedOutput);
 
   // reverse
   const size_t len = strlen(reversedOutput);
-  char output[len + 1];
+  // char output[len + 1];
+  char* output = malloc((len + 1) * sizeof(char));
   size_t j;
   for (j = 0; j < len; j++) {
     output[j] = reversedOutput[len - 1 - j];
   }
   output[j] = '\0';
-  printf("OUTPUT: %s\n\n", output);
+  return output;
 }
 
 int main(int argc, char* argv[]) {
   StringPair p = getInput();
 
-  addHexStrings(p.a, p.b);
+  char* output = addHexStrings(p.a, p.b);
+  printf("output: %s\n", output);
+  free(output);
 
   free(p.a);
   free(p.b);
