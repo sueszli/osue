@@ -288,7 +288,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  // close unnecessary fds for parent
+  // close fds
   for (int i = 0; i < 4; i++) {
     if ((close(parent2child[i][READ_END]) == -1) ||
         (close(child2parent[i][WRITE_END]) == -1)) {
@@ -300,6 +300,14 @@ int main(int argc, char* argv[]) {
   HexStringQuad quad = splitToQuad(pair);
   free(pair.a);
   free(pair.b);
+
+  fprintf(stderr, "arrived here lol\n");
+  // gdb shows:
+  //    - child starts listening to stdin but doesn't receive anything
+  //    - parent stops and waits for child to return something
+  //
+  // this means:
+  //    - writing doesn't work
 
   for (int i = 0; i < 4; i++) {
     char* arg1;
@@ -322,31 +330,46 @@ int main(int argc, char* argv[]) {
         arg2 = quad.bL;
         break;
     }
+
+    FILE* stream = fdopen(parent2child[i][WRITE_END], "w");
+    if (stream == NULL) {
+      error("fdopen");
+    }
+    /*
+    if ((fputs(arg1, stream) == -1) || (fputs(arg2, stream) == -1)) {
+      error("fputs");
+    }
+    */
+    fprintf(stream, "%.*s", quad.len, arg1);
+    fprintf(stream, "%.*s", quad.len, arg2);
+    if (fclose(stream) == -1) {
+      error("fclose");
+    }
+
+    /*
     if (((write(parent2child[i][WRITE_END], arg1, quad.len) == -1) ||
          (write(parent2child[i][WRITE_END], arg2, quad.len) == -1)) &&
         (errno != EINTR)) {
       error("write");
     }
     if (close(parent2child[i][WRITE_END]) == -1) {  // child sees EOF
-      error("close")
+      error("close here")
     }
+    */
   }
   free(quad.aH);
   free(quad.aL);
   free(quad.bH);
   free(quad.bL);
 
-  // <--------- EVERYTHING WORKS UNTIL HERE
-  fprintf(stderr, "arrived here lol\n");
-
   // wait for child to exit
+  int status[4];
   for (int i = 0; i < 4; i++) {
     fprintf(stderr, "processing index %d\n", i);
-    int status;
-    if (waitpid(cpid[i], &status, 0) == -1) {
+    if (waitpid(cpid[i], &status[i], 0) == -1) {
       error("waitpid");
     }
-    if (WEXITSTATUS(status) == EXIT_FAILURE) {
+    if (WEXITSTATUS(status[i]) == EXIT_FAILURE) {
       error("child failed");
     }
   }
@@ -359,16 +382,18 @@ int main(int argc, char* argv[]) {
     if (stream == NULL) {
       error("fdopen");
     }
-    if (getline(&childResult[i], &len, stream) == -1) {
+    if (getline(&childResult[i], &len, stream) < 0) {
       error("getline");
     }
     addChars(&childResult[i], 1, '\0', false);
     if (fclose(stream) == -1) {
       error("fclose");
     }
+    /*
     if (close(child2parent[i][READ_END]) == -1) {
       error("close");
     }
+    */
   }
 
   // print total sum
