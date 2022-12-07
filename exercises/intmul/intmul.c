@@ -27,7 +27,7 @@ typedef struct {
   char* a;
   char* b;
   size_t len;
-} StringPair;
+} HexStringPair;
 
 typedef struct {
   char* aH;
@@ -35,7 +35,7 @@ typedef struct {
   char* bH;
   char* bL;
   size_t len;
-} StringQuad;
+} HexStringQuad;
 
 #pragma region "reliable"
 static void addChars(char** strp, size_t num, char c, bool addToStart) {
@@ -66,10 +66,10 @@ static void addChars(char** strp, size_t num, char c, bool addToStart) {
   *strp = rStr;
 }
 
-static StringPair getInput(void) {
-  // post-condition: free returned StringPair
+static HexStringPair getInput(void) {
+  // post-condition: free returned pair
 
-  StringPair pair;
+  HexStringPair pair;
   char* line = NULL;
   size_t lineLen = 0;
   ssize_t nChars;
@@ -132,10 +132,10 @@ static StringPair getInput(void) {
   return pair;
 }
 
-static StringQuad splitToQuad(StringPair pair) {
+static HexStringQuad splitToQuad(HexStringPair pair) {
   // post-condition: free returned quad
 
-  StringQuad quad;
+  HexStringQuad quad;
   size_t size = (pair.len / 2) + 1;
 
   quad.aH = malloc(size * sizeof(char));
@@ -156,7 +156,6 @@ static StringQuad splitToQuad(StringPair pair) {
   quad.len = size - 1;
   return quad;
 }
-#pragma endregion "reliable"
 
 static char* addHexStrings(char str1[], char str2[]) {
   // post-condition: output must be freed
@@ -217,8 +216,8 @@ static char* addHexStrings(char str1[], char str2[]) {
 
   // reverse
   const size_t len = strlen(reversedOutput);
-  // char output[len + 1];
   char* output = malloc((len + 1) * sizeof(char));
+  // alternatively: char output[len + 1]; -> then write into pointer
   size_t j;
   for (j = 0; j < len; j++) {
     output[j] = reversedOutput[len - 1 - j];
@@ -226,31 +225,19 @@ static char* addHexStrings(char str1[], char str2[]) {
   output[j] = '\0';
   return output;
 }
+#pragma endregion "reliable"
 
 int main(int argc, char* argv[]) {
-  StringPair p = getInput();
-
-  char* output = addHexStrings(p.a, p.b);
-  printf("output: %s\n", output);
-  free(output);
-
-  free(p.a);
-  free(p.b);
-  exit(EXIT_SUCCESS);
-}
-
-int main2(int argc, char* argv[]) {
   if (argc > 1) {
     usage("no arguments allowed");
   }
 
   // base case
-  StringPair pair = getInput();
+  HexStringPair pair = getInput();
   if (pair.len == 1) {
     errno = 0;
     fprintf(stdout, "%lx\n",
             strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16));
-    fflush(stdout);
     if (errno != 0) {
       error("strtoul");
     }
@@ -303,8 +290,8 @@ int main2(int argc, char* argv[]) {
     }
   }
 
-  // write into p2c pipes
-  StringQuad quad = splitToQuad(pair);
+  // write into parent2child
+  HexStringQuad quad = splitToQuad(pair);
   free(pair.a);
   free(pair.b);
   for (int i = 0; i < 4; i++) {
@@ -330,12 +317,13 @@ int main2(int argc, char* argv[]) {
     }
     addChars(&arg1, 1, '\n', false);
     addChars(&arg2, 1, '\n', false);
+    quad.len++;
     if (((write(parent2child[i][WRITE_END], arg1, quad.len) == -1) ||
          (write(parent2child[i][WRITE_END], arg2, quad.len) == -1)) &&
         (errno != EINTR)) {
       error("write");
     }
-    if (close(parent2child[i][WRITE_END]) == -1) {
+    if (close(parent2child[i][WRITE_END]) == -1) {  // child sees EOF
       error("close")
     }
   }
@@ -355,12 +343,10 @@ int main2(int argc, char* argv[]) {
     }
   }
 
-  // read from c2p pipes
+  // read child2parent
   char* childResult[4];
   for (int i = 0; i < 4; i++) {
     size_t len;
-
-    // can i write into fp
     FILE* stream = fdopen(child2parent[i][READ_END], "r");
     if (stream == NULL) {
       error("fdopen");
@@ -369,11 +355,11 @@ int main2(int argc, char* argv[]) {
       error("getline");
     }
     addChars(&childResult[i], 1, '\0', false);
-    if (close(child2parent[i][READ_END]) == -1) {
-      error("close");
-    }
     if (fclose(stream) == -1) {
       error("fclose");
+    }
+    if (close(child2parent[i][READ_END]) == -1) {
+      error("close");
     }
   }
 
@@ -383,14 +369,21 @@ int main2(int argc, char* argv[]) {
   addChars(&childResult[aH_bL], n / 2, '0', false);
   addChars(&childResult[aL_bH], n / 2, '0', false);
 
-  // char* sum = NULL;
-  // for (int i = 0; i < 4; i++) {
-  //   addHexStrings(&sum, &childResult[i]);
-  //   free(childResult[i]);
-  // }
-  // fprintf(stdout, "%s\n", sum);
-  // fflush(stdout);
-  // free(sum);
+  char* fstSum = addHexStrings(childResult[aH_bH], childResult[aH_bL]);
+  free(childResult[aH_bH]);
+  free(childResult[aH_bL]);
+
+  char* sndSum = addHexStrings(childResult[aL_bH], childResult[aL_bL]);
+  free(childResult[aL_bH]);
+  free(childResult[aL_bL]);
+
+  char* totalSum = addHexStrings(fstSum, sndSum);
+  free(fstSum);
+  free(sndSum);
+
+  fprintf(stdout, "%s\n", totalSum);
+  fflush(stdout);
+  free(totalSum);
 
   exit(EXIT_SUCCESS);
 }
