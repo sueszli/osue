@@ -158,31 +158,88 @@ static StringQuad splitToQuad(StringPair pair) {
 }
 #pragma endregion "reliable"
 
-static char* addHexStrings(char* str1, char* str2) {
-  // post-condition: free output
+static void addHexStrings(char* str1, char* str2) {
+  // remove leading zeroes
+  while (*str1 == '0') {
+    str1++;
+  }
+  while (*str2 == '0') {
+    str2++;
+  }
+  printf("\nInput: %s + %s\n\n", str1, str2);
 
-  return "test";
+  // add bit wise
+  const size_t maxLen =
+      (strlen(str1) > strlen(str2) ? strlen(str1) : strlen(str2));
+  size_t indexStr1 = strlen(str1) - 1;
+  size_t indexStr2 = strlen(str2) - 1;
+
+  char reversedOutput[maxLen + 2];  // +2 for carry and '\0'
+  unsigned long carry = 0;
+  char carryStr[2] = {'\0', '\0'};
+  size_t i;
+  for (i = 0; i < maxLen; i++) {
+    char tmp1[2] = {'0', '\0'};
+    char tmp2[2] = {'0', '\0'};
+    if (indexStr1 != -1) {
+      tmp1[0] = str1[indexStr1--];
+    }
+    if (indexStr2 != -1) {
+      tmp2[0] = str2[indexStr2--];
+    }
+
+    errno = 0;
+    unsigned long sum =
+        carry + strtoul(tmp1, NULL, 16) + strtoul(tmp2, NULL, 16);
+    if (errno != 0) {
+      error("strtoul");
+    }
+
+    printf("prev carry + str1[%ld] + str2[%ld] = %s + %s + %s\n", i, i,
+           carryStr, tmp1, tmp2);
+
+    unsigned long write = sum % 16;
+    carry = sum / 16;
+
+    char writeStr[2];
+    assert(write <= 15);
+    sprintf(writeStr, "%lx", write);
+
+    assert(carry <= 15);
+    sprintf(carryStr, "%lx", carry);
+
+    printf("write: %s --> carry: %s\n\n", writeStr, carryStr);
+    reversedOutput[i] = writeStr[0];
+  }
+  if (carry == 0) {
+    reversedOutput[i] = '\0';
+  } else {
+    reversedOutput[i] = carryStr[0];
+    reversedOutput[i + 1] = '\0';
+  }
+  printf("\nREVERSED OUTPUT: %s\n\n", reversedOutput);
+
+  // reverse
+  const size_t len = strlen(reversedOutput);
+  char output[len + 1];
+  size_t j;
+  for (j = 0; j < len; j++) {
+    output[j] = reversedOutput[len - 1 - j];
+  }
+  output[j] = '\0';
+  printf("OUTPUT: %s\n\n", output);
+  return output;
+
+  return "nothing";
 }
 
 int main(int argc, char* argv[]) {
-  StringPair pair = getInput();
-  StringQuad quad = splitToQuad(pair);
+  StringPair p = getInput();
 
-  printf("a-pair before: %s\n", pair.a);
-  addChars(&(quad.aH), 1, 'X', false);
-  addChars(&(quad.aH), 1, 'X', true);
+  addHexStrings(p.a, p.b);
 
-  printf("a-pair after: %s\n", pair.a);
-  printf("changed aH: %s\n", quad.aH);
-
-  free(pair.a);
-  free(pair.b);
-
-  free(quad.aH);
-  free(quad.aL);
-  free(quad.bH);
-  free(quad.bL);
-
+  free(p.a);
+  free(p.b);
   exit(EXIT_SUCCESS);
 }
 
@@ -199,7 +256,7 @@ int main2(int argc, char* argv[]) {
             strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16));
     fflush(stdout);
     if (errno != 0) {
-      error("strtoull");
+      error("strtoul");
     }
     free(pair.a);
     free(pair.b);
@@ -325,7 +382,7 @@ int main2(int argc, char* argv[]) {
   }
 
   // shift and calculate sum
-  const int n = pair.len;
+  const size_t n = pair.len;
   addChars(&childResult[aH_bH], n, '0', false);
   addChars(&childResult[aH_bL], n / 2, '0', false);
   addChars(&childResult[aL_bH], n / 2, '0', false);
