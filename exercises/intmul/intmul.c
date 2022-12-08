@@ -5,12 +5,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define USAGE()                                  \
-  do {                                           \
-    fprintf(stderr, "USAGE:\t%s\n", "./intmul"); \
-    exit(EXIT_FAILURE);                          \
-  } while (0)
-
 #define error(...)                               \
   do {                                           \
     fprintf(stderr, "ERROR: " __VA_ARGS__ "\n"); \
@@ -80,7 +74,8 @@ static void add_X_zeros(char *a, int count) {
 
 int main(int argc, char *argv[]) {
   if (argc != 1) {
-    USAGE();
+    fprintf(stderr, "USAGE:\t./intmul\n");
+    exit(EXIT_FAILURE);
   }
 
   // get pair
@@ -170,29 +165,29 @@ int main(int argc, char *argv[]) {
   }
 
   // close unnecessary ends
-  for (int i = 0; i < 8; i++) {
-    if (i % 2 == 0) {
-      close(pipes[i][WRITE]);
-    } else {
-      close(pipes[i][READ]);
-    }
-  }
+  close(pipes[c2p_HH][WRITE]);
+  close(pipes[c2p_HL][WRITE]);
+  close(pipes[c2p_LH][WRITE]);
+  close(pipes[c2p_LL][WRITE]);
+  close(pipes[p2c_HH][READ]);
+  close(pipes[p2c_HL][READ]);
+  close(pipes[p2c_LH][READ]);
+  close(pipes[p2c_LL][READ]);
 
   // write
   write(pipes[p2c_HH][WRITE], Ah, strlen(Ah));
   write(pipes[p2c_HH][WRITE], Bh, strlen(Bh));
-  close(pipes[p2c_HH][WRITE]);
-
   write(pipes[p2c_HL][WRITE], Ah, strlen(Ah));
   write(pipes[p2c_HL][WRITE], Bl, strlen(Bl));
-  close(pipes[p2c_HL][WRITE]);
-
   write(pipes[p2c_LH][WRITE], Al, strlen(Al));
   write(pipes[p2c_LH][WRITE], Bh, strlen(Bh));
-  close(pipes[p2c_LH][WRITE]);
-
   write(pipes[p2c_LL][WRITE], Al, strlen(Al));
   write(pipes[p2c_LL][WRITE], Bl, strlen(Bl));
+
+  // close write ends
+  close(pipes[p2c_HH][WRITE]);
+  close(pipes[p2c_HL][WRITE]);
+  close(pipes[p2c_LH][WRITE]);
   close(pipes[p2c_LL][WRITE]);
 
   // wait
@@ -223,11 +218,11 @@ int main(int argc, char *argv[]) {
   rv = (int)read(pipes[c2p_LL][READ], returnChildLL, (size_t)length * 2 + 1);
   returnChildLL[rv - 1] = '\0';
 
-  for (int i = 0; i < 8; i++) {
-    if (i % 2 != 0) {
-      close(pipes[i][READ]);
-    }
-  }
+  // close read ends
+  close(pipes[c2p_HH][READ]);
+  close(pipes[c2p_HL][READ]);
+  close(pipes[c2p_LH][READ]);
+  close(pipes[c2p_LL][READ]);
 
   // calculate and print
   add_X_zeros(returnChildHH, length * 2);
