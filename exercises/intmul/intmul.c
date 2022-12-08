@@ -24,7 +24,6 @@ static void read_input(char *firstString, char *secondString) {
   fgets(secondString, MAXLENGTH, stdin);
   firstString[strlen(firstString) - 1] = '\0';
   secondString[strlen(secondString) - 1] = '\0';
-
   if (!(strspn(firstString, "0123456789ABCDEFabcdef") == strlen(firstString)) ||
       !(strspn(secondString, "0123456789ABCDEFabcdef") ==
         strlen(secondString))) {
@@ -51,7 +50,6 @@ static char int_to_hex_char(int i) {
 static void add_hex_char_overflow(char *a, const char *b, char *overflow) {
   int value =
       hex_char_to_int(*a) + hex_char_to_int(*b) + hex_char_to_int(*overflow);
-
   *a = int_to_hex_char(value % 16);
   *overflow = int_to_hex_char(value / 16);
 }
@@ -59,12 +57,10 @@ static void add_hex_char_overflow(char *a, const char *b, char *overflow) {
 static void add_hex(char *firstHex, const char *secondHex) {
   char overflow = '0';
   int dif = (int)(strlen(firstHex) - strlen(secondHex));
-
   for (int i = (int)strlen(firstHex) - 1; i >= 0; i--) {
     char second = (i - dif < 0) ? '0' : secondHex[i - dif];
     add_hex_char_overflow(&firstHex[i], &second, &overflow);
   }
-
   if (overflow != '0') {
     for (int i = (int)strlen(firstHex); i >= 0; i--) {
       firstHex[i + 1] = firstHex[i];
@@ -180,7 +176,6 @@ int main(int argc, char *argv[]) {
   }
 
   // write
-
   write(pipes[p2c_HH][WRITE], Ah, strlen(Ah));
   write(pipes[p2c_HH][WRITE], Bh, strlen(Bh));
   close(pipes[p2c_HH][WRITE]);
