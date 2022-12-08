@@ -16,11 +16,6 @@
     exit(EXIT_FAILURE);                          \
   } while (0)
 
-#define SUCCESS_EXIT()  \
-  do {                  \
-    exit(EXIT_SUCCESS); \
-  } while (0)
-
 #define MAXLENGTH 1024
 
 static void read_input(char *firstString, char *secondString) {
@@ -93,9 +88,9 @@ static void add_X_zeros(char *a, int count) {
   a[length] = '\0';
 }
 
-// dup_needed_pipes(8, pipes, i * 2, i * 2 + 1);
-static void dup_needed_pipes(int pipeAmount, int pipes[pipeAmount][2],
-                             int neededReadPipe, int neededWritePipe) {
+// dup_needed_pipes(pipes, i * 2, i * 2 + 1);
+static void dup_needed_pipes(int pipes[8][2], int neededReadPipe,
+                             int neededWritePipe) {
   for (int i = 0; i < 8; i++) {
     if (i == neededReadPipe) {
       if (dup2(pipes[i][1], STDOUT_FILENO) == -1) {
@@ -129,7 +124,7 @@ int main(int argc, char *argv[]) {
                 (int)strtol(secondString, NULL, 16);
     sprintf(firstString, "%x", value);
     fprintf(stdout, "%s\n", firstString);
-    SUCCESS_EXIT();
+    exit(EXIT_SUCCESS);
   }
 
   char Al[length + 2];
@@ -183,7 +178,7 @@ int main(int argc, char *argv[]) {
     if (pid[i] < 0) {
       error("Error at forking");
     } else if (pid[i] == 0) {
-      dup_needed_pipes(8, pipes, i * 2, i * 2 + 1);
+      dup_needed_pipes(pipes, i * 2, i * 2 + 1);
 
       if (execlp(argv[0], argv[0], NULL) == -1) {
         error("Error on execlp");
@@ -270,5 +265,5 @@ int main(int argc, char *argv[]) {
   add_hex(returnChildHH, returnChildLL);
 
   fprintf(stdout, "%s\n", returnChildHH);
-  SUCCESS_EXIT();
+  exit(EXIT_SUCCESS);
 }
