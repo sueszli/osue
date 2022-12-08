@@ -126,17 +126,15 @@ int main(int argc, char *argv[]) {
 
   enum children { HH, HL, LH, LL };
   enum pipe_index {
-    c2p_HH,
     p2c_HH,
-
-    c2p_HL,
     p2c_HL,
-
-    c2p_LH,
     p2c_LH,
+    p2c_LL,
 
-    c2p_LL,
-    p2c_LL
+    c2p_HH,
+    c2p_HL,
+    c2p_LH,
+    c2p_LL
   };
   enum pipe_end { READ, WRITE };
 
@@ -148,10 +146,10 @@ int main(int argc, char *argv[]) {
       error("Error at forking");
     } else if (pid[i] == 0) {
       // redirect pipes
-      if (dup2(pipes[i * 2 + 1][0], STDIN_FILENO) == -1) {
+      if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
         error("dup2");
       }
-      if (dup2(pipes[i * 2][1], STDOUT_FILENO) == -1) {
+      if (dup2(pipes[i + 4][1], STDOUT_FILENO) == -1) {
         error("dup2");
       }
       for (int j = 0; j < 8; j++) {
