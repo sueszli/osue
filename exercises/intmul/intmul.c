@@ -43,20 +43,12 @@ static int hex_char_to_int(char character) {
   return -1;
 }
 
-static char int_to_hex_char(int i) {
-  if (i < 10) {
-    return '0' + i;
-  } else {
-    return 'a' + i - 10;
-  }
-}
+static char int_to_hex_char(int i) { return (i < 10 ? '0' + i : 'a' + i - 10); }
 
 static void add_hex_char_overflow(char *a, const char *b, char *overflow) {
-  int value = hex_char_to_int(*a) + hex_char_to_int(*b) +
-              hex_char_to_int(
-                  *overflow);  // functions like strtol would need a \0 at the
-                               // end and since we deal with only a character at
-                               // a time we can use a custom function
+  int value =
+      hex_char_to_int(*a) + hex_char_to_int(*b) + hex_char_to_int(*overflow);
+
   *a = int_to_hex_char(value % 16);
   *overflow = int_to_hex_char(value / 16);
 }
@@ -70,8 +62,7 @@ static void add_hex(char *firstHex, const char *secondHex) {
     add_hex_char_overflow(&firstHex[i], &second, &overflow);
   }
 
-  if (overflow != '0') {  // if overflow exists shift the entire hexstring by 1
-                          // and add the overflow to the beginning
+  if (overflow != '0') {
     for (int i = strlen(firstHex); i >= 0; i--) {
       firstHex[i + 1] = firstHex[i];
     }
@@ -88,7 +79,7 @@ static void add_X_zeros(char *a, int count) {
   a[length] = '\0';
 }
 
-// dup_needed_pipes(pipes, i * 2, i * 2 + 1);
+// dup_needed_pipes(pipes, neededReadPipe: i * 2, neededWritePipe: i * 2 + 1);
 static void dup_needed_pipes(int pipes[8][2], int neededReadPipe,
                              int neededWritePipe) {
   for (int i = 0; i < 8; i++) {
@@ -112,10 +103,10 @@ int main(int argc, char *argv[]) {
     USAGE();
   }
 
+  // get pair
   int length;
   char firstString[MAXLENGTH];
   char secondString[MAXLENGTH];
-
   read_input(firstString, secondString);
   length = strlen(firstString) / 2;
 
@@ -127,19 +118,18 @@ int main(int argc, char *argv[]) {
     exit(EXIT_SUCCESS);
   }
 
+  // get quad
   char Al[length + 2];
   char Bh[length + 2];
   char Bl[length + 2];
   char Ah[length + 2];
-
-  int i = 0;
-  for (; i < length; i++) {
+  int i;
+  for (i = 0; i < length; i++) {
     Ah[i] = firstString[i];
     Bh[i] = secondString[i];
     Al[i] = firstString[length + i];
     Bl[i] = secondString[length + i];
   }
-
   Ah[i] = '\n';
   Bh[i] = '\n';
   Al[i] = '\n';
@@ -162,17 +152,14 @@ int main(int argc, char *argv[]) {
   enum readWrite { READ, WRITE };
 
   int pipes[8][2];
-
-  int pid[4];
-
-  if (pipe(pipes[READ_CHILD_HH]) == -1 || pipe(pipes[WRITE_CHILD_HH]) == -1 ||
-      pipe(pipes[READ_CHILD_HL]) == -1 || pipe(pipes[WRITE_CHILD_HL]) == -1 ||
-      pipe(pipes[READ_CHILD_LH]) == -1 || pipe(pipes[WRITE_CHILD_LH]) == -1 ||
-      pipe(pipes[READ_CHILD_LL]) == -1 || pipe(pipes[WRITE_CHILD_LL]) == -1) {
-    error("Error when opening pipes");
+  for (int i = 0; i < 8; i++) {
+    if (pipe(pipes[i]) == -1) {
+      error("pipe");
+    }
   }
 
   // create child processes
+  int pid[4];
   for (int i = 0; i < 4; i++) {
     pid[i] = fork();
     if (pid[i] < 0) {
@@ -186,46 +173,38 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  {
-    // close all reading ends of writing pipe
-    close(pipes[WRITE_CHILD_HH][READ]);
-    close(pipes[READ_CHILD_HH][WRITE]);
-    close(pipes[WRITE_CHILD_HL][READ]);
-    close(pipes[READ_CHILD_HL][WRITE]);
-    close(pipes[WRITE_CHILD_LH][READ]);
-    close(pipes[READ_CHILD_LH][WRITE]);
-    close(pipes[WRITE_CHILD_LL][READ]);
-    close(pipes[READ_CHILD_LL][WRITE]);
+  // close all reading ends of writing pipe
+  for (int i = 0; i < 8; i++) {
+    if (i % 2 == 0) {
+      close(pipes[i][WRITE]);
+    } else {
+      close(pipes[i][READ]);
+    }
+  }
 
-    // writing
+  // writing
+  write(pipes[WRITE_CHILD_HH][WRITE], Ah, strlen(Ah));
+  write(pipes[WRITE_CHILD_HH][WRITE], Bh, strlen(Bh));
+  close(pipes[WRITE_CHILD_HH][WRITE]);
 
-    write(pipes[WRITE_CHILD_HH][WRITE], Ah, strlen(Ah));
-    write(pipes[WRITE_CHILD_HH][WRITE], Bh, strlen(Bh));
-    close(pipes[WRITE_CHILD_HH][WRITE]);
+  write(pipes[WRITE_CHILD_HL][WRITE], Ah, strlen(Ah));
+  write(pipes[WRITE_CHILD_HL][WRITE], Bl, strlen(Bl));
+  close(pipes[WRITE_CHILD_HL][WRITE]);
 
-    write(pipes[WRITE_CHILD_HL][WRITE], Ah, strlen(Ah));
-    write(pipes[WRITE_CHILD_HL][WRITE], Bl, strlen(Bl));
-    close(pipes[WRITE_CHILD_HL][WRITE]);
+  write(pipes[WRITE_CHILD_LH][WRITE], Al, strlen(Al));
+  write(pipes[WRITE_CHILD_LH][WRITE], Bh, strlen(Bh));
+  close(pipes[WRITE_CHILD_LH][WRITE]);
 
-    write(pipes[WRITE_CHILD_LH][WRITE], Al, strlen(Al));
-    write(pipes[WRITE_CHILD_LH][WRITE], Bh, strlen(Bh));
-    close(pipes[WRITE_CHILD_LH][WRITE]);
+  write(pipes[WRITE_CHILD_LL][WRITE], Al, strlen(Al));
+  write(pipes[WRITE_CHILD_LL][WRITE], Bl, strlen(Bl));
+  close(pipes[WRITE_CHILD_LL][WRITE]);
 
-    write(pipes[WRITE_CHILD_LL][WRITE], Al, strlen(Al));
-    write(pipes[WRITE_CHILD_LL][WRITE], Bl, strlen(Bl));
-    close(pipes[WRITE_CHILD_LL][WRITE]);
-
-    // Wait for child
-    int status[4];
-    waitpid(pid[0], &status[0], 0);
-    waitpid(pid[1], &status[1], 0);
-    waitpid(pid[2], &status[2], 0);
-    waitpid(pid[3], &status[3], 0);
-
-    if (WEXITSTATUS(status[0]) == 1 || WEXITSTATUS(status[1]) == 1 ||
-        WEXITSTATUS(status[2]) == 1 || WEXITSTATUS(status[3]) == 1) {
+  // Wait for child
+  for (int i = 0; i < 4; i++) {
+    int status;
+    waitpid(pid[i], &status, 0);
+    if (WEXITSTATUS(status) == 1) {
       error("Error in the childprocess");
-      exit(EXIT_FAILURE);
     }
   }
 
@@ -235,27 +214,26 @@ int main(int argc, char *argv[]) {
   char returnChildLH[2 * length + length + 2];
   char returnChildLL[2 * length + 2];
 
-  {
-    int rv;
-    rv = read(pipes[READ_CHILD_HH][READ], returnChildHH, length * 2 + 1);
-    returnChildHH[rv - 1] = '\0';
-    close(pipes[READ_CHILD_HH][READ]);
+  int rv;
+  rv = read(pipes[READ_CHILD_HH][READ], returnChildHH, length * 2 + 1);
+  returnChildHH[rv - 1] = '\0';
 
-    rv = read(pipes[READ_CHILD_HL][READ], returnChildHL, length * 2 + 1);
-    returnChildHL[rv - 1] = '\0';
-    close(pipes[READ_CHILD_HL][READ]);
+  rv = read(pipes[READ_CHILD_HL][READ], returnChildHL, length * 2 + 1);
+  returnChildHL[rv - 1] = '\0';
 
-    rv = read(pipes[READ_CHILD_LH][READ], returnChildLH, length * 2 + 1);
-    returnChildLH[rv - 1] = '\0';
-    close(pipes[READ_CHILD_LH][READ]);
+  rv = read(pipes[READ_CHILD_LH][READ], returnChildLH, length * 2 + 1);
+  returnChildLH[rv - 1] = '\0';
 
-    rv = read(pipes[READ_CHILD_LL][READ], returnChildLL, length * 2 + 1);
-    returnChildLL[rv - 1] = '\0';
-    close(pipes[READ_CHILD_LL][READ]);
+  rv = read(pipes[READ_CHILD_LL][READ], returnChildLL, length * 2 + 1);
+  returnChildLL[rv - 1] = '\0';
+
+  for (int i = 0; i < 8; i++) {
+    if (i % 2 != 0) {
+      close(pipes[i][READ]);
+    }
   }
 
   // calculation
-
   add_X_zeros(returnChildHH, length * 2);
   add_X_zeros(returnChildHL, length);
   add_X_zeros(returnChildLH, length);
