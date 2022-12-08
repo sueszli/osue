@@ -380,14 +380,12 @@ int main(int argc, char* argv[]) {
   addChars(&childResult[aL_bH], n / 2, '0', false);
 
   char* fstSum = addHexStrings(childResult[aH_bH], childResult[aH_bL]);
+  char* sndSum = addHexStrings(childResult[aL_bH], childResult[aL_bL]);
+  char* totalSum = addHexStrings(fstSum, sndSum);
   free(childResult[aH_bH]);
   free(childResult[aH_bL]);
-
-  char* sndSum = addHexStrings(childResult[aL_bH], childResult[aL_bL]);
   free(childResult[aL_bH]);
   free(childResult[aL_bL]);
-
-  char* totalSum = addHexStrings(fstSum, sndSum);
   free(fstSum);
   free(sndSum);
 
