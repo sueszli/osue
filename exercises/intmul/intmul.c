@@ -123,24 +123,25 @@ int main(int argc, char *argv[]) {
   Al[i + 1] = '\0';
   Bl[i + 1] = '\0';
 
-  enum children {
-    READ_CHILD_HH,
-    WRITE_CHILD_HH,
-    READ_CHILD_LH,
-    WRITE_CHILD_LH,
-    READ_CHILD_HL,
-    WRITE_CHILD_HL,
-    READ_CHILD_LL,
-    WRITE_CHILD_LL
-  };
-  enum readWrite { READ, WRITE };
-
+  // create pipes
   int pipes[8][2];
   for (int i = 0; i < 8; i++) {
     if (pipe(pipes[i]) == -1) {
       error("pipe");
     }
   }
+
+  enum pipe_index {
+    c2p_HH,
+    p2c_HH,
+    c2p_LH,
+    p2c_LH,
+    c2p_HL,
+    p2c_HL,
+    c2p_LL,
+    p2c_LL
+  };
+  enum pipe_end { READ, WRITE };
 
   // create child processes
   int pid[4];
@@ -178,21 +179,21 @@ int main(int argc, char *argv[]) {
   }
 
   // writing
-  write(pipes[WRITE_CHILD_HH][WRITE], Ah, strlen(Ah));
-  write(pipes[WRITE_CHILD_HH][WRITE], Bh, strlen(Bh));
-  close(pipes[WRITE_CHILD_HH][WRITE]);
+  write(pipes[p2c_HH][WRITE], Ah, strlen(Ah));
+  write(pipes[p2c_HH][WRITE], Bh, strlen(Bh));
+  close(pipes[p2c_HH][WRITE]);
 
-  write(pipes[WRITE_CHILD_HL][WRITE], Ah, strlen(Ah));
-  write(pipes[WRITE_CHILD_HL][WRITE], Bl, strlen(Bl));
-  close(pipes[WRITE_CHILD_HL][WRITE]);
+  write(pipes[p2c_HL][WRITE], Ah, strlen(Ah));
+  write(pipes[p2c_HL][WRITE], Bl, strlen(Bl));
+  close(pipes[p2c_HL][WRITE]);
 
-  write(pipes[WRITE_CHILD_LH][WRITE], Al, strlen(Al));
-  write(pipes[WRITE_CHILD_LH][WRITE], Bh, strlen(Bh));
-  close(pipes[WRITE_CHILD_LH][WRITE]);
+  write(pipes[p2c_LH][WRITE], Al, strlen(Al));
+  write(pipes[p2c_LH][WRITE], Bh, strlen(Bh));
+  close(pipes[p2c_LH][WRITE]);
 
-  write(pipes[WRITE_CHILD_LL][WRITE], Al, strlen(Al));
-  write(pipes[WRITE_CHILD_LL][WRITE], Bl, strlen(Bl));
-  close(pipes[WRITE_CHILD_LL][WRITE]);
+  write(pipes[p2c_LL][WRITE], Al, strlen(Al));
+  write(pipes[p2c_LL][WRITE], Bl, strlen(Bl));
+  close(pipes[p2c_LL][WRITE]);
 
   // Wait for child
   for (int i = 0; i < 4; i++) {
@@ -210,20 +211,16 @@ int main(int argc, char *argv[]) {
   char returnChildLL[2 * length + 2];
 
   int rv;
-  rv = (int)read(pipes[READ_CHILD_HH][READ], returnChildHH,
-                 (size_t)length * 2 + 1);
+  rv = (int)read(pipes[c2p_HH][READ], returnChildHH, (size_t)length * 2 + 1);
   returnChildHH[rv - 1] = '\0';
 
-  rv = (int)read(pipes[READ_CHILD_HL][READ], returnChildHL,
-                 (size_t)length * 2 + 1);
+  rv = (int)read(pipes[c2p_HL][READ], returnChildHL, (size_t)length * 2 + 1);
   returnChildHL[rv - 1] = '\0';
 
-  rv = (int)read(pipes[READ_CHILD_LH][READ], returnChildLH,
-                 (size_t)length * 2 + 1);
+  rv = (int)read(pipes[c2p_LH][READ], returnChildLH, (size_t)length * 2 + 1);
   returnChildLH[rv - 1] = '\0';
 
-  rv = (int)read(pipes[READ_CHILD_LL][READ], returnChildLL,
-                 (size_t)length * 2 + 1);
+  rv = (int)read(pipes[c2p_LL][READ], returnChildLL, (size_t)length * 2 + 1);
   returnChildLL[rv - 1] = '\0';
 
   for (int i = 0; i < 8; i++) {
