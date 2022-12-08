@@ -123,6 +123,8 @@ int main(int argc, char *argv[]) {
   Al[i + 1] = '\0';
   Bl[i + 1] = '\0';
 
+  // --------------------------
+
   // create pipes
   int pipes[8][2];
   for (int i = 0; i < 8; i++) {
@@ -170,7 +172,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // close all reading ends of writing pipe
+  // close unnecessary ends
   for (int i = 0; i < 8; i++) {
     if (i % 2 == 0) {
       close(pipes[i][WRITE]);
@@ -179,7 +181,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // writing
+  // write
   write(pipes[p2c_HH][WRITE], Ah, strlen(Ah));
   write(pipes[p2c_HH][WRITE], Bh, strlen(Bh));
   close(pipes[p2c_HH][WRITE]);
@@ -196,7 +198,7 @@ int main(int argc, char *argv[]) {
   write(pipes[p2c_LL][WRITE], Bl, strlen(Bl));
   close(pipes[p2c_LL][WRITE]);
 
-  // Wait for child
+  // wait
   for (int i = 0; i < 4; i++) {
     int status;
     waitpid(pid[i], &status, 0);
@@ -205,7 +207,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // Read string from child and close reading end.
+  // read
   char returnChildHH[2 * length + length * 2 + 2];
   char returnChildHL[2 * length + length + 2];
   char returnChildLH[2 * length + length + 2];
@@ -230,7 +232,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // calculation
+  // calculate and print
   add_X_zeros(returnChildHH, length * 2);
   add_X_zeros(returnChildHL, length);
   add_X_zeros(returnChildLH, length);
