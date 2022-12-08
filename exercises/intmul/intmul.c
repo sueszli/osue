@@ -133,10 +133,13 @@ int main(int argc, char *argv[]) {
   enum pipe_index {
     c2p_HH,
     p2c_HH,
-    c2p_LH,
-    p2c_LH,
+
     c2p_HL,
     p2c_HL,
+
+    c2p_LH,
+    p2c_LH,
+
     c2p_LL,
     p2c_LL
   };
