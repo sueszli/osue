@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -79,25 +80,6 @@ static void add_X_zeros(char *a, int count) {
   a[length] = '\0';
 }
 
-// dup_needed_pipes(pipes, neededReadPipe: i * 2, neededWritePipe: i * 2 + 1);
-static void dup_needed_pipes(int pipes[8][2], int neededReadPipe,
-                             int neededWritePipe) {
-  for (int i = 0; i < 8; i++) {
-    if (i == neededReadPipe) {
-      if (dup2(pipes[i][1], STDOUT_FILENO) == -1) {
-        error("dup-Error");
-      }
-    } else if (i == neededWritePipe) {
-      if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
-        error("dup-Error");
-      }
-    }
-
-    close(pipes[i][1]);
-    close(pipes[i][0]);
-  }
-}
-
 int main(int argc, char *argv[]) {
   if (argc != 1) {
     USAGE();
@@ -165,11 +147,25 @@ int main(int argc, char *argv[]) {
     if (pid[i] < 0) {
       error("Error at forking");
     } else if (pid[i] == 0) {
-      dup_needed_pipes(pipes, i * 2, i * 2 + 1);
+      for (int j = 0; j < 8; j++) {
+        bool cond1 = (j == i * 2);
+        bool cond2 = (j == i * 2 + 1);
+        if (cond1) {
+          if (dup2(pipes[j][1], STDOUT_FILENO) == -1) {
+            error("dup2");
+          }
+        } else if (cond2) {
+          if (dup2(pipes[j][0], STDIN_FILENO) == -1) {
+            error("dup2");
+          }
+        }
 
-      if (execlp(argv[0], argv[0], NULL) == -1) {
-        error("Error on execlp");
+        close(pipes[j][1]);
+        close(pipes[j][0]);
       }
+
+      execlp(argv[0], argv[0], NULL);
+      error("execlp");
     }
   }
 
