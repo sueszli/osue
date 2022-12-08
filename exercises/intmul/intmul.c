@@ -22,6 +22,7 @@
 #define usage(msg)                                                   \
   do {                                                               \
     fprintf(stderr, "Invalid input: %s\nSYNOPSIS: ./intmul\n", msg); \
+    fflush(stderr);                                                  \
     exit(EXIT_FAILURE);                                              \
   } while (true);
 
@@ -160,12 +161,6 @@ static HexStringQuad splitToQuad(HexStringPair pair) {
   quad.bL[size - 1] = '\0';
   quad.len = size - 1;
 
-  addChars(&(quad.aH), 1, '\n', false);
-  addChars(&(quad.aL), 1, '\n', false);
-  addChars(&(quad.bH), 1, '\n', false);
-  addChars(&(quad.bL), 1, '\n', false);
-  quad.len++;
-
   return quad;
 }
 
@@ -246,15 +241,12 @@ int main(int argc, char* argv[]) {
   }
 
   // base case
-  log("entered intmul -> waiting for arguments", NULL);
   HexStringPair pair = getInput();
-  log("received arguments: %s %s", pair.a, pair.b);
-
   if (pair.len == 1) {
-    log("reached base case", NULL);
     errno = 0;
-    fprintf(stdout, "%lx\n",
-            strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16));
+    unsigned long out = strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16);
+    log("reached base case: %s * %s = %lx", pair.a, pair.b, out);
+    fprintf(stdout, "%lx\n", out);
     if (errno != 0) {
       error("strtoul");
     }
@@ -275,6 +267,7 @@ int main(int argc, char* argv[]) {
   enum child_index { aH_bH, aH_bL, aL_bH, aL_bL };
   enum pipe_end { READ, WRITE };
 
+  log("now forking");
   pid_t cpid[4];
   for (int i = 0; i < 4; i++) {
     cpid[i] = fork();
@@ -293,7 +286,7 @@ int main(int argc, char* argv[]) {
         }
       }
 
-      log("[child %d] now calling intmul", i);
+      log("child %d was born", i);
       execlp(argv[0], argv[0], NULL);
       error("execlp");
     }
@@ -332,30 +325,16 @@ int main(int argc, char* argv[]) {
         break;
     }
 
-    log("[parent] writing %.*s %.*s to child %d", (int)quad.len - 1, arg1,
-        (int)quad.len - 1, arg2, i);
-    /*
+    log("writing '%s' and '%s' to child %d", arg1, arg2, i);
+
     FILE* stream = fdopen(p2c[i][WRITE], "w");
     if (stream == NULL) {
       error("fdopen");
     }
-    if ((fputs(arg1, stream) == -1) || (fputs(arg2, stream) ==
-    -1)) { error("fputs");
-    }
-    fprintf(stream, "%.*s", (int)quad.len, arg1);
-    fprintf(stream, "%.*s", (int)quad.len, arg2);
+    fprintf(stream, "%.*s\n", (int)quad.len, arg1);
+    fprintf(stream, "%.*s\n", (int)quad.len, arg2);
     if (fclose(stream) == -1) {
       error("fclose");
-    }
-    */
-
-    if (((write(p2c[i][WRITE], arg1, quad.len) == -1) ||
-         (write(p2c[i][WRITE], arg2, quad.len) == -1)) &&
-        (errno != EINTR)) {
-      error("write");
-    }
-    if (close(p2c[i][WRITE]) == -1) {  // child sees EOF
-      error("close")
     }
   }
   free(quad.aH);
@@ -366,14 +345,13 @@ int main(int argc, char* argv[]) {
   // wait for child to exit
   int status[4];
   for (int i = 0; i < 4; i++) {
-    log("[parent] waiting for child %d to exit", i);
-    fprintf(stderr, "processing index %d\n", i);
     if (waitpid(cpid[i], &status[i], 0) == -1) {
       error("waitpid");
     }
     if (WEXITSTATUS(status[i]) == EXIT_FAILURE) {
       error("child failed");
     }
+    log("child %d exited", i);
   }
 
   // read c2p
@@ -391,11 +369,6 @@ int main(int argc, char* argv[]) {
     if (fclose(stream) == -1) {
       error("fclose");
     }
-    /*
-    if (close(c2p[i][READ]) == -1) {
-      error("close");
-    }
-    */
   }
 
   // print total sum
