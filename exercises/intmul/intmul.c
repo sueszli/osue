@@ -129,17 +129,6 @@ int main(int argc, char *argv[]) {
   }
 
   enum children { HH, HL, LH, LL };
-  enum pipe_index {
-    p2c_HH,
-    p2c_HL,
-    p2c_LH,
-    p2c_LL,
-
-    c2p_HH,
-    c2p_HL,
-    c2p_LH,
-    c2p_LL
-  };
   enum pipe_end { READ, WRITE };
 
   // create child processes
