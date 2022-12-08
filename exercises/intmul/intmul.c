@@ -154,16 +154,13 @@ int main(int argc, char *argv[]) {
       error("Error at forking");
     } else if (pid[i] == 0) {
       // redirect pipes
+      if (dup2(pipes[i * 2 + 1][0], STDIN_FILENO) == -1) {
+        error("dup2");
+      }
+      if (dup2(pipes[i * 2][1], STDOUT_FILENO) == -1) {
+        error("dup2");
+      }
       for (int j = 0; j < 8; j++) {
-        if (j == i * 2) {
-          if (dup2(pipes[j][1], STDOUT_FILENO) == -1) {
-            error("dup2");
-          }
-        } else if (j == i * 2 + 1) {
-          if (dup2(pipes[j][0], STDIN_FILENO) == -1) {
-            error("dup2");
-          }
-        }
         close(pipes[j][1]);
         close(pipes[j][0]);
       }
@@ -183,6 +180,7 @@ int main(int argc, char *argv[]) {
   }
 
   // write
+
   write(pipes[p2c_HH][WRITE], Ah, strlen(Ah));
   write(pipes[p2c_HH][WRITE], Bh, strlen(Bh));
   close(pipes[p2c_HH][WRITE]);
@@ -237,11 +235,9 @@ int main(int argc, char *argv[]) {
   add_X_zeros(returnChildHH, length * 2);
   add_X_zeros(returnChildHL, length);
   add_X_zeros(returnChildLH, length);
-
   add_hex(returnChildHH, returnChildHL);
   add_hex(returnChildHH, returnChildLH);
   add_hex(returnChildHH, returnChildLL);
-
   fprintf(stdout, "%s\n", returnChildHH);
   exit(EXIT_SUCCESS);
 }
