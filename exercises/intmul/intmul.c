@@ -24,10 +24,6 @@
     exit(EXIT_FAILURE);                                              \
   } while (true);
 
-// remove this later vvv
-#define log(msg, ...) \
-  // fprintf(stderr, "[PID: %d] " msg "\n", getpid(), ##__VA_ARGS__);
-
 typedef struct {
   char* a;
   char* b;
@@ -222,7 +218,8 @@ static char* addHexStrings(char str1[], char str2[]) {
   // reverse
   const size_t len = strlen(reversedOutput);
   char* output = malloc((len + 1) * sizeof(char));
-  // alternatively: char output[len + 1]; -> then use memcpy() to *output
+  // alternative to malloc:
+  // char output[len + 1]; -> then use memcpy() to output pointer
   size_t j;
   for (j = 0; j < len; j++) {
     output[j] = reversedOutput[len - 1 - j];
@@ -241,7 +238,6 @@ int main(int argc, char* argv[]) {
   if (pair.len == 1) {
     errno = 0;
     unsigned long out = strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16);
-    log("reached base case: %s * %s = %lx", pair.a, pair.b, out);
     fprintf(stdout, "%lx\n", out);
     if (errno != 0) {
       error("strtoul");
@@ -252,8 +248,8 @@ int main(int argc, char* argv[]) {
   }
 
   // general case
-  int p2c[4][2];
-  int c2p[4][2];
+  int p2c[4][2];  // parent 2 child pipe
+  int c2p[4][2];  // child 2 parent pipe
   for (int i = 0; i < 4; i++) {
     if ((pipe(p2c[i]) == -1) || (pipe(c2p[i]) == -1)) {
       error("pipe");
@@ -263,7 +259,6 @@ int main(int argc, char* argv[]) {
   enum child_index { aH_bH, aH_bL, aL_bH, aL_bL };
   enum pipe_end { READ, WRITE };
 
-  log("now forking", 0);
   pid_t cpid[4];
   for (int i = 0; i < 4; i++) {
     cpid[i] = fork();
@@ -282,13 +277,12 @@ int main(int argc, char* argv[]) {
         }
       }
 
-      log("child %d was born", i);
       execlp(argv[0], argv[0], NULL);
       error("execlp");
     }
   }
 
-  // close fds
+  // close unnecessary ends
   for (int i = 0; i < 4; i++) {
     if ((close(p2c[i][READ]) == -1) || (close(c2p[i][WRITE]) == -1)) {
       error("close");
@@ -320,9 +314,6 @@ int main(int argc, char* argv[]) {
         arg2 = quad.bL;
         break;
     }
-
-    log("writing '%s' and '%s' to child %d", arg1, arg2, i);
-
     FILE* stream = fdopen(p2c[i][WRITE], "w");
     if (stream == NULL) {
       error("fdopen");
@@ -347,7 +338,6 @@ int main(int argc, char* argv[]) {
     if (WEXITSTATUS(status[i]) == EXIT_FAILURE) {
       error("child failed");
     }
-    log("child %d exited", i);
   }
 
   // read c2p
@@ -366,7 +356,6 @@ int main(int argc, char* argv[]) {
     if (fclose(stream) == -1) {
       error("fclose");
     }
-    log("child %d returned '%s'", i, childResult[i]);
   }
 
   // print total sum
@@ -374,9 +363,6 @@ int main(int argc, char* argv[]) {
   addChars(&childResult[aH_bH], n, '0', false);
   addChars(&childResult[aH_bL], n / 2, '0', false);
   addChars(&childResult[aL_bH], n / 2, '0', false);
-
-  log("adding '%s' + '%s' + '%s' + '%s'", childResult[aH_bH],
-      childResult[aH_bL], childResult[aL_bH], childResult[aL_bL]);
 
   char* fstSum = addHexStrings(childResult[aH_bH], childResult[aH_bL]);
   free(childResult[aH_bH]);
@@ -388,7 +374,9 @@ int main(int argc, char* argv[]) {
   free(fstSum);
   free(sndSum);
 
-  log("total sum is '%s'", totalSum);
+  // add leading zeroes (just to pass unit test cases)
+  size_t diff = (2 * pair.len) - strlen(totalSum);
+  addChars(&totalSum, diff, '0', true);
 
   fprintf(stdout, "%s\n", totalSum);
   fflush(stdout);
