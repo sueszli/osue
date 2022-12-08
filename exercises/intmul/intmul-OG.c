@@ -264,13 +264,13 @@ int main(int argc, char* argv[]) {
   log("received arguments: %s %s", pair.a, pair.b);
 
   // general case
-  enum child_index { aH_bH = 0, aH_bL = 1, aL_bH = 2, aL_bL = 3 };
-  enum pipe_end { READ_END = 0, WRITE_END = 1 };
+  enum child_index { aH_bH, aH_bL, aL_bH, aL_bL };
+  enum pipe_end { READ, WRITE };
 
-  int parent2child[4][2];
-  int child2parent[4][2];
+  int p2c[4][2];  // parent to child
+  int c2p[4][2];  // child to parent
   for (int i = 0; i < 4; i++) {
-    if ((pipe(parent2child[i]) == -1) || (pipe(child2parent[i]) == -1)) {
+    if ((pipe(p2c[i]) == -1) || (pipe(c2p[i]) == -1)) {
       error("pipe");
     }
   }
@@ -279,20 +279,15 @@ int main(int argc, char* argv[]) {
   for (int i = 0; i < 4; i++) {
     cpid[i] = fork();
     if (cpid[i] == -1) {
-      error("fork");
+      error("fork");  // fork duplicates pipes for child
     }
     if (cpid[i] == 0) {
-      // (fork duplicates pipes for child)
-      // child: stdin -> p2c READ_END
-      //  stdout -> c2p WRITE_END
-      if ((dup2(parent2child[i][READ_END], STDIN_FILENO) == -1) ||
-          (dup2(child2parent[i][WRITE_END], STDOUT_FILENO) == -1)) {
+      if ((dup2(p2c[i][READ], STDIN_FILENO) == -1) ||
+          (dup2(c2p[i][WRITE], STDOUT_FILENO) == -1)) {
         error("dup2");
       }
-      if ((close(parent2child[i][READ_END]) == -1) ||
-          (close(parent2child[i][WRITE_END]) == -1) ||
-          (close(child2parent[i][READ_END]) == -1) ||
-          (close(child2parent[i][WRITE_END]) == -1)) {
+      if ((close(p2c[i][READ]) == -1) || (close(p2c[i][WRITE]) == -1) ||
+          (close(c2p[i][READ]) == -1) || (close(c2p[i][WRITE]) == -1)) {
         error("close");
       }
 
@@ -305,13 +300,12 @@ int main(int argc, char* argv[]) {
 
   // close fds
   for (int i = 0; i < 4; i++) {
-    if ((close(parent2child[i][READ_END]) == -1) ||
-        (close(child2parent[i][WRITE_END]) == -1)) {
+    if ((close(p2c[i][READ]) == -1) || (close(c2p[i][WRITE]) == -1)) {
       error("close");
     }
   }
 
-  // write into parent2child
+  // write into p2c
   HexStringQuad quad = splitToQuad(pair);
   free(pair.a);
   free(pair.b);
@@ -339,7 +333,7 @@ int main(int argc, char* argv[]) {
 
     log("[parent] writing %.*s %.*s to child %d", (int)quad.len - 1, arg1,
         (int)quad.len - 1, arg2, i);  // ERROR -> THINGS WRITTEN NEVER ARRIVE
-    FILE* stream = fdopen(parent2child[i][WRITE_END], "w");
+    FILE* stream = fdopen(p2c[i][WRITE], "w");
     if (stream == NULL) {
       error("fdopen");
     }
@@ -355,11 +349,11 @@ int main(int argc, char* argv[]) {
     }
 
     /*
-    if (((write(parent2child[i][WRITE_END], arg1, quad.len) == -1)
-    || (write(parent2child[i][WRITE_END], arg2, quad.len) == -1))
+    if (((write(p2c[i][WRITE], arg1, quad.len) == -1)
+    || (write(p2c[i][WRITE], arg2, quad.len) == -1))
     && (errno != EINTR)) { error("write");
     }
-    if (close(parent2child[i][WRITE_END]) == -1) {  // child sees
+    if (close(p2c[i][WRITE]) == -1) {  // child sees
     EOF error("close here")
     }
     */
@@ -382,11 +376,11 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  // read child2parent
+  // read c2p
   char* childResult[4];
   for (int i = 0; i < 4; i++) {
     size_t len;
-    FILE* stream = fdopen(child2parent[i][READ_END], "r");
+    FILE* stream = fdopen(c2p[i][READ], "r");
     if (stream == NULL) {
       error("fdopen");
     }
@@ -398,7 +392,7 @@ int main(int argc, char* argv[]) {
       error("fclose");
     }
     /*
-    if (close(child2parent[i][READ_END]) == -1) {
+    if (close(c2p[i][READ]) == -1) {
       error("close");
     }
     */

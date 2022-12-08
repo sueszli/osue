@@ -156,14 +156,10 @@ int main(int argc, char *argv[]) {
   }
 
   // close unnecessary ends
-  close(p2c[HH][READ]);
-  close(p2c[HL][READ]);
-  close(p2c[LH][READ]);
-  close(p2c[LL][READ]);
-  close(c2p[HH][WRITE]);
-  close(c2p[HL][WRITE]);
-  close(c2p[LH][WRITE]);
-  close(c2p[LL][WRITE]);
+  for (int i = 0; i < 4; i++) {
+    close(p2c[i][READ]);
+    close(c2p[i][WRITE]);
+  }
 
   // write
   write(p2c[HH][WRITE], Ah, strlen(Ah));
@@ -174,11 +170,9 @@ int main(int argc, char *argv[]) {
   write(p2c[LH][WRITE], Bh, strlen(Bh));
   write(p2c[LL][WRITE], Al, strlen(Al));
   write(p2c[LL][WRITE], Bl, strlen(Bl));
-
-  close(p2c[HH][WRITE]);
-  close(p2c[HL][WRITE]);
-  close(p2c[LH][WRITE]);
-  close(p2c[LL][WRITE]);
+  for (int i = 0; i < 4; i++) {
+    close(p2c[i][WRITE]);
+  }
 
   // wait
   for (int i = 0; i < 4; i++) {
@@ -190,36 +184,34 @@ int main(int argc, char *argv[]) {
   }
 
   // read
-  char returnChildHH[2 * length + length * 2 + 2];
-  char returnChildHL[2 * length + length + 2];
-  char returnChildLH[2 * length + length + 2];
-  char returnChildLL[2 * length + 2];
+  char retHH[2 * length + length * 2 + 2];
+  char retHL[2 * length + length + 2];
+  char retLH[2 * length + length + 2];
+  char retLL[2 * length + 2];
 
   int rv;
-  rv = (int)read(c2p[HH][READ], returnChildHH, (size_t)length * 2 + 1);
-  returnChildHH[rv - 1] = '\0';
+  rv = (int)read(c2p[HH][READ], retHH, (size_t)length * 2 + 1);
+  retHH[rv - 1] = '\0';
 
-  rv = (int)read(c2p[HL][READ], returnChildHL, (size_t)length * 2 + 1);
-  returnChildHL[rv - 1] = '\0';
+  rv = (int)read(c2p[HL][READ], retHL, (size_t)length * 2 + 1);
+  retHL[rv - 1] = '\0';
 
-  rv = (int)read(c2p[LH][READ], returnChildLH, (size_t)length * 2 + 1);
-  returnChildLH[rv - 1] = '\0';
+  rv = (int)read(c2p[LH][READ], retLH, (size_t)length * 2 + 1);
+  retLH[rv - 1] = '\0';
 
-  rv = (int)read(c2p[LL][READ], returnChildLL, (size_t)length * 2 + 1);
-  returnChildLL[rv - 1] = '\0';
-
-  close(c2p[HH][READ]);
-  close(c2p[HL][READ]);
-  close(c2p[LH][READ]);
-  close(c2p[LL][READ]);
+  rv = (int)read(c2p[LL][READ], retLL, (size_t)length * 2 + 1);
+  retLL[rv - 1] = '\0';
+  for (int i = 0; i < 4; i++) {
+    close(c2p[i][READ]);
+  }
 
   // calculate and print
-  add_X_zeros(returnChildHH, length * 2);
-  add_X_zeros(returnChildHL, length);
-  add_X_zeros(returnChildLH, length);
-  add_hex(returnChildHH, returnChildHL);
-  add_hex(returnChildHH, returnChildLH);
-  add_hex(returnChildHH, returnChildLL);
-  fprintf(stdout, "%s\n", returnChildHH);
+  add_X_zeros(retHH, length * 2);
+  add_X_zeros(retHL, length);
+  add_X_zeros(retLH, length);
+  add_hex(retHH, retHL);
+  add_hex(retHH, retLH);
+  add_hex(retHH, retLL);
+  fprintf(stdout, "%s\n", retHH);
   exit(EXIT_SUCCESS);
 }
