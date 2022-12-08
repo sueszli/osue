@@ -333,7 +333,7 @@ int main(int argc, char* argv[]) {
     }
 
     log("[parent] writing %.*s %.*s to child %d", (int)quad.len - 1, arg1,
-        (int)quad.len - 1, arg2, i);  // ERROR -> THINGS WRITTEN NEVER ARRIVE
+        (int)quad.len - 1, arg2, i);
     /*
     FILE* stream = fdopen(p2c[i][WRITE], "w");
     if (stream == NULL) {
