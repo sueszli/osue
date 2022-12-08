@@ -245,11 +245,13 @@ int main(int argc, char* argv[]) {
     usage("no arguments allowed");
   }
 
-  log("entered intmul -> waiting for arguments", NULL);
-
   // base case
+  log("entered intmul -> waiting for arguments", NULL);
   HexStringPair pair = getInput();
+  log("received arguments: %s %s", pair.a, pair.b);
+
   if (pair.len == 1) {
+    log("reached base case", NULL);
     errno = 0;
     fprintf(stdout, "%lx\n",
             strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16));
@@ -260,8 +262,6 @@ int main(int argc, char* argv[]) {
     free(pair.b);
     exit(EXIT_SUCCESS);
   }
-
-  log("received arguments: %s %s", pair.a, pair.b);
 
   // general case
   enum child_index { aH_bH, aH_bL, aL_bH, aL_bL };
@@ -279,20 +279,20 @@ int main(int argc, char* argv[]) {
   for (int i = 0; i < 4; i++) {
     cpid[i] = fork();
     if (cpid[i] == -1) {
-      error("fork");  // fork duplicates pipes for child
+      error("fork");  // also duplicates pipes for child
     }
     if (cpid[i] == 0) {
       if ((dup2(p2c[i][READ], STDIN_FILENO) == -1) ||
           (dup2(c2p[i][WRITE], STDOUT_FILENO) == -1)) {
         error("dup2");
       }
-      if ((close(p2c[i][READ]) == -1) || (close(p2c[i][WRITE]) == -1) ||
-          (close(c2p[i][READ]) == -1) || (close(c2p[i][WRITE]) == -1)) {
-        error("close");
+      for (int j = 0; j < 4; j++) {
+        if ((close(p2c[j][WRITE]) == -1) || (close(c2p[j][READ]) == -1)) {
+          error("close");
+        }
       }
 
-      log("[child %d] calling intmul", i);
-      // child runs intmul (waits for arguments in stdin)
+      log("[child %d] now calling intmul", i);
       execlp(argv[0], argv[0], NULL);
       error("execlp");
     }

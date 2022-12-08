@@ -120,10 +120,7 @@ int main(int argc, char *argv[]) {
   int p2c[4][2];
   int c2p[4][2];
   for (int i = 0; i < 4; i++) {
-    if (pipe(p2c[i]) == -1) {
-      error("pipe");
-    }
-    if (pipe(c2p[i]) == -1) {
+    if ((pipe(p2c[i]) == -1) || (pipe(c2p[i]) == -1)) {
       error("pipe");
     }
   }
@@ -139,15 +136,17 @@ int main(int argc, char *argv[]) {
       error("Error at forking");
     } else if (pid[i] == 0) {
       // redirect pipes
-      if (dup2(p2c[i][0], STDIN_FILENO) == -1) {
+      if (dup2(p2c[i][READ], STDIN_FILENO) == -1) {
         error("dup2");
       }
-      if (dup2(c2p[i][1], STDOUT_FILENO) == -1) {
+      if (dup2(c2p[i][WRITE], STDOUT_FILENO) == -1) {
         error("dup2");
       }
       for (int j = 0; j < 4; j++) {
-        close(p2c[j][1]);
-        close(c2p[j][0]);
+        close(p2c[j][READ]);
+        close(p2c[j][WRITE]);
+        close(c2p[j][READ]);
+        close(c2p[j][WRITE]);
       }
       execlp(argv[0], argv[0], NULL);
       error("execlp");
