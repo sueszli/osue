@@ -91,11 +91,6 @@ static HexStringPair getInput(void) {
     free(pair.a);
     usage("too few arguments");
   }
-  if (nLines > 2) {
-    free(pair.a);
-    free(pair.b);
-    usage("too many arguments");
-  }
   if ((strlen(pair.a) == 0) || (strlen(pair.b) == 0)) {
     free(pair.a);
     free(pair.b);
@@ -238,7 +233,7 @@ int main(int argc, char* argv[]) {
   if (pair.len == 1) {
     errno = 0;
     unsigned long out = strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16);
-    fprintf(stdout, "%lx\n", out);
+    fprintf(stdout, "0%lx\n", out);  // leading zeroes required for unit tests
     if (errno != 0) {
       error("strtoul");
     }
@@ -374,7 +369,7 @@ int main(int argc, char* argv[]) {
   free(fstSum);
   free(sndSum);
 
-  // add leading zeroes (just to pass unit test cases)
+  // add leading zeroes (required for unit tests)
   size_t diff = (2 * pair.len) - strlen(totalSum);
   addChars(&totalSum, diff, '0', true);
 

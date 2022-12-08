@@ -1,5 +1,5 @@
 #!/bin/bash
-ARGS="ff\nff"
+ARGS="00Deadbe\n000000ef"
 
 # examples
 #ARGS="3\n3"
@@ -28,6 +28,10 @@ make all
 
 echo -e "\n\n--------- RUNNING WITH VALGRIND ---------"
 echo -e $ARGS | valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./intmul
+
+echo -e "\n\n--------- RETURN STATUS ---------"
+echo -e "(success == 0, failure == 1)"
+echo $?
 
 
 echo -e "\n\n--------- CLEANING ---------"
