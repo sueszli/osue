@@ -133,8 +133,8 @@ static HexStringPair getInput(void) {
 }
 
 static HexStringQuad splitToQuad(HexStringPair pair) {
-  // also adds a '\n' at the end so content can be directly sent
-  // to children post-condition: free returned quad
+  // also adds a '\n' at the end so content can be directly sent to children
+  // post-condition: free returned quad
 
   HexStringQuad quad;
   size_t size = (pair.len / 2) + 1;
