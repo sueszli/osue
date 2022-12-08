@@ -362,6 +362,7 @@ int main(int argc, char* argv[]) {
     if (stream == NULL) {
       error("fdopen");
     }
+    childResult[i] = NULL;
     if (getline(&childResult[i], &len, stream) < 0) {
       error("getline");
     }
