@@ -366,10 +366,11 @@ int main(int argc, char* argv[]) {
     if (getline(&childResult[i], &len, stream) < 0) {
       error("getline");
     }
-    addChars(&childResult[i], 1, '\0', false);
+    childResult[i][strlen(childResult[i]) - 1] = '\0';
     if (fclose(stream) == -1) {
       error("fclose");
     }
+    log("child %d returned '%s'", i, childResult[i]);
   }
 
   // print total sum
