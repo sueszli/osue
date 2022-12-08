@@ -1,5 +1,10 @@
 /*
-  This is the most barebones and minimalis
+  This is the refactored version of HEDs intmul implementation.
+  It is not fully correct (ie. doesn't accept numbers with different lengths)
+  but it helped me understand how to solve this assignment best.
+
+  Original:
+  https://github.com/HED-GIT/TU_WIEN_BETRIEBSSYSTEME/blob/master/2/intmul/intmul.c
 
   ---
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+ARGS="ff\nff"
 
 # examples
 #ARGS="3\n3"
@@ -11,7 +12,7 @@
 #ARGS="3\n3"
 #ARGS="1A\nb3"
 #ARGS="1000\n0001"
-ARGS="aB\n7"
+#ARGS="aB\n7"
 #ARGS="Deadbe\nef"
 #ARGS="13A5D87E85412E5F\n7812C53B014D5DF8"
 
