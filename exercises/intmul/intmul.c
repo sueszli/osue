@@ -11,8 +11,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#pragma region works
-
 #define error(msg)      \
   do {                  \
     perror(msg);        \
@@ -26,8 +24,9 @@
     exit(EXIT_FAILURE);                                              \
   } while (true);
 
+// remove this later vvv
 #define log(msg, ...) \
-  fprintf(stderr, "[PID: %d] " msg "\n", getpid(), ##__VA_ARGS__);
+  // fprintf(stderr, "[PID: %d] " msg "\n", getpid(), ##__VA_ARGS__);
 
 typedef struct {
   char* a;
@@ -151,8 +150,7 @@ static HexStringQuad splitToQuad(HexStringPair pair) {
 
   memcpy(quad.aH, pair.a, size - 1);  // high digits (left side)
   memcpy(quad.bH, pair.b, size - 1);
-  memcpy(quad.aL, (pair.a + size - 1),
-         size - 1);  // low digits (right side)
+  memcpy(quad.aL, (pair.a + size - 1), size - 1);  // low digits (right side)
   memcpy(quad.bL, (pair.b + size - 1), size - 1);
 
   quad.aH[size - 1] = '\0';
@@ -175,7 +173,7 @@ static char* addHexStrings(char str1[], char str2[]) {
     str2++;
   }
 
-  // add bit wise
+  // add bit wise into reversed output
   const size_t maxLen =
       (strlen(str1) > strlen(str2) ? strlen(str1) : strlen(str2));
   size_t indexStr1 = strlen(str1) - 1;
@@ -233,8 +231,6 @@ static char* addHexStrings(char str1[], char str2[]) {
   return output;
 }
 
-#pragma endregion works
-
 int main(int argc, char* argv[]) {
   if (argc > 1) {
     usage("no arguments allowed");
@@ -267,7 +263,7 @@ int main(int argc, char* argv[]) {
   enum child_index { aH_bH, aH_bL, aL_bH, aL_bL };
   enum pipe_end { READ, WRITE };
 
-  log("now forking");
+  log("now forking", 0);
   pid_t cpid[4];
   for (int i = 0; i < 4; i++) {
     cpid[i] = fork();
@@ -379,15 +375,20 @@ int main(int argc, char* argv[]) {
   addChars(&childResult[aH_bL], n / 2, '0', false);
   addChars(&childResult[aL_bH], n / 2, '0', false);
 
+  log("adding '%s' + '%s' + '%s' + '%s'", childResult[aH_bH],
+      childResult[aH_bL], childResult[aL_bH], childResult[aL_bL]);
+
   char* fstSum = addHexStrings(childResult[aH_bH], childResult[aH_bL]);
-  char* sndSum = addHexStrings(childResult[aL_bH], childResult[aL_bL]);
-  char* totalSum = addHexStrings(fstSum, sndSum);
   free(childResult[aH_bH]);
   free(childResult[aH_bL]);
+  char* sndSum = addHexStrings(childResult[aL_bH], childResult[aL_bL]);
   free(childResult[aL_bH]);
   free(childResult[aL_bL]);
+  char* totalSum = addHexStrings(fstSum, sndSum);
   free(fstSum);
   free(sndSum);
+
+  log("total sum is '%s'", totalSum);
 
   fprintf(stdout, "%s\n", totalSum);
   fflush(stdout);

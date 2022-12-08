@@ -133,9 +133,8 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < 4; i++) {
     pid[i] = fork();
     if (pid[i] < 0) {
-      error("Error at forking");
+      error("fork");
     } else if (pid[i] == 0) {
-      // redirect pipes
       if (dup2(p2c[i][READ], STDIN_FILENO) == -1) {
         error("dup2");
       }
