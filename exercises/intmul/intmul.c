@@ -1,422 +1,274 @@
-#define _GNU_SOURCE
-#include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <math.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define error(msg)      \
+#define USAGE()                                  \
+  do {                                           \
+    fprintf(stderr, "USAGE:\t%s\n", "./intmul"); \
+    exit(EXIT_FAILURE);                          \
+  } while (0)
+
+#define error(...)                               \
+  do {                                           \
+    fprintf(stderr, "ERROR: " __VA_ARGS__ "\n"); \
+    exit(EXIT_FAILURE);                          \
+  } while (0)
+
+#define SUCCESS_EXIT()  \
   do {                  \
-    perror(msg);        \
-    exit(EXIT_FAILURE); \
-  } while (true);
+    exit(EXIT_SUCCESS); \
+  } while (0)
 
-#define usage(msg)                                                   \
-  do {                                                               \
-    fprintf(stderr, "Invalid input: %s\nSYNOPSIS: ./intmul\n", msg); \
-    exit(EXIT_FAILURE);                                              \
-  } while (true);
+#define MAXLENGTH 1024
 
-typedef struct {
-  char* a;
-  char* b;
-  size_t len;
-} HexStringPair;
+static void read_input(char *firstString, char *secondString) {
+  fgets(firstString, MAXLENGTH, stdin);
+  fgets(secondString, MAXLENGTH, stdin);
+  firstString[strlen(firstString) - 1] = '\0';
+  secondString[strlen(secondString) - 1] = '\0';
 
-typedef struct {
-  char* aH;
-  char* aL;
-  char* bH;
-  char* bL;
-  size_t len;
-} HexStringQuad;
-
-static void addChars(char** strp, size_t num, char c, bool addToStart) {
-  // if !addToStart, then it will add it to the end of strp
-  // pre-condition: str must be allocated dynamically
-  // side-effect: adds leading zeroes to str and reallocates it
-
-  size_t oldSize = strlen(*strp) + 1;
-  char* oldCopy = strdup(*strp);
-  if (oldCopy == NULL) {
-    error("strdup");
+  if (!(strspn(firstString, "0123456789ABCDEFabcdef") == strlen(firstString)) ||
+      !(strspn(secondString, "0123456789ABCDEFabcdef") ==
+        strlen(secondString))) {
+    error("The input is not a valid HEX-String");
+  } else if (strlen(firstString) != strlen(secondString)) {
+    error("The length of both strings must be equal");
+  } else if ((((strlen(firstString) - 1) / 2) * 2 == strlen(firstString) - 1) &&
+             strlen(firstString) != 1) {
+    error("The number of digits is not even or 1");
   }
-  char* rStr = realloc(*strp, (oldSize + num) * sizeof(char));
-  if (rStr == NULL) {
-    error("realloc");
-  }
+}
 
-  if (addToStart) {
-    memset(rStr, c, num);
-    memcpy((rStr + num), oldCopy, oldSize);
+static int hex_char_to_int(char character) {
+  if (character >= '0' && character <= '9') return character - '0';
+  if (character >= 'A' && character <= 'F') return character - 'A' + 10;
+  if (character >= 'a' && character <= 'f') return character - 'a' + 10;
+  return -1;
+}
+
+static char int_to_hex_char(int i) {
+  if (i < 10) {
+    return '0' + i;
   } else {
-    memcpy(rStr, oldCopy, oldSize - 1);
-    memset((rStr + oldSize - 1), c, num);
-    rStr[oldSize - 1 + num] = '\0';
+    return 'a' + i - 10;
   }
-
-  free(oldCopy);
-  *strp = rStr;
 }
 
-static HexStringPair getInput(void) {
-  // post-condition: free returned pair
-
-  HexStringPair pair;
-  char* line = NULL;
-  size_t lineLen = 0;
-  ssize_t nChars;
-  int nLines = 0;
-  while ((nChars = getline(&line, &lineLen, stdin)) != -1) {
-    if (nLines == 0) {
-      line[strlen(line) - 1] = '\0';
-      pair.a = strdup(line);
-    } else if (nLines == 1) {
-      line[strlen(line) - 1] = '\0';
-      pair.b = strdup(line);
-    }
-    nLines++;
-  }
-  free(line);
-
-  // validate input
-  if (nLines == 1) {
-    free(pair.a);
-    usage("too few arguments");
-  }
-  if (nLines > 2) {
-    free(pair.a);
-    free(pair.b);
-    usage("too many arguments");
-  }
-  if ((strlen(pair.a) == 0) || (strlen(pair.b) == 0)) {
-    free(pair.a);
-    free(pair.b);
-    usage("empty argument");
-  }
-  const char* valid = "0123456789abcdefABCDEF";
-  if ((strspn(pair.a, valid) != strlen(pair.a)) ||
-      (strspn(pair.b, valid) != strlen(pair.b))) {
-    free(pair.a);
-    free(pair.b);
-    usage("one argument is not a hexadecimal number")
-  }
-
-  // get len to the same in pair
-  const size_t len1 = strlen(pair.a);
-  const size_t len2 = strlen(pair.b);
-  const size_t diff = (size_t)labs((long)(len2 - len1));
-  if (len1 < len2) {
-    addChars(&(pair.a), diff, '0', true);
-  } else if (len1 > len2) {
-    addChars(&(pair.b), diff, '0', true);
-  }
-  assert(strlen(pair.a) == strlen(pair.b));
-
-  // get len to be a power of 2
-  const size_t len = strlen(pair.a);
-  if ((len & (len - 1)) != 0) {
-    const size_t newLen = 1 << (size_t)ceill(log2l((long double)len));
-    addChars(&(pair.a), newLen - len, '0', true);
-    addChars(&(pair.b), newLen - len, '0', true);
-  }
-
-  pair.len = strlen(pair.a);
-  return pair;
+static void add_hex_char_overflow(char *a, const char *b, char *overflow) {
+  int value = hex_char_to_int(*a) + hex_char_to_int(*b) +
+              hex_char_to_int(
+                  *overflow);  // functions like strtol would need a \0 at the
+                               // end and since we deal with only a character at
+                               // a time we can use a custom function
+  *a = int_to_hex_char(value % 16);
+  *overflow = int_to_hex_char(value / 16);
 }
 
-static HexStringQuad splitToQuad(HexStringPair pair) {
-  // also adds a '\n' at the end so content can be directly sent to children
-  // post-condition: free returned quad
+static void add_hex(char *firstHex, const char *secondHex) {
+  char overflow = '0';
+  int dif = strlen(firstHex) - strlen(secondHex);
 
-  HexStringQuad quad;
-  size_t size = (pair.len / 2) + 1;
+  for (int i = strlen(firstHex) - 1; i >= 0; i--) {
+    char second = (i - dif < 0) ? '0' : secondHex[i - dif];
+    add_hex_char_overflow(&firstHex[i], &second, &overflow);
+  }
 
-  quad.aH = malloc(size * sizeof(char));
-  quad.bH = malloc(size * sizeof(char));
-  quad.aL = malloc(size * sizeof(char));
-  quad.bL = malloc(size * sizeof(char));
-
-  memcpy(quad.aH, pair.a, size - 1);  // high digits (left side)
-  memcpy(quad.bH, pair.b, size - 1);
-  memcpy(quad.aL, (pair.a + size - 1), size - 1);  // low digits (right side)
-  memcpy(quad.bL, (pair.b + size - 1), size - 1);
-
-  quad.aH[size - 1] = '\0';
-  quad.bH[size - 1] = '\0';
-  quad.aL[size - 1] = '\0';
-  quad.bL[size - 1] = '\0';
-  quad.len = size - 1;
-
-  addChars(&(quad.aH), 1, '\n', false);
-  addChars(&(quad.aL), 1, '\n', false);
-  addChars(&(quad.bH), 1, '\n', false);
-  addChars(&(quad.bL), 1, '\n', false);
-  quad.len++;
-
-  return quad;
+  if (overflow != '0') {  // if overflow exists shift the entire hexstring by 1
+                          // and add the overflow to the beginning
+    for (int i = strlen(firstHex); i >= 0; i--) {
+      firstHex[i + 1] = firstHex[i];
+    }
+    firstHex[0] = overflow;
+  }
 }
 
-static char* addHexStrings(char str1[], char str2[]) {
-  // post-condition: output must be freed
-
-  // remove leading zeroes
-  while (*str1 == '0') {
-    str1++;
+static void add_X_zeros(char *a, int count) {
+  int length = strlen(a);
+  for (int i = 0; count > i; i++) {
+    a[length] = '0';
+    length++;
   }
-  while (*str2 == '0') {
-    str2++;
-  }
-
-  // add bit wise
-  const size_t maxLen =
-      (strlen(str1) > strlen(str2) ? strlen(str1) : strlen(str2));
-  size_t indexStr1 = strlen(str1) - 1;
-  size_t indexStr2 = strlen(str2) - 1;
-
-  char reversedOutput[maxLen + 2];  // +2 for carry and '\0'
-  unsigned long carry = 0;
-  char carryStr[2] = {'\0', '\0'};
-  size_t i;
-  for (i = 0; i < maxLen; i++) {
-    char tmp1[2] = {'0', '\0'};
-    char tmp2[2] = {'0', '\0'};
-    if (indexStr1 != (size_t)-1) {
-      tmp1[0] = str1[indexStr1--];
-    }
-    if (indexStr2 != (size_t)-1) {
-      tmp2[0] = str2[indexStr2--];
-    }
-
-    errno = 0;
-    unsigned long sum =
-        carry + strtoul(tmp1, NULL, 16) + strtoul(tmp2, NULL, 16);
-    if (errno != 0) {
-      error("strtoul");
-    }
-
-    unsigned long write = sum % 16;
-    carry = sum / 16;
-
-    char writeStr[2];
-    assert(write <= 15);
-    sprintf(writeStr, "%lx", write);
-
-    assert(carry <= 15);
-    sprintf(carryStr, "%lx", carry);
-
-    reversedOutput[i] = writeStr[0];
-  }
-  if (carry == 0) {
-    reversedOutput[i] = '\0';
-  } else {
-    reversedOutput[i] = carryStr[0];
-    reversedOutput[i + 1] = '\0';
-  }
-
-  // reverse
-  const size_t len = strlen(reversedOutput);
-  char* output = malloc((len + 1) * sizeof(char));
-  // alternatively: char output[len + 1]; -> then write into pointer
-  size_t j;
-  for (j = 0; j < len; j++) {
-    output[j] = reversedOutput[len - 1 - j];
-  }
-  output[j] = '\0';
-  return output;
+  a[length] = '\0';
 }
 
-int main(int argc, char* argv[]) {
-  if (argc > 1) {
-    usage("no arguments allowed");
-  }
-
-  // base case
-  HexStringPair pair = getInput();
-  if (pair.len == 1) {
-    errno = 0;
-    fprintf(stdout, "%lx\n",
-            strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16));
-    if (errno != 0) {
-      error("strtoul");
-    }
-    free(pair.a);
-    free(pair.b);
-    exit(EXIT_SUCCESS);
-  }
-
-  // general case
-  enum child_index { aH_bH = 0, aH_bL = 1, aL_bH = 2, aL_bL = 3 };
-  enum pipe_end { READ_END = 0, WRITE_END = 1 };
-
-  int parent2child[4][2];
-  int child2parent[4][2];
-  for (int i = 0; i < 4; i++) {
-    if ((pipe(parent2child[i]) == -1) || (pipe(child2parent[i]) == -1)) {
-      error("pipe");
-    }
-  }
-
-  pid_t cpid[4];
-  for (int i = 0; i < 4; i++) {
-    cpid[i] = fork();
-    if (cpid[i] == -1) {
-      error("fork");
-    }
-    if (cpid[i] == 0) {
-      // child redirects stdin and stdout (fork duplicates pipes for child)
-      if ((dup2(parent2child[i][READ_END], STDIN_FILENO) == -1) ||
-          (dup2(child2parent[i][WRITE_END], STDOUT_FILENO) == -1)) {
-        error("dup2");
+// dup_needed_pipes(8, pipes, i * 2, i * 2 + 1);
+static void dup_needed_pipes(int pipeAmount, int pipes[pipeAmount][2],
+                             int neededReadPipe, int neededWritePipe) {
+  for (int i = 0; i < 8; i++) {
+    if (i == neededReadPipe) {
+      if (dup2(pipes[i][1], STDOUT_FILENO) == -1) {
+        error("dup-Error");
       }
-      if ((close(parent2child[i][READ_END]) == -1) ||
-          (close(parent2child[i][WRITE_END]) == -1) ||
-          (close(child2parent[i][READ_END]) == -1) ||
-          (close(child2parent[i][WRITE_END]) == -1)) {
-        error("close");
+    } else if (i == neededWritePipe) {
+      if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
+        error("dup-Error");
       }
-
-      // child runs intmul (waits for arguments in stdin)
-      execlp("./intmul", "./intmul", NULL);
-      error("execlp");
     }
+
+    close(pipes[i][1]);
+    close(pipes[i][0]);
+  }
+}
+
+int main(int argc, char *argv[]) {
+  if (argc != 1) {
+    USAGE();
   }
 
-  // close fds
+  int length;
+  char firstString[MAXLENGTH];
+  char secondString[MAXLENGTH];
+
+  read_input(firstString, secondString);
+  length = strlen(firstString) / 2;
+
+  if (strlen(firstString) == 1) {
+    int value = (int)strtol(firstString, NULL, 16) *
+                (int)strtol(secondString, NULL, 16);
+    sprintf(firstString, "%x", value);
+    fprintf(stdout, "%s\n", firstString);
+    SUCCESS_EXIT();
+  }
+
+  char Al[length + 2];
+  char Bh[length + 2];
+  char Bl[length + 2];
+  char Ah[length + 2];
+
+  int i = 0;
+  for (; i < length; i++) {
+    Ah[i] = firstString[i];
+    Bh[i] = secondString[i];
+    Al[i] = firstString[length + i];
+    Bl[i] = secondString[length + i];
+  }
+
+  Ah[i] = '\n';
+  Bh[i] = '\n';
+  Al[i] = '\n';
+  Bl[i] = '\n';
+  Ah[i + 1] = '\0';
+  Bh[i + 1] = '\0';
+  Al[i + 1] = '\0';
+  Bl[i + 1] = '\0';
+
+  enum children {
+    READ_CHILD_HH,
+    WRITE_CHILD_HH,
+    READ_CHILD_LH,
+    WRITE_CHILD_LH,
+    READ_CHILD_HL,
+    WRITE_CHILD_HL,
+    READ_CHILD_LL,
+    WRITE_CHILD_LL
+  };
+  enum readWrite { READ, WRITE };
+
+  int pipes[8][2];
+
+  int pid[4];
+
+  if (pipe(pipes[READ_CHILD_HH]) == -1 || pipe(pipes[WRITE_CHILD_HH]) == -1 ||
+      pipe(pipes[READ_CHILD_HL]) == -1 || pipe(pipes[WRITE_CHILD_HL]) == -1 ||
+      pipe(pipes[READ_CHILD_LH]) == -1 || pipe(pipes[WRITE_CHILD_LH]) == -1 ||
+      pipe(pipes[READ_CHILD_LL]) == -1 || pipe(pipes[WRITE_CHILD_LL]) == -1) {
+    error("Error when opening pipes");
+  }
+
+  // create child processes
   for (int i = 0; i < 4; i++) {
-    if ((close(parent2child[i][READ_END]) == -1) ||
-        (close(child2parent[i][WRITE_END]) == -1)) {
-      error("close");
+    pid[i] = fork();
+    if (pid[i] < 0) {
+      error("Error at forking");
+    } else if (pid[i] == 0) {
+      dup_needed_pipes(8, pipes, i * 2, i * 2 + 1);
+
+      if (execlp(argv[0], argv[0], NULL) == -1) {
+        error("Error on execlp");
+      }
     }
   }
 
-  // write into parent2child
-  HexStringQuad quad = splitToQuad(pair);
-  free(pair.a);
-  free(pair.b);
+  {
+    // close all reading ends of writing pipe
+    close(pipes[WRITE_CHILD_HH][READ]);
+    close(pipes[READ_CHILD_HH][WRITE]);
+    close(pipes[WRITE_CHILD_HL][READ]);
+    close(pipes[READ_CHILD_HL][WRITE]);
+    close(pipes[WRITE_CHILD_LH][READ]);
+    close(pipes[READ_CHILD_LH][WRITE]);
+    close(pipes[WRITE_CHILD_LL][READ]);
+    close(pipes[READ_CHILD_LL][WRITE]);
 
-  fprintf(stderr, "arrived here lol\n");
-  // gdb shows:
-  //    - child starts listening to stdin but doesn't receive anything
-  //    - parent stops and waits for child to return something
-  //
-  // this means:
-  //    - writing doesn't work
+    // writing
 
-  for (int i = 0; i < 4; i++) {
-    char* arg1;
-    char* arg2;
-    switch (i) {
-      case aH_bH:
-        arg1 = quad.aH;
-        arg2 = quad.bH;
-        break;
-      case aH_bL:
-        arg1 = quad.aH;
-        arg2 = quad.bL;
-        break;
-      case aL_bH:
-        arg1 = quad.aL;
-        arg2 = quad.bH;
-        break;
-      case aL_bL:
-        arg1 = quad.aL;
-        arg2 = quad.bL;
-        break;
-    }
+    write(pipes[WRITE_CHILD_HH][WRITE], Ah, strlen(Ah));
+    write(pipes[WRITE_CHILD_HH][WRITE], Bh, strlen(Bh));
+    close(pipes[WRITE_CHILD_HH][WRITE]);
 
-    FILE* stream = fdopen(parent2child[i][WRITE_END], "w");
-    if (stream == NULL) {
-      error("fdopen");
-    }
-    /*
-    if ((fputs(arg1, stream) == -1) || (fputs(arg2, stream) == -1)) {
-      error("fputs");
-    }
-    */
-    fprintf(stream, "%.*s", quad.len, arg1);
-    fprintf(stream, "%.*s", quad.len, arg2);
-    if (fclose(stream) == -1) {
-      error("fclose");
-    }
+    write(pipes[WRITE_CHILD_HL][WRITE], Ah, strlen(Ah));
+    write(pipes[WRITE_CHILD_HL][WRITE], Bl, strlen(Bl));
+    close(pipes[WRITE_CHILD_HL][WRITE]);
 
-    /*
-    if (((write(parent2child[i][WRITE_END], arg1, quad.len) == -1) ||
-         (write(parent2child[i][WRITE_END], arg2, quad.len) == -1)) &&
-        (errno != EINTR)) {
-      error("write");
-    }
-    if (close(parent2child[i][WRITE_END]) == -1) {  // child sees EOF
-      error("close here")
-    }
-    */
-  }
-  free(quad.aH);
-  free(quad.aL);
-  free(quad.bH);
-  free(quad.bL);
+    write(pipes[WRITE_CHILD_LH][WRITE], Al, strlen(Al));
+    write(pipes[WRITE_CHILD_LH][WRITE], Bh, strlen(Bh));
+    close(pipes[WRITE_CHILD_LH][WRITE]);
 
-  // wait for child to exit
-  int status[4];
-  for (int i = 0; i < 4; i++) {
-    fprintf(stderr, "processing index %d\n", i);
-    if (waitpid(cpid[i], &status[i], 0) == -1) {
-      error("waitpid");
-    }
-    if (WEXITSTATUS(status[i]) == EXIT_FAILURE) {
-      error("child failed");
+    write(pipes[WRITE_CHILD_LL][WRITE], Al, strlen(Al));
+    write(pipes[WRITE_CHILD_LL][WRITE], Bl, strlen(Bl));
+    close(pipes[WRITE_CHILD_LL][WRITE]);
+
+    // Wait for child
+    int status[4];
+    waitpid(pid[0], &status[0], 0);
+    waitpid(pid[1], &status[1], 0);
+    waitpid(pid[2], &status[2], 0);
+    waitpid(pid[3], &status[3], 0);
+
+    if (WEXITSTATUS(status[0]) == 1 || WEXITSTATUS(status[1]) == 1 ||
+        WEXITSTATUS(status[2]) == 1 || WEXITSTATUS(status[3]) == 1) {
+      error("Error in the childprocess");
+      exit(EXIT_FAILURE);
     }
   }
 
-  // read child2parent
-  char* childResult[4];
-  for (int i = 0; i < 4; i++) {
-    size_t len;
-    FILE* stream = fdopen(child2parent[i][READ_END], "r");
-    if (stream == NULL) {
-      error("fdopen");
-    }
-    if (getline(&childResult[i], &len, stream) < 0) {
-      error("getline");
-    }
-    addChars(&childResult[i], 1, '\0', false);
-    if (fclose(stream) == -1) {
-      error("fclose");
-    }
-    /*
-    if (close(child2parent[i][READ_END]) == -1) {
-      error("close");
-    }
-    */
+  // Read string from child and close reading end.
+  char returnChildHH[2 * length + length * 2 + 2];
+  char returnChildHL[2 * length + length + 2];
+  char returnChildLH[2 * length + length + 2];
+  char returnChildLL[2 * length + 2];
+
+  {
+    int rv;
+    rv = read(pipes[READ_CHILD_HH][READ], returnChildHH, length * 2 + 1);
+    returnChildHH[rv - 1] = '\0';
+    close(pipes[READ_CHILD_HH][READ]);
+
+    rv = read(pipes[READ_CHILD_HL][READ], returnChildHL, length * 2 + 1);
+    returnChildHL[rv - 1] = '\0';
+    close(pipes[READ_CHILD_HL][READ]);
+
+    rv = read(pipes[READ_CHILD_LH][READ], returnChildLH, length * 2 + 1);
+    returnChildLH[rv - 1] = '\0';
+    close(pipes[READ_CHILD_LH][READ]);
+
+    rv = read(pipes[READ_CHILD_LL][READ], returnChildLL, length * 2 + 1);
+    returnChildLL[rv - 1] = '\0';
+    close(pipes[READ_CHILD_LL][READ]);
   }
 
-  // print total sum
-  const size_t n = pair.len;
-  addChars(&childResult[aH_bH], n, '0', false);
-  addChars(&childResult[aH_bL], n / 2, '0', false);
-  addChars(&childResult[aL_bH], n / 2, '0', false);
+  // calculation
 
-  char* fstSum = addHexStrings(childResult[aH_bH], childResult[aH_bL]);
-  free(childResult[aH_bH]);
-  free(childResult[aH_bL]);
+  add_X_zeros(returnChildHH, length * 2);
+  add_X_zeros(returnChildHL, length);
+  add_X_zeros(returnChildLH, length);
 
-  char* sndSum = addHexStrings(childResult[aL_bH], childResult[aL_bL]);
-  free(childResult[aL_bH]);
-  free(childResult[aL_bL]);
+  add_hex(returnChildHH, returnChildHL);
+  add_hex(returnChildHH, returnChildLH);
+  add_hex(returnChildHH, returnChildLL);
 
-  char* totalSum = addHexStrings(fstSum, sndSum);
-  free(fstSum);
-  free(sndSum);
-
-  fprintf(stdout, "%s\n", totalSum);
-  fflush(stdout);
-  free(totalSum);
-
-  exit(EXIT_SUCCESS);
+  fprintf(stdout, "%s\n", returnChildHH);
+  SUCCESS_EXIT();
 }

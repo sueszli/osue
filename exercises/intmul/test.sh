@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGS="ff\nf"
+ARGS="ff\nff"
 
 # examples
 #ARGS="3\n3"
@@ -30,6 +30,7 @@ make all
 
 echo -e "\n\n--------- RUNNING WITH VALGRIND ---------"
 echo -e $ARGS | valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./intmul
+
 
 echo -e "\n\n--------- CLEANING ---------"
 make clean
