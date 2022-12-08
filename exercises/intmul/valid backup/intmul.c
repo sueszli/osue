@@ -1,4 +1,3 @@
-// #region works
 #define _GNU_SOURCE
 #include <assert.h>
 #include <errno.h>
@@ -223,7 +222,6 @@ static char* addHexStrings(char str1[], char str2[]) {
   output[j] = '\0';
   return output;
 }
-// #endregion works
 
 int main(int argc, char* argv[]) {
   if (argc > 1) {
@@ -378,10 +376,6 @@ int main(int argc, char* argv[]) {
   fprintf(stdout, "%s\n", totalSum);
   fflush(stdout);
   free(totalSum);
-
-#ifdef OSUETREE
-  fprintf(stdout, "OSUETREE\n");
-#endif
 
   exit(EXIT_SUCCESS);
 }

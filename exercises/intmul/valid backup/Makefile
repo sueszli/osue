@@ -2,7 +2,7 @@
 
 
 # compiler version (gcc-12 not available in OSUE lab)
-GCC = gcc-12
+GCC = gcc
 
 
 # compile flags (see: https://gcc.gnu.org/onlinedocs/gcc-4.3.2/gcc/Warning-Options.html)
@@ -21,7 +21,7 @@ intmul: intmul.o
 	$(GCC) -o intmul intmul.o $(libraries)
 
 intmul.o: intmul.c
-	$(GCC) $(VERBOSE) -c -o intmul.o intmul.c
+	$(GCC) $(DEFAULT) -c -o intmul.o intmul.c
 
 
 # cleaning up

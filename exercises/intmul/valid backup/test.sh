@@ -1,5 +1,5 @@
 #!/bin/bash
-ARGS="abc\ndef"
+ARGS="00Deadbe\n000000ef"
 
 # examples
 #ARGS="3\n3"
