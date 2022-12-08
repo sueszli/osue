@@ -132,8 +132,8 @@ int main(int argc, char *argv[]) {
   }
 
   enum pipe_index {
-    c2p_HH,
-    p2c_HH,
+    c2p_HH,  // child to parent -> i % 2 == 0
+    p2c_HH,  // parent to child -> i % 2 == 1
     c2p_LH,
     p2c_LH,
     c2p_HL,
@@ -150,6 +150,7 @@ int main(int argc, char *argv[]) {
     if (pid[i] < 0) {
       error("Error at forking");
     } else if (pid[i] == 0) {
+      // redirect pipes
       for (int j = 0; j < 8; j++) {
         if (j == i * 2) {
           if (dup2(pipes[j][1], STDOUT_FILENO) == -1) {
