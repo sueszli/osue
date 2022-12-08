@@ -117,9 +117,13 @@ int main(int argc, char *argv[]) {
   // --------------------------
 
   // create pipes
-  int pipes[8][2];
-  for (int i = 0; i < 8; i++) {
-    if (pipe(pipes[i]) == -1) {
+  int p2c[4][2];
+  int c2p[4][2];
+  for (int i = 0; i < 4; i++) {
+    if (pipe(p2c[i]) == -1) {
+      error("pipe");
+    }
+    if (pipe(c2p[i]) == -1) {
       error("pipe");
     }
   }
@@ -146,15 +150,15 @@ int main(int argc, char *argv[]) {
       error("Error at forking");
     } else if (pid[i] == 0) {
       // redirect pipes
-      if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
+      if (dup2(p2c[i][0], STDIN_FILENO) == -1) {
         error("dup2");
       }
-      if (dup2(pipes[i + 4][1], STDOUT_FILENO) == -1) {
+      if (dup2(c2p[i][1], STDOUT_FILENO) == -1) {
         error("dup2");
       }
-      for (int j = 0; j < 8; j++) {
-        close(pipes[j][1]);
-        close(pipes[j][0]);
+      for (int j = 0; j < 4; j++) {
+        close(p2c[j][1]);
+        close(c2p[j][0]);
       }
 
       execlp(argv[0], argv[0], NULL);
@@ -163,30 +167,30 @@ int main(int argc, char *argv[]) {
   }
 
   // close unnecessary ends
-  close(pipes[c2p_HH][WRITE]);
-  close(pipes[c2p_HL][WRITE]);
-  close(pipes[c2p_LH][WRITE]);
-  close(pipes[c2p_LL][WRITE]);
-  close(pipes[p2c_HH][READ]);
-  close(pipes[p2c_HL][READ]);
-  close(pipes[p2c_LH][READ]);
-  close(pipes[p2c_LL][READ]);
+  close(c2p[HH][WRITE]);
+  close(c2p[HL][WRITE]);
+  close(c2p[LH][WRITE]);
+  close(c2p[LL][WRITE]);
+  close(p2c[HH][READ]);
+  close(p2c[HL][READ]);
+  close(p2c[LH][READ]);
+  close(p2c[LL][READ]);
 
   // write
-  write(pipes[p2c_HH][WRITE], Ah, strlen(Ah));
-  write(pipes[p2c_HH][WRITE], Bh, strlen(Bh));
-  write(pipes[p2c_HL][WRITE], Ah, strlen(Ah));
-  write(pipes[p2c_HL][WRITE], Bl, strlen(Bl));
-  write(pipes[p2c_LH][WRITE], Al, strlen(Al));
-  write(pipes[p2c_LH][WRITE], Bh, strlen(Bh));
-  write(pipes[p2c_LL][WRITE], Al, strlen(Al));
-  write(pipes[p2c_LL][WRITE], Bl, strlen(Bl));
+  write(p2c[HH][WRITE], Ah, strlen(Ah));
+  write(p2c[HH][WRITE], Bh, strlen(Bh));
+  write(p2c[HL][WRITE], Ah, strlen(Ah));
+  write(p2c[HL][WRITE], Bl, strlen(Bl));
+  write(p2c[LH][WRITE], Al, strlen(Al));
+  write(p2c[LH][WRITE], Bh, strlen(Bh));
+  write(p2c[LL][WRITE], Al, strlen(Al));
+  write(p2c[LL][WRITE], Bl, strlen(Bl));
 
   // close write ends
-  close(pipes[p2c_HH][WRITE]);
-  close(pipes[p2c_HL][WRITE]);
-  close(pipes[p2c_LH][WRITE]);
-  close(pipes[p2c_LL][WRITE]);
+  close(p2c[HH][WRITE]);
+  close(p2c[HL][WRITE]);
+  close(p2c[LH][WRITE]);
+  close(p2c[LL][WRITE]);
 
   // wait
   for (int i = 0; i < 4; i++) {
@@ -204,23 +208,23 @@ int main(int argc, char *argv[]) {
   char returnChildLL[2 * length + 2];
 
   int rv;
-  rv = (int)read(pipes[c2p_HH][READ], returnChildHH, (size_t)length * 2 + 1);
+  rv = (int)read(c2p[HH][READ], returnChildHH, (size_t)length * 2 + 1);
   returnChildHH[rv - 1] = '\0';
 
-  rv = (int)read(pipes[c2p_HL][READ], returnChildHL, (size_t)length * 2 + 1);
+  rv = (int)read(c2p[HL][READ], returnChildHL, (size_t)length * 2 + 1);
   returnChildHL[rv - 1] = '\0';
 
-  rv = (int)read(pipes[c2p_LH][READ], returnChildLH, (size_t)length * 2 + 1);
+  rv = (int)read(c2p[LH][READ], returnChildLH, (size_t)length * 2 + 1);
   returnChildLH[rv - 1] = '\0';
 
-  rv = (int)read(pipes[c2p_LL][READ], returnChildLL, (size_t)length * 2 + 1);
+  rv = (int)read(c2p[LL][READ], returnChildLL, (size_t)length * 2 + 1);
   returnChildLL[rv - 1] = '\0';
 
   // close read ends
-  close(pipes[c2p_HH][READ]);
-  close(pipes[c2p_HL][READ]);
-  close(pipes[c2p_LH][READ]);
-  close(pipes[c2p_LL][READ]);
+  close(c2p[HH][READ]);
+  close(c2p[HL][READ]);
+  close(c2p[LH][READ]);
+  close(c2p[LL][READ]);
 
   // calculate and print
   add_X_zeros(returnChildHH, length * 2);
