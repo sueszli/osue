@@ -44,7 +44,9 @@ static int hex_char_to_int(char character) {
   return -1;
 }
 
-static char int_to_hex_char(int i) { return (i < 10 ? '0' + i : 'a' + i - 10); }
+static char int_to_hex_char(int i) {
+  return (char)(i < 10 ? '0' + i : 'a' + i - 10);
+}
 
 static void add_hex_char_overflow(char *a, const char *b, char *overflow) {
   int value =
@@ -56,15 +58,15 @@ static void add_hex_char_overflow(char *a, const char *b, char *overflow) {
 
 static void add_hex(char *firstHex, const char *secondHex) {
   char overflow = '0';
-  int dif = strlen(firstHex) - strlen(secondHex);
+  int dif = (int)(strlen(firstHex) - strlen(secondHex));
 
-  for (int i = strlen(firstHex) - 1; i >= 0; i--) {
+  for (int i = (int)strlen(firstHex) - 1; i >= 0; i--) {
     char second = (i - dif < 0) ? '0' : secondHex[i - dif];
     add_hex_char_overflow(&firstHex[i], &second, &overflow);
   }
 
   if (overflow != '0') {
-    for (int i = strlen(firstHex); i >= 0; i--) {
+    for (int i = (int)strlen(firstHex); i >= 0; i--) {
       firstHex[i + 1] = firstHex[i];
     }
     firstHex[0] = overflow;
@@ -72,7 +74,7 @@ static void add_hex(char *firstHex, const char *secondHex) {
 }
 
 static void add_X_zeros(char *a, int count) {
-  int length = strlen(a);
+  int length = (int)strlen(a);
   for (int i = 0; count > i; i++) {
     a[length] = '0';
     length++;
@@ -90,7 +92,7 @@ int main(int argc, char *argv[]) {
   char firstString[MAXLENGTH];
   char secondString[MAXLENGTH];
   read_input(firstString, secondString);
-  length = strlen(firstString) / 2;
+  length = (int)strlen(firstString) / 2;
 
   if (strlen(firstString) == 1) {
     int value = (int)strtol(firstString, NULL, 16) *
@@ -148,18 +150,15 @@ int main(int argc, char *argv[]) {
       error("Error at forking");
     } else if (pid[i] == 0) {
       for (int j = 0; j < 8; j++) {
-        bool cond1 = (j == i * 2);
-        bool cond2 = (j == i * 2 + 1);
-        if (cond1) {
+        if (j == i * 2) {
           if (dup2(pipes[j][1], STDOUT_FILENO) == -1) {
             error("dup2");
           }
-        } else if (cond2) {
+        } else if (j == i * 2 + 1) {
           if (dup2(pipes[j][0], STDIN_FILENO) == -1) {
             error("dup2");
           }
         }
-
         close(pipes[j][1]);
         close(pipes[j][0]);
       }
@@ -211,16 +210,20 @@ int main(int argc, char *argv[]) {
   char returnChildLL[2 * length + 2];
 
   int rv;
-  rv = read(pipes[READ_CHILD_HH][READ], returnChildHH, length * 2 + 1);
+  rv = (int)read(pipes[READ_CHILD_HH][READ], returnChildHH,
+                 (size_t)length * 2 + 1);
   returnChildHH[rv - 1] = '\0';
 
-  rv = read(pipes[READ_CHILD_HL][READ], returnChildHL, length * 2 + 1);
+  rv = (int)read(pipes[READ_CHILD_HL][READ], returnChildHL,
+                 (size_t)length * 2 + 1);
   returnChildHL[rv - 1] = '\0';
 
-  rv = read(pipes[READ_CHILD_LH][READ], returnChildLH, length * 2 + 1);
+  rv = (int)read(pipes[READ_CHILD_LH][READ], returnChildLH,
+                 (size_t)length * 2 + 1);
   returnChildLH[rv - 1] = '\0';
 
-  rv = read(pipes[READ_CHILD_LL][READ], returnChildLL, length * 2 + 1);
+  rv = (int)read(pipes[READ_CHILD_LL][READ], returnChildLL,
+                 (size_t)length * 2 + 1);
   returnChildLL[rv - 1] = '\0';
 
   for (int i = 0; i < 8; i++) {
