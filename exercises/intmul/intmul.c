@@ -133,6 +133,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  enum children { HH, HL, LH, LL };
   enum pipe_index {
     c2p_HH,  // child to parent -> i % 2 == 0
     p2c_HH,  // parent to child -> i % 2 == 1
