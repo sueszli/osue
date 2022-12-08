@@ -156,14 +156,14 @@ int main(int argc, char *argv[]) {
   }
 
   // close unnecessary ends
-  close(c2p[HH][WRITE]);
-  close(c2p[HL][WRITE]);
-  close(c2p[LH][WRITE]);
-  close(c2p[LL][WRITE]);
   close(p2c[HH][READ]);
   close(p2c[HL][READ]);
   close(p2c[LH][READ]);
   close(p2c[LL][READ]);
+  close(c2p[HH][WRITE]);
+  close(c2p[HL][WRITE]);
+  close(c2p[LH][WRITE]);
+  close(c2p[LL][WRITE]);
 
   // write
   write(p2c[HH][WRITE], Ah, strlen(Ah));
@@ -175,7 +175,6 @@ int main(int argc, char *argv[]) {
   write(p2c[LL][WRITE], Al, strlen(Al));
   write(p2c[LL][WRITE], Bl, strlen(Bl));
 
-  // close write ends
   close(p2c[HH][WRITE]);
   close(p2c[HL][WRITE]);
   close(p2c[LH][WRITE]);
@@ -209,7 +208,6 @@ int main(int argc, char *argv[]) {
   rv = (int)read(c2p[LL][READ], returnChildLL, (size_t)length * 2 + 1);
   returnChildLL[rv - 1] = '\0';
 
-  // close read ends
   close(c2p[HH][READ]);
   close(c2p[HL][READ]);
   close(c2p[LH][READ]);
