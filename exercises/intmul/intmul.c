@@ -149,7 +149,6 @@ int main(int argc, char *argv[]) {
         close(p2c[j][1]);
         close(c2p[j][0]);
       }
-
       execlp(argv[0], argv[0], NULL);
       error("execlp");
     }
@@ -188,17 +187,13 @@ int main(int argc, char *argv[]) {
   char retHL[2 * length + length + 2];
   char retLH[2 * length + length + 2];
   char retLL[2 * length + 2];
-
   int rv;
   rv = (int)read(c2p[HH][READ], retHH, (size_t)length * 2 + 1);
   retHH[rv - 1] = '\0';
-
   rv = (int)read(c2p[HL][READ], retHL, (size_t)length * 2 + 1);
   retHL[rv - 1] = '\0';
-
   rv = (int)read(c2p[LH][READ], retLH, (size_t)length * 2 + 1);
   retLH[rv - 1] = '\0';
-
   rv = (int)read(c2p[LL][READ], retLL, (size_t)length * 2 + 1);
   retLL[rv - 1] = '\0';
   for (int i = 0; i < 4; i++) {
