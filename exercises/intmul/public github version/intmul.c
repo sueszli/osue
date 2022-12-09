@@ -1,29 +1,3 @@
-/**
- * @file intmul.c
- * @author Yahya Jabary 11912007 <yahyajabary@tuwien.ac.at>
- * @date 09.12.2022
- *
- * @brief Concurrent hexadecimal integer multiplication.
- * @details The hexadecimal integer multiplication is done recursively.
- *
- * 1) Base case: print product of single char multiplication to stdout.
- *
- * 2) General case: fork 4 children, each responsible for one product.
- *     a · b =
- *      + aH · bH · 16^n       -> done by 'aH_bH' child
- *      + aH · bL · 16^(n/2)   -> done by 'aH_bL' child
- *      + aL · bH · 16^(n/2)   -> done by 'aL_bH' child
- *      + aL · bL              -> done by 'aL_bL' child
- *
- *    Each of the 4 children requires 2 pipes to communicate:
- *      parent to child pipe (p2c)
- *      child to parent pipe (c2p)
- *
- *    We write into the p2c pipes and then wait for a response in the c2p pipes.
- *    Then we add the 4 responses from the children together and print them on
- *    stdout.
- */
-
 #define _GNU_SOURCE
 #include <assert.h>
 #include <errno.h>
@@ -54,7 +28,7 @@ typedef struct {
   char* a;
   char* b;
   size_t len;
-} HexStringPair; /* < stores the 2 received and validated arguments */
+} HexStringPair;
 
 typedef struct {
   char* aH;
@@ -62,19 +36,13 @@ typedef struct {
   char* bH;
   char* bL;
   size_t len;
-} HexStringQuad; /* < 2 validated arguments, split in 2 halves */
+} HexStringQuad;
 
-/**
- * @brief Adds leading or trailing characters to str and reallocates it.
- * @pre str must be allocated dynamically
- * @post (side effect) adds leading or trailing c characters to str
- * @param strp pointer to the string to add the characters to
- * @param num number of characters to add
- * @param c character to add
- * @param addToStart if true, then it will add it to the start of strp else it
- * will add it to the end of strp
- */
 static void addChars(char** strp, size_t num, char c, bool addToStart) {
+  // if !addToStart, then it will add it to the end of strp
+  // pre-condition: str must be allocated dynamically
+  // side-effect: adds leading zeroes to str and reallocates it
+
   size_t oldSize = strlen(*strp) + 1;
   char* oldCopy = strdup(*strp);
   if (oldCopy == NULL) {
@@ -98,14 +66,9 @@ static void addChars(char** strp, size_t num, char c, bool addToStart) {
   *strp = rStr;
 }
 
-/**
- * @brief Reads the input from stdin and returns it as a HexStringPair after
- * validation and adding leading zeros. The length of the returned pair is
- * always the same and a power of two.
- * @post returned pair must be freed because it is allocated dynamically
- * @return HexStringPair containing the 2 validated arguments read from stdin
- */
 static HexStringPair getInput(void) {
+  // post-condition: free returned pair
+
   HexStringPair pair;
   char* line = NULL;
   size_t lineLen = 0;
@@ -169,14 +132,10 @@ static HexStringPair getInput(void) {
   return pair;
 }
 
-/**
- * @brief Splits a HexStringPair into 4 HexStringQuads.
- * @pre pair must be allocated dynamically
- * @post returned quad must be freed because it is allocated dynamically
- * @param pair HexStringPair to split
- * @return HexStringQuad containing the 4 split parts of pair with the same len
- */
 static HexStringQuad splitToQuad(HexStringPair pair) {
+  // also adds a '\n' at the end so content can be directly sent to children
+  // post-condition: free returned quad
+
   HexStringQuad quad;
   size_t size = (pair.len / 2) + 1;
 
@@ -199,14 +158,9 @@ static HexStringQuad splitToQuad(HexStringPair pair) {
   return quad;
 }
 
-/**
- * @brief Adds two hexadecimal numbers as strings.
- * @post returned string must be freed because it is allocated dynamically
- * @param str1 first number as string
- * @param str2 second number as string
- * @return sum of str1 and str2 as string
- */
 static char* addHexStrings(char str1[], char str2[]) {
+  // post-condition: output must be freed
+
   // remove leading zeroes
   while (*str1 == '0') {
     str1++;
@@ -274,12 +228,6 @@ static char* addHexStrings(char str1[], char str2[]) {
   return output;
 }
 
-/**
- * @brief Adds two hexadecimal numbers as strings.
- * @param argc number of arguments
- * @param argv arguments
- * @return EXIT_SUCCESS or EXIT_FAILURE if an error occurred
- */
 int main(int argc, char* argv[]) {
   if (argc > 1) {
     usage("no arguments allowed");
