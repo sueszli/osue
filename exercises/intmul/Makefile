@@ -21,7 +21,7 @@ intmul: intmul.o
 	$(GCC) -o intmul intmul.o $(libraries)
 
 intmul.o: intmul.c
-	$(GCC) $(DEFAULT) -c -o intmul.o intmul.c
+	$(GCC) $(VERBOSE) -c -o intmul.o intmul.c
 
 
 # cleaning up
