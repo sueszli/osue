@@ -17,11 +17,14 @@ VERBOSE = -std=c99 -pedantic -Wall -g3 -DOSUETREE -DDEBUG $(wflags)
 # building executables
 all: intmul
 
-intmul: intmul.o
-	$(GCC) -o intmul intmul.o $(libraries)
+intmul: intmul.o osuetree.o
+	$(GCC) -o intmul intmul.o osuetree.o $(libraries)
 
-intmul.o: intmul.c
+intmul.o: intmul.c osuetree.h
 	$(GCC) $(VERBOSE) -c -o intmul.o intmul.c
+
+osuetree.o: osuetree.c osuetree.h
+	$(GCC) $(VERBOSE) -c -o osuetree.o osuetree.c
 
 
 # cleaning up
