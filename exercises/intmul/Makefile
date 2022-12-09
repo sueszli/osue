@@ -2,7 +2,7 @@
 
 
 # compiler version (gcc-12 not available in OSUE lab)
-GCC = gcc-12
+GCC = gcc
 
 
 # compile flags (see: https://gcc.gnu.org/onlinedocs/gcc-4.3.2/gcc/Warning-Options.html)
@@ -17,14 +17,11 @@ VERBOSE = -std=c99 -pedantic -Wall -g3 -DOSUETREE -DDEBUG $(wflags)
 # building executables
 all: intmul
 
-intmul: intmul.o osuetree.o
-	$(GCC) -o intmul intmul.o osuetree.o $(libraries)
+intmul: intmul.o
+	$(GCC) -o intmul intmul.o $(libraries)
 
-intmul.o: intmul.c osuetree.h
-	$(GCC) $(VERBOSE) -c -o intmul.o intmul.c
-
-osuetree.o: osuetree.c osuetree.h
-	$(GCC) $(VERBOSE) -c -o osuetree.o osuetree.c
+intmul.o: intmul.c
+	$(GCC) $(DEFAULT) -c -o intmul.o intmul.c
 
 
 # cleaning up

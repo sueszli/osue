@@ -1,5 +1,3 @@
-// #region works
-
 #define _GNU_SOURCE
 #include <assert.h>
 #include <errno.h>
@@ -12,8 +10,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
-#include "osuetree.h"
 
 #define error(msg)      \
   do {                  \
@@ -233,8 +229,6 @@ static char* addHexStrings(char str1[], char str2[]) {
   return output;
 }
 
-// #endregion works
-
 int main(int argc, char* argv[]) {
   if (argc > 1) {
     usage("no arguments allowed");
@@ -243,7 +237,6 @@ int main(int argc, char* argv[]) {
   // base case
   HexStringPair pair = getInput();
   if (pair.len == 1) {
-    fprintf(stderr, "[pid %d] base case\n", getpid());
     errno = 0;
     unsigned long out = strtoul(pair.a, NULL, 16) * strtoul(pair.b, NULL, 16);
     fprintf(stdout, "0%lx\n", out);  // leading zeroes required for unit tests
@@ -365,8 +358,6 @@ int main(int argc, char* argv[]) {
       error("fclose");
     }
   }
-
-  fprintf(stderr, "[pid %d] general case\n", getpid());
 
   // print total sum
   const size_t n = pair.len;
