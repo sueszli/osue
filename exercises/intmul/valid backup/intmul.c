@@ -91,6 +91,12 @@ static HexStringPair getInput(void) {
     free(pair.a);
     usage("too few arguments");
   }
+  if (nLines > 2) {  // < this my break the unit tests
+    free(pair.a);
+    free(pair.b);
+    usage("to many newline characters / too many arguments");
+  }
+
   if ((strlen(pair.a) == 0) || (strlen(pair.b) == 0)) {
     free(pair.a);
     free(pair.b);

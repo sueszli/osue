@@ -1,4 +1,3 @@
-// #region works
 #define _GNU_SOURCE
 #include <assert.h>
 #include <errno.h>
@@ -92,6 +91,12 @@ static HexStringPair getInput(void) {
     free(pair.a);
     usage("too few arguments");
   }
+  if (nLines > 2) {  // < this my break the unit tests
+    free(pair.a);
+    free(pair.b);
+    usage("to many newline characters / too many arguments");
+  }
+
   if ((strlen(pair.a) == 0) || (strlen(pair.b) == 0)) {
     free(pair.a);
     free(pair.b);
@@ -223,7 +228,6 @@ static char* addHexStrings(char str1[], char str2[]) {
   output[j] = '\0';
   return output;
 }
-// #endregion works
 
 int main(int argc, char* argv[]) {
   if (argc > 1) {
@@ -378,10 +382,6 @@ int main(int argc, char* argv[]) {
   fprintf(stdout, "%s\n", totalSum);
   fflush(stdout);
   free(totalSum);
-
-#ifdef OSUETREE
-  fprintf(stdout, "OSUETREE\n");
-#endif
 
   exit(EXIT_SUCCESS);
 }
