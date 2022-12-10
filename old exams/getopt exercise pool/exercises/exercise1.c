@@ -18,24 +18,23 @@ int main(int argc, char **argv) {
     program_name = argv[0];
   }
 
-  // - ./client [-a optargA | -b optargB | -o ] -c [optargC] file... (max. 8
-  // files)
-  // - hint: optargC can only be specified by -coptargC (not -c optargC)
-  // - optargA ... int [-50,300]
-  // - optargB ... char
-  // - optargC ... char[8] (exactly!)
-  // - maximum of 8 pos-args, no minimum, cat all to one total_string
+  /*
+  - ./client [-a optargA] [-e] -c [optargC] [-b optargB [-d] ]
 
-  int a = -51;
+  - hint: optargC can only be specified by -coptargC (not -c optargC)
 
-  if (a != -51)
-    printf("a: %d\n", a);
-  else
-    printf("a: not initialized yet.\n");
+  - all optargs are char* (for simplicity)
+  - hardest test-cases:
+      - -d specified, although -b not specified (FAIL)
+      - -d not specified, -b specified (PASS)
+
+  */
+
+  printf("a: %s\n", a);
   printf("b: %s\n", b);
   printf("c: %s\n", c);
-  printf("o_set: %s\n", o_set ? "true" : "false");
-  printf("total_string: %s\n", total_string);
+  printf("d_set: %s\n", d_set ? "true" : "false");
+  printf("e_set: %s\n", e_set ? "true" : "false");
 
   return 0;
 }
@@ -44,8 +43,7 @@ int main(int argc, char **argv) {
 void usage(const char *message) {
   fprintf(stderr, "%s\n", message);
   fprintf(stderr,
-          "Usage: %s [-a optargA | -b optargB | -o ] -c [optargC] file... "
-          "(max. 8 files)\n",
+          "Usage: %s [-a optargA] [-e] -c [optargC] [-b optargB [-d] ]\n",
           program_name);
   exit(EXIT_FAILURE);
 }

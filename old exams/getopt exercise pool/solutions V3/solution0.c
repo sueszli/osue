@@ -4,90 +4,108 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
+
+/** default port number */
+#define DEFAULT_PORTNUM (2017)
+#define DEFAULT_PORTNUM_STR "2017"
 
 /** name of the executable (for printing messages) */
 char *program_name = "<not yet set>";
 
+/** Defines the command type. */
+typedef enum { GET = 0, SET = 1, UNDEF = 2 } cmd_t;
+
+/** Structure for the arguments. */
+struct args {
+  uint16_t portnum;    /**< port number */
+  const char *portstr; /**< port number as string */
+  cmd_t cmd;           /**< command (GET, SET) */
+  uint8_t value;       /**< set value */
+  uint8_t id;          /**< device id */
+};
+
 void usage(const char *message);
 
 int main(int argc, char **argv) {
+  struct args arguments = {DEFAULT_PORTNUM, DEFAULT_PORTNUM_STR, UNDEF, 0, 0};
+
   /* set program_name */
   if (argc > 0) {
     program_name = argv[0];
   }
 
-  /*
+  /***********************************************************************
+   * Task 1
+   * ------
+   * Implement argument parsing for the client. Synopsis:
+   *   ./client [-p PORT] {-g|-s VALUE} ID
+   *
+   * Call usage() if invalid options or arguments are given (there is no
+   * need to print a description of the problem).
+   *
+   * Hints: getopt(3), UINT16_MAX, parse_number (client.h),
+   *        struct args (client.h)
+   ***********************************************************************/
 
-  - ./client [-a optargA] [-e] -c [optargC] [-b optargB [-d] ]
+  /* COMPLETE AND EXTEND THE FOLLOWING CODE */
+  int c;
+  int opt_p = 0;
+  long num;
+  char *endptr;
 
-  - hint: optargC can only be specified by -coptargC (not -c optargC)
+  bool gs_appeared = false;
+  bool id_appeared = false;
 
-  - all optargs are char* (for simplicity)
-  - hardest test-cases:
-      - -d specified, although -b not specified (FAIL)
-      - -d not specified, -b specified (PASS)
+  if (argc > 6) usage("More argv than possible.");
 
-  */
-  if (argc < 2) usage("Too few args.");
-  if (argc > 9) usage("Too many args.");
+  while ((c = getopt(argc, argv, "-gs:p:")) != -1) {
+    switch (c) {
+      case 'p':
+        if (opt_p != 0) usage("Every option character only once.");
 
-  char *a = NULL;
-  char *b = NULL;
-  char *c = NULL;
-  bool d_set = false;
-  bool e_set = false;
+        num = strtol(optarg, &endptr, 10);
+        if (endptr == optarg) usage("port not parsable.");
+        if (num < 1024 || num > UINT16_MAX) usage("PORT ∈ [1024,UINT16_MAX]");
 
-  bool a_occured = false;
-  bool b_occured = false;
-  bool c_occured = false;
-  bool d_occured = false;
-  bool e_occured = false;
-
-  char c1;
-  while ((c1 = getopt(argc, argv, "a:b:c::de")) != -1) {
-    switch (c1) {
-      case 'a':
-        if (a_occured) usage("passed in -a more than once.");
-        a_occured = true;
-        a = optarg;  // how to throw exception, if optargA not occured? ->
-                     // getopt should do. Test it!
+        arguments.portnum = (uint16_t)num;
+        arguments.portstr = optarg;
+        opt_p = 1;
         break;
-      case 'b':
-        if (b_occured) usage("passed in -b more than once.");
-        b_occured = true;
-        b = optarg;  // how to throw exception, if optargB not occured? ->
-                     // getopt should do. Test it!
+      case 'g':
+        if (gs_appeared) usage("Only one of g or s as option.");
+        gs_appeared = true;
+        arguments.cmd = GET;
         break;
-      case 'c':
-        if (c_occured) usage("passed in -c more than once.");
-        c_occured = true;
-        c = optarg;  // todo: test what happens, if optargC was not specified
+      case 's':
+        if (gs_appeared) usage("Only one of g or s as option.");
+        gs_appeared = true;
+        arguments.cmd = SET;
+        int value = strtol(optarg, &endptr, 10);
+        if (endptr == optarg) usage("Value not parsable.");
+        if (value < 0 || value > 127) usage("VALUE ∈ [0,127]");
+        arguments.value = value;
         break;
-      case 'd':
-        if (d_occured) usage("passed in -d more than once.");
-        d_occured = true;
-        d_set = true;
-        break;
-      case 'e':
-        if (e_occured) usage("passed in -e more than once.");
-        e_occured = true;
-        e_set = true;
+      case 1:
+        if (id_appeared) usage("Only one positional argument (ID).");
+        id_appeared = true;
+        int id = strtol(optarg, &endptr, 10);
+        if (endptr == optarg) usage("ID not parsable.");
+        if (id < 0 || id > 63) usage("ID ∈ [0,63]");
+        arguments.id = id;
         break;
       default:
-        usage("(getopt detected an error)");
+        usage("(getopt printed the message)");
     }
   }
+  if (!gs_appeared) usage("Specify -g XOR -s.");
+  if (!id_appeared) usage("Specify id.");
 
-  if (!c_occured) usage("-c has to have occured.");
-  if (d_occured && !b_occured) usage("-d only if -b occured.");
-
-  printf("a: %s\n", a);
-  printf("b: %s\n", b);
-  printf("c: %s\n", c);
-  printf("d_set: %s\n", d_set ? "true" : "false");
-  printf("e_set: %s\n", e_set ? "true" : "false");
+  printf("pn: %d\n", arguments.portnum);
+  printf("pns: %s\n", arguments.portstr);
+  printf("cmd: %d\n", arguments.cmd);
+  printf("value: %d\n", arguments.value);
+  printf("id: %d\n", arguments.id);
 
   return 0;
 }
@@ -95,8 +113,6 @@ int main(int argc, char **argv) {
 /** Prints the usage message and exits with EXIT_FAILURE. */
 void usage(const char *message) {
   fprintf(stderr, "%s\n", message);
-  fprintf(stderr,
-          "Usage: %s [-a optargA] [-e] -c [optargC] [-b optargB [-d] ]\n",
-          program_name);
+  fprintf(stderr, "Usage: %s [-p PORT] {-g|-s VALUE} ID\n", program_name);
   exit(EXIT_FAILURE);
 }
