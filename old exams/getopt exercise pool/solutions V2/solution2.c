@@ -18,84 +18,85 @@ int main(int argc, char **argv) {
     program_name = argv[0];
   }
 
-  /* COMPLETE AND EXTEND THE FOLLOWING CODE */
-  if (argc < 6) usage("Too few args.");
-  if (argc > 7) usage("Too many args.");
+  // - ./client [-a optargA | -b optargB | -o ] -c [optargC] file... (max. 8
+  // files)
 
-  // ./client {-a optargA | -b | -c [optargC] } file... (exactly 4 files)
+  // - hint: optargC can only be specified by -coptargC (not -c optargC)
 
-  char *a = NULL;
+  // - optargA ... int [-50,300]
+  // - optargB ... char
+  // - optargC ... char[8] (exactly!)
+  // - maximum of 8 pos-args, no minimum, cat all to one total_string
+
+  if (argc < 2) usage("Too few argv.");
+  if (argc > 11) usage("Too many argv.");
+
+  bool a_occured = false;
+  bool b_occured = false;
+  bool c_occured = false;
+  bool o_occured = false;
+
+  int a = -51;  // printf only if a != NULL
+  char *b = NULL;
   char *c = NULL;
-
-  char *endptr;
-
-  bool b_set = false;
-  bool abc_occured = false;
-
+  bool o_set = false;
+  char total_string[2048] = "";
   int posArgCount = 0;
 
-  char *first;
-  char *second;
-  char *third;
-  char *fourth;
-
   char c1;
-  while ((c1 = getopt(argc, argv, "-ba:c::")) != -1) {
+  while ((c1 = getopt(argc, argv, "-a:b:c::o")) != -1) {
     switch (c1) {
       case 'a':
-        if (abc_occured) usage("Specify exactly one of a/b/c as option.");
-        abc_occured = true;
-        c = optarg;
-        if (optarg == endptr) usage("optargA not parsable");
+        if (a_occured) usage("passed in -a more than once.");
+        if (b_occured || o_occured)
+          usage("Specify exactly one of a|b|o as option.");
+        a_occured = true;
+        a = strtol(optarg, NULL, 10);  // missing the nptr == endptr edge case
+        if (a < -50 || a > 300) usage("a element [-50,300]");
         break;
       case 'b':
-        if (abc_occured) usage("Specify exactly one of a/b/c as option.");
-        abc_occured = true;
-        b_set = true;
+        if (b_occured) usage("passed in -b more than once.");
+        if (o_occured || a_occured)
+          usage("Specify exactly one of a|b|o as option.");
+        b_occured = true;
+        b = optarg;
         break;
       case 'c':
-        if (abc_occured) usage("Specify exactly one of a/b/c as option.");
-        abc_occured = true;
-        c = optarg;
+        if (c_occured) usage("passed in -c more than once.");
+        c_occured = true;
+        c = optarg;  // todo: test what happens, if optargC was not specified
+        if (c != NULL) {
+          if (strlen(c) != 8) usage("strlen(optargC) must == 8.");
+        }
+        break;
+      case 'o':
+        if (o_occured) usage("passed in -o more than once.");
+        if (a_occured || b_occured)
+          usage("Specify exactly one of a|b|o as option.");
+        o_occured = true;
+        o_set = true;
         break;
       case 1:
         posArgCount++;
-        if (posArgCount > 4) usage("Specify exactly 4 positional arguments.");
-
-        switch (posArgCount) {
-          case 1:
-            first = optarg;
-            break;
-          case 2:
-            second = optarg;
-            break;
-          case 3:
-            third = optarg;
-            break;
-          case 4:
-            fourth = optarg;
-            break;
-          default:
-            usage("This line should not be printed!");
-        }
+        if (posArgCount > 8) usage("too many posargs!");
+        strcat(total_string, optarg);
         break;
       default:
-        usage("(getopt detected the error)");
+        usage("(getopt detected an error, see description above.)");
     }
   }
 
-  if (!abc_occured) usage("Specify exactly one of a/b/c as option.");
-  if (posArgCount != 4) usage("If this line gets printed, then I'm retarted.");
+  // if(!a_occured && !b_occured && !c_occured) usage("Specify exactly one of
+  // a|b|o as option.");
+  if (!c_occured) usage("c must occur");
 
-  char total_string[2048];
-  strcpy(total_string, fourth);
-  strcat(total_string, third);
-  strcat(total_string, second);
-  strcat(total_string, first);
-
-  printf("a: %s\n", a);
-  printf("b_set: %s\n", b_set ? "true" : "false");
+  if (a != -51)
+    printf("a: %d\n", a);
+  else
+    printf("a: not initialized yet.\n");
+  printf("b: %s\n", b);
   printf("c: %s\n", c);
+  printf("o_set: %s\n", o_set ? "true" : "false");
   printf("total_string: %s\n", total_string);
 
   return 0;
@@ -105,8 +106,8 @@ int main(int argc, char **argv) {
 void usage(const char *message) {
   fprintf(stderr, "%s\n", message);
   fprintf(stderr,
-          "Usage: %s { -a optargA | -b | -c [optargC] } file... (exactly 4 "
-          "files)\n",
+          "Usage: %s [-a optargA | -b optargB | -o ] -c [optargC] file... "
+          "(max. 8 files)\n",
           program_name);
   exit(EXIT_FAILURE);
 }

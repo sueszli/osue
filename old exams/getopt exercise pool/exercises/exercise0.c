@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
 
   /* set program_name */
   if (argc > 0) {
-    program_name = argv[0];
+    program_name = "?";
   }
 
   /***********************************************************************
@@ -42,6 +42,11 @@ int main(int argc, char **argv) {
    * ------
    * Implement argument parsing for the client. Synopsis:
    *   ./client [-p PORT] {-g|-s VALUE} ID
+   *
+   * Legal ranges:
+   *   PORT:  long [1024;UINT16_MAX]
+   *   VALUE: int  [0;127]
+   *   ID:    int  [0;63]
    *
    * Call usage() if invalid options or arguments are given (there is no
    * need to print a description of the problem).
@@ -51,57 +56,6 @@ int main(int argc, char **argv) {
    ***********************************************************************/
 
   /* COMPLETE AND EXTEND THE FOLLOWING CODE */
-  int c;
-  int opt_p = 0;
-  long num;
-  char *endptr;
-
-  bool gs_appeared = false;
-  bool id_appeared = false;
-
-  if (argc > 6) usage("More argv than possible.");
-
-  while ((c = getopt(argc, argv, "-gs:p:")) != -1) {
-    switch (c) {
-      case 'p':
-        if (opt_p != 0) usage("Every option character only once.");
-
-        num = strtol(optarg, &endptr, 10);
-        if (endptr == optarg) usage("port not parsable.");
-        if (num < 1024 || num > UINT16_MAX) usage("PORT ∈ [1024,UINT16_MAX]");
-
-        arguments.portnum = (uint16_t)num;
-        arguments.portstr = optarg;
-        opt_p = 1;
-        break;
-      case 'g':
-        if (gs_appeared) usage("Only one of g or s as option.");
-        gs_appeared = true;
-        arguments.cmd = GET;
-        break;
-      case 's':
-        if (gs_appeared) usage("Only one of g or s as option.");
-        gs_appeared = true;
-        arguments.cmd = SET;
-        int value = strtol(optarg, &endptr, 10);
-        if (endptr == optarg) usage("Value not parsable.");
-        if (value < 0 || value > 127) usage("VALUE ∈ [0,127]");
-        arguments.value = value;
-        break;
-      case 1:
-        if (id_appeared) usage("Only one positional argument (ID).");
-        id_appeared = true;
-        int id = strtol(optarg, &endptr, 10);
-        if (endptr == optarg) usage("ID not parsable.");
-        if (id < 0 || id > 63) usage("ID ∈ [0,63]");
-        arguments.id = id;
-        break;
-      default:
-        usage("(getopt printed the message)");
-    }
-  }
-  if (!gs_appeared) usage("Specify -g XOR -s.");
-  if (!id_appeared) usage("Specify id.");
 
   printf("pn: %d\n", arguments.portnum);
   printf("pns: %s\n", arguments.portstr);

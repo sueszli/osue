@@ -4,21 +4,6 @@ Some are from old exercises, some from old exams and some are just self invented
 The goal in each exercise is the same: Get the options based on the synopsis and validate user input.
 
 
-## exercise 0
-```
-SYNOPSIS: ./client [-p PORT] {-g|-s VALUE} ID
-
-PORT: long [1024,UINT16_MAX]
-VALUE: int [0,127]
-ID: int [0,63]
-```
-
-Additionally:
-
-- Set flags based on whether `-s` or `-g` was called.
-- Create a struct to store the given input.
-
-
 ## exercise 1
 ```
 SYNOPSIS: ./client [-a optargA] [-e] -c [optargC] [-b optargB [-d] ]
