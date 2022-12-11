@@ -43,11 +43,6 @@ int main(int argc, char **argv) {
    * Implement argument parsing for the client. Synopsis:
    *   ./client [-p PORT] {-g|-s VALUE} ID
    *
-   * Legal ranges:
-   *   PORT:  long [1024;UINT16_MAX]
-   *   VALUE: int  [0;127]
-   *   ID:    int  [0;63]
-   *
    * Call usage() if invalid options or arguments are given (there is no
    * need to print a description of the problem).
    *
