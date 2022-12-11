@@ -7,12 +7,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#define error(msg)      \
-  do {                  \
-    perror(msg);        \
-    exit(EXIT_FAILURE); \
-  } while (0)
-
 char* program_name = NULL;
 
 void usage(const char* message) {
@@ -61,7 +55,7 @@ int main(int argc, char** argv) {
           usage("used same option more than once");
         }
         aOption = true;
-        if ((optarg == NULL) || (optarg[0] == '-')) {
+        if (optarg[0] == '-') {
           usage("missing option argument");
         }
         optargA = optarg;
@@ -100,7 +94,7 @@ int main(int argc, char** argv) {
           usage("used same option more than once");
         }
         bOption = true;
-        if ((optarg == NULL) || (optarg[0] == '-')) {
+        if (optarg[0] == '-') {
           usage("missing option argument");
         }
         optargB = optarg;

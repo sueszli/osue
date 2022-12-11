@@ -26,6 +26,8 @@ ARGS="-ae -ccarg -bbarg -d"
 solution1
 
 ARGS=""
+ARGS="-c"
+ARGS="-c carg"
 
 # ----------
 

@@ -78,17 +78,17 @@ int main(int argc, char **argv) {
     switch (opt) {
       // [-p PORT]
       case 'p':
-        if (optarg[0] == '-') {
+        if (optarg[0] != '-') {
           usage("no p option argument used");
         }
         if (pOption) {
           usage("used p option more than once");
         }
+        pOption = true;
         unsigned long port = strtoulWrapper(optarg);
         if (port > UINT16_MAX) {
           usage("p option argument not in uint16_t range");
         }
-        pOption = true;
         arguments.portnum = (uint16_t)port;
         arguments.portstr = optarg;
         break;
@@ -98,10 +98,10 @@ int main(int argc, char **argv) {
         if (gOption) {
           usage("used g option more than once");
         }
+        gOption = true;
         if (sOption) {
           usage("not g xor s option used");
         }
-        gOption = true;
         arguments.cmd = GET;
         break;
 
@@ -113,6 +113,7 @@ int main(int argc, char **argv) {
         if (sOption) {
           usage("used s option more than once");
         }
+        sOption = true;
         if (gOption) {
           usage("not g xor s option used");
         }
@@ -120,7 +121,6 @@ int main(int argc, char **argv) {
         if (value > UINT8_MAX) {
           usage("s option argument not in uint8_t range");
         }
-        sOption = true;
         arguments.cmd = SET;
         arguments.value = (uint8_t)value;
         break;

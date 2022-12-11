@@ -1,0 +1,1 @@
+This directory contains exercises that were scraped together from old exams / exercises to practice using getopt.
