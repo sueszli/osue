@@ -1,17 +1,33 @@
 #!/bin/sh
 
-ELF="./solution0"
+ELF="./solution2"
+
+<<solution0
 ARGS="-gp 41 43"
 ARGS="-p 1 -g 2  "
 ARGS="-gp 41 -s 43 44"
 ARGS="-p 41 -s 43 44"
+ARGS="-p41 -s 43 44"
+ARGS="-p"
+solution0
 
-# --------------------------------------------
+<<solution1
+ARGS=""
+ARGS="-c"
+ARGS="-c -s"
+ARGS="-c -b test"
+ARGS="-c -b test illegal"
+ARGS="-c -btest -de"
+ARGS="-ccarg -bbarg -de"
+ARGS="-a arg -ccarg -bbarg -de"
+ARGS="-a arg -ccarg -bbarg -derg"
+ARGS="-aaarg -ccarg -bbarg -d"
+ARGS="-ae -ccarg -bbarg -d"
+solution1
 
-ELF="./solution1"
 ARGS=""
 
-# --------------------------------------------
+# ----------
 
 clear
 

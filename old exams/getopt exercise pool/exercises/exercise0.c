@@ -1,5 +1,3 @@
-// Note: this exercise is the 'client.c' file from the 2017 exam
-
 #include <assert.h>
 #include <errno.h>
 #include <stdbool.h>

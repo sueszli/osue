@@ -41,10 +41,10 @@ static unsigned long strtoulWrapper(const char *str) {
     error("strtoul");
   }
   if (endptr == str) {
-    usage("empty option argument");
+    usage("strtoul -> empty option argument");
   }
   if (*endptr != '\0') {
-    usage("illegal option argument");
+    usage("strtoul -> illegal option argument");
   }
   return val;
 }
@@ -62,7 +62,6 @@ static unsigned long strtoulWrapper(const char *str) {
  *        struct args (client.h)
  ***********************************************************************/
 int main(int argc, char **argv) {
-  // check total count
   if (argc > 6) {
     usage("too many options/arguments");
   }
@@ -74,11 +73,10 @@ int main(int argc, char **argv) {
   bool gOption = false;
   bool sOption = false;
 
-  // check if options only used once
-  // check range
   int opt;
   while ((opt = getopt(argc, argv, "p:gs:")) != -1) {
     switch (opt) {
+      // [-p PORT]
       case 'p':
         if (optarg[0] == '-') {
           usage("no p option argument used");
@@ -95,20 +93,28 @@ int main(int argc, char **argv) {
         arguments.portstr = optarg;
         break;
 
+      // {-g|-s VALUE}
       case 'g':
         if (gOption) {
           usage("used g option more than once");
+        }
+        if (sOption) {
+          usage("not g xor s option used");
         }
         gOption = true;
         arguments.cmd = GET;
         break;
 
+      // {-g|-s VALUE}
       case 's':
         if (optarg[0] == '-') {
           usage("no s option argument used");
         }
         if (sOption) {
           usage("used s option more than once");
+        }
+        if (gOption) {
+          usage("not g xor s option used");
         }
         unsigned long value = strtoulWrapper(optarg);
         if (value > UINT8_MAX) {
@@ -124,15 +130,10 @@ int main(int argc, char **argv) {
     }
   }
 
-  // check if required arguments exist
   if (!pOption) {
     usage("no p option used");
   }
-  if ((gOption && sOption) || (!gOption && !sOption)) {
-    usage("not g xor s option used");
-  }
 
-  // get positional arg
   if ((argc - optind) != 1) {
     usage("not exactly one ID argument");
   }
@@ -142,7 +143,6 @@ int main(int argc, char **argv) {
   }
   arguments.id = (uint8_t)id;
 
-  // print
   printf("pn: %d\n", arguments.portnum);
   printf("pns: %s\n", arguments.portstr);
   printf("cmd: %d\n", arguments.cmd);

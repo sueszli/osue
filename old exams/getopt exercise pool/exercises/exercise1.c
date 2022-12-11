@@ -27,7 +27,6 @@ int main(int argc, char **argv) {
   - hardest test-cases:
       - -d specified, although -b not specified (FAIL)
       - -d not specified, -b specified (PASS)
-
   */
 
   printf("a: %s\n", a);
