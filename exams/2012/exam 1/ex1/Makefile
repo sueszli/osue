@@ -5,8 +5,8 @@ LIBS=-lcrypt
 
 all: listtool
 
-listtool: list.o listtool.o
-	gcc -o $@ $^ $(LIBS)
+listtool: listtool.o
+	gcc -o $@ $^ $(LIBS) list.o
 
 listtool.o: listtool.c list.h
 	gcc $(CFLAGS) -c -o $@ $< 
