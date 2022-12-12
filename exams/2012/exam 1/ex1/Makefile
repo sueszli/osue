@@ -9,7 +9,7 @@ listtool: listtool.o
 	gcc -o $@ $^ $(LIBS) list.o
 
 listtool.o: listtool.c list.h
-	gcc $(CFLAGS) -c -o $@ $< 
+	gcc $(CFLAGS) -c -o $@ $< -fPIE
 
 clean:
 	rm -f listtool listtool.o

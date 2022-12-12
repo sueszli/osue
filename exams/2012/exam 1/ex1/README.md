@@ -12,6 +12,7 @@ collect2: error: ld returned 1 exit status
 make: *** [Makefile:10: listtool] Error 1
 ```
 
-Also the `test.sh` test cases behave wrongly.
+I also did some research and used the `-fPIE` flag for compilation but it didn't make any difference.
+I don't know how to fix this problem.
 
-In conclusion: You can attempt to guess what the code behind list.o looks like by disassembling it, but I would suggest you practice for your exam by solving other problems.
+In conclusion: You can attempt to guess what the code behind list.o looks like by disassembling it and writing everything from scratch such that it can be compiled to run on any machine (but I don't think it is worth the effort and suggest you practice for your exam by solving other problems instead).

@@ -116,8 +116,9 @@ int main(int argc, char **argv) {
    * 'print_list(head)' */
   if (opt_a != -1) {
     /* iterate over the list and stop at the right entry */
-    (int i = 0; i < num && current->next != NULL; i++) { /* TODO: change it */
-      currefornt = current->next;
+    for (int i = 0; i < num && current->next != NULL;
+         i++) { /* TODO: change it */
+      // currefornt = current->next;
     }
     print_list(head);
     insert_after(current, optstr); /* assuming you stopped at current */
