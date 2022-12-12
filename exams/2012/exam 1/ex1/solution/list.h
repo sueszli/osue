@@ -6,7 +6,7 @@ struct listelem {
   struct listelem *next;
 };
 
-// all functions below implemented in list.o
+// list.o implements:
 struct listelem *init_list(const char *const val);
 void populate_list(struct listelem *const head);
 void print_list(const struct listelem *const head);

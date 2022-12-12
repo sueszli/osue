@@ -51,19 +51,19 @@ static void usage(const char *msg) {
   exit(EXIT_FAILURE);
 }
 
-static void insert_after(struct listelem *after, const char *const value) {
-  /* when setting 'val' of the list, use strdup(value); */
-  /* if you do not use strdup(), destroy() will fail/crash */
-  struct listelem *next = malloc(sizeof(struct listelem));
-  if (next == NULL) {
+static void insert_after(struct listelem *current, const char *const value) {
+  /* you must use strdup() */
+  struct listelem *newElem = malloc(sizeof(struct listelem));
+  if (newElem == NULL) {
     error("malloc");
   }
-  next->val = strdup(value);
-  if (next->val == NULL) {
+  newElem->val = strdup(value);
+  if (newElem->val == NULL) {
     error("strdup");
   }
-  next->next = after->next;
-  after->next = next;
+
+  newElem->next = current->next;
+  current->next = newElem;
   return;
 }
 
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
         char *endptr;
         long val = strtol(optarg, &endptr, 10);
         if (errno != 0) {
-          usage("argument for option a does not contain only digits");
+          error("strtol");
         }
         if (endptr == optarg) {
           usage("missing option argument");
@@ -145,22 +145,21 @@ int main(int argc, char **argv) {
     printf("-a %ld %s\n", num, optstr);
   }
 
-  /* do not touch */
+  // -------------------------------
+
   struct listelem *head;
   struct listelem *current;
 
   head = init_list("head");
   populate_list(head);
   current = head;
-  /* end do not touch */
 
   /* SEARCH:
    * iterate over the whole list and find the given <string>
    * remember: the 'next' pointer of the last list entry is set to NULL.
-   * for every element print:
-   * 'yes,' if it is equal to <string>, else 'no,'
+   * for every element print: 'yes,' if it is equal to <string>, else 'no,'
    */
-  if (optS != -1) {
+  if (optS) {
     while (current != NULL) {
       if (strcmp(current->val, optstr) == 0) {
         printf("yes,");
@@ -169,7 +168,7 @@ int main(int argc, char **argv) {
       }
       current = current->next;
     }
-    printf("\n"); /* do not remove this line */
+    printf("\n");  // don't remove
   }
 
   /* ADD:
@@ -178,17 +177,17 @@ int main(int argc, char **argv) {
    * after the last element. for debugging, the list can be printed with
    * 'print_list(head)'
    */
-  if (optS != -1) {
-    /* iterate over the list and stop at the right entry */
-    /*
-    for (int i = 0; (i < num) && (current->next != NULL); i++) {
+  if (optA) {
+    // find num
+    long currIndex = 0;
+    while ((currIndex < num) && (current->next != NULL)) {
       current = current->next;
+      currIndex++;
     }
-    */
-    print_list(head);
-    insert_after(current, optstr);  // assuming we stopped at current
-    print_list(head);
-    check_list(head);
+    insert_after(current, optstr);
+
+    print_list(head);  // don't remove
+    check_list(head);  // don't remove
   }
 
   destroy_list(head);
