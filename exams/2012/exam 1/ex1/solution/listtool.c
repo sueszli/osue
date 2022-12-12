@@ -55,7 +55,13 @@ static void insert_after(struct listelem *after, const char *const value) {
   /* when setting 'val' of the list, use strdup(value); */
   /* if you do not use strdup(), destroy() will fail/crash */
   struct listelem *next = malloc(sizeof(struct listelem));
+  if (next == NULL) {
+    error("malloc");
+  }
   next->val = strdup(value);
+  if (next->val == NULL) {
+    error("strdup");
+  }
   next->next = after->next;
   after->next = next;
   return;
@@ -168,9 +174,8 @@ int main(int argc, char **argv) {
    */
   if (optS != -1) {
     /* iterate over the list and stop at the right entry */
-    for (int i = 0; (i < num) && (current->next != NULL);
-         i++) { /* TODO: change it */
-      // currfront = current->next;
+    for (int i = 0; (i < num) && (current->next != NULL); i++) {
+      current = current->next;
     }
     print_list(head);
     insert_after(current, optstr);  // assuming we stopped at current
