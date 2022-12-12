@@ -52,7 +52,6 @@ static void usage(const char *msg) {
 }
 
 static void insert_after(struct listelem *after, const char *const value) {
-  /* TODO: insert your code */
   /* when setting 'val' of the list, use strdup(value); */
   /* if you do not use strdup(), destroy() will fail/crash */
   struct listelem *next = malloc(sizeof(struct listelem));
@@ -131,6 +130,7 @@ int main(int argc, char **argv) {
       usage("no positional argument for option a");
     }
     optstr = argv[optind];
+    printf("-a %ld %s", num, optstr);
   }
 
   /* do not touch */
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
    * for every element print:
    * 'yes,' if it is equal to <string>, else 'no,'
    */
-  if (opt_s != -1) {
+  if (optS != -1) {
     while (current != NULL) {
       if (strcmp(current->val, optstr) == 0) {
         printf("yes,");
@@ -166,10 +166,11 @@ int main(int argc, char **argv) {
    * after the last element. for debugging, the list can be printed with
    * 'print_list(head)'
    */
-  if (opt_a != -1) {
+  if (optS != -1) {
     /* iterate over the list and stop at the right entry */
-    (int i = 0; i < num && current->next != NULL; i++) { /* TODO: change it */
-      currefornt = current->next;
+    for (int i = 0; (i < num) && (current->next != NULL);
+         i++) { /* TODO: change it */
+      // currfront = current->next;
     }
     print_list(head);
     insert_after(current, optstr);  // assuming we stopped at current
