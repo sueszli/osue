@@ -1,3 +1,4 @@
+If you run all exercises that
 I wasn't able to link and run `list.o` with listtool.o 
 
 I ran the Makefile on the following architecture: <...> 5.10.102.1-microsoft-standard-WSL2 <...> x86_64 x86_64 x86_64 GNU/Linux
