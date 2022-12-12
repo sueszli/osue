@@ -1,8 +1,8 @@
 #!/bin/sh
 
-ELF="./solution2"
 
 <<solution0
+ELF="./solution0"
 ARGS="-gp 41 43"
 ARGS="-p 1 -g 2  "
 ARGS="-gp 41 -s 43 44"
@@ -12,6 +12,7 @@ ARGS="-p"
 solution0
 
 <<solution1
+ELF="./solution1"
 ARGS=""
 ARGS="-c"
 ARGS="-c -s"
@@ -25,9 +26,23 @@ ARGS="-aaarg -ccarg -bbarg -d"
 ARGS="-ae -ccarg -bbarg -d"
 solution1
 
+<<solution2
+ELF="./solution2"
 ARGS=""
 ARGS="-c"
 ARGS="-c carg"
+ARGS="-ccarg"
+ARGS="-ccarg test1 test2 test3"
+ARGS="-oc"
+ARGS="-o -b -ccarg"
+ARGS="-bbarg -ccarg"
+ARGS="-a-50 -ccarg"
+ARGS="-a -c carg"
+ARGS="-a -35 -c cargg test1test2 test3"
+solution2
+
+ELF="./solution3"
+ARGS=""
 
 # ----------
 

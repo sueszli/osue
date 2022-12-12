@@ -132,22 +132,15 @@ int main(int argc, char **argv) {
           usage("used option more than once");
         }
         cOption = true;
-        if ((optarg != NULL) && (optarg[0] == '-')) {
-          if (strlen(optarg) > 7) {
-            usage("argument for c option to large");
-          }
-          optargC = optarg;
-        }
-        if ((argv[optind] != NULL) && (argv[optind][0] == '-')) {
-          if (strlen(argv[optind]) > 7) {
-            usage("argument for c option to large");
-          }
+        if ((argv[optind] != NULL) && (argv[optind][0] != '-')) {
           optargC = argv[optind];
         }
-        printf("%ld\n", strlen(optarg));
-        printf("%d\n", strlen(argv[optind]));
-        printf("%s\n", optarg);
-        printf("%s\n", argv[optind]);
+        if ((optarg != NULL) && (optarg[0] != '-')) {
+          optargC = optarg;
+        }
+        if ((optargC != NULL) && (strlen(optargC) > 7)) {
+          usage("argument of option c is too large");
+        }
         printf("-c %s\n", optargC);
         break;
 
@@ -160,30 +153,37 @@ int main(int argc, char **argv) {
     usage("did not use c option");
   }
 
-  // file... (max. 8) -> all concatenated to 'total_string'
+  // file... (max. 8) -> all concatenated to 'total'
+  if ((optargC != NULL) && (argc - optind != 0) &&
+      (strcmp(optargC, argv[optind]) == 0)) {
+    optind++;
+  }
+
   if ((argc - optind) > 8) {
     usage("too many file paths");
   }
 
-  size_t t_index = 0;
   char *total = malloc(1 * sizeof(char));
   total[0] = '\0';
   if (total == NULL) {
     error("malloc");
   }
 
+  size_t counter = 0;
   for (int i = optind; i < argc; i++) {
     char *elem = argv[i];
-    size_t elemSize = strlen(elem) + 1;
 
-    char *newTotal = realloc(total, elemSize * sizeof(char));
+    char *newTotal =
+        realloc(total, (counter + strlen(elem) + 1) * sizeof(char));
     if (newTotal == NULL) {
       error("realloc");
     }
     total = newTotal;
 
-    memcpy(total + t_index, elem, elemSize);
-    t_index += elemSize - 1;  // override '\0' in next iteration
+    for (size_t j = 0; j <= strlen(elem); j++) {
+      total[counter++] = elem[j];
+    }
+    counter--;
   }
 
   printf("all files: %s\n", total);
