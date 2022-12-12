@@ -1,4 +1,5 @@
 #!/bin/bash
+
 function info() {
     echo -e "\033[36m\nRUNNING TEST: $* \033[0m" >&2
 }
@@ -24,6 +25,10 @@ function ret_check() {
       exit
    fi
 }
+
+clear
+
+make all
 
 MSG="Argument handling: neither -s nor -a" && info ${MSG}
 ./listtool 2>/dev/null 
@@ -85,3 +90,5 @@ info ${MSG}
 ./listtool -a 23 bar | egrep "^chk: wmIW/Ll0Y5a9c$" >/dev/null && ok ${MSG} || error "(./listtool -a 23 bar): List not correct (use print_list(head) for debugging.\nMake sure check_list(head) is called and that chk: <somehash> is your only output"
 
 echo -e "\nDONE: Test finished"
+
+make clean
