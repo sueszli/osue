@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 <<solution0
 ELF="./solution0"
 ARGS="-gp 41 43"
