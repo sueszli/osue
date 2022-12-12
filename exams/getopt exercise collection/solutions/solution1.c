@@ -28,12 +28,13 @@ void usage(const char* message) {
     - -d not specified, -b specified (PASS)
 */
 int main(int argc, char** argv) {
-  if (argc < 2) {
-    usage("too few arguments");
-  }
   if (argc > 9) {
-    usage("too many arguments");
+    usage("too many options/arguments");
   }
+  if (argc < 2) {
+    usage("too few options/arguments");
+  }
+
   program_name = argv[0];
 
   bool aOption = false;

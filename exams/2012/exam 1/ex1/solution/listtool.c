@@ -69,11 +69,11 @@ static void insert_after(struct listelem *after, const char *const value) {
 
 // alternative synopsis: ./listtool {-s <optstr> | -a <num> <optstr>}
 int main(int argc, char **argv) {
-  if (argc < 3) {
-    usage("too few arguments");
-  }
   if (argc > 4) {
     usage("too many arguments");
+  }
+  if (argc < 2) {
+    usage("too few arguments");
   }
   program_name = argv[0];
 
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
           usage("missing option argument");
         }
         optstr = optarg;
-        printf("-s %s", optstr);
+        printf("-s %s\n", optstr);
         break;
 
       case 'a':
@@ -131,12 +131,18 @@ int main(int argc, char **argv) {
     usage("did not use option s xor a");
   }
 
+  if (optS) {
+    if ((argc - optind) != 0) {
+      usage("redundant positional arguments for option s");
+    }
+  }
+
   if (optA) {
     if ((argc - optind) != 1) {
       usage("no positional argument for option a");
     }
     optstr = argv[optind];
-    printf("-a %ld %s", num, optstr);
+    printf("-a %ld %s\n", num, optstr);
   }
 
   /* do not touch */
@@ -174,9 +180,11 @@ int main(int argc, char **argv) {
    */
   if (optS != -1) {
     /* iterate over the list and stop at the right entry */
+    /*
     for (int i = 0; (i < num) && (current->next != NULL); i++) {
       current = current->next;
     }
+    */
     print_list(head);
     insert_after(current, optstr);  // assuming we stopped at current
     print_list(head);

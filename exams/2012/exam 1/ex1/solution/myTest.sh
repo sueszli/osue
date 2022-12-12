@@ -1,6 +1,11 @@
 #!/bin/bash
 
 ARGS=""
+ARGS="-s"
+ARGS="-ssarg"
+ARGS="-s sarg"
+ARGS="-s test -a test"
+ARGS="-a 2 test"
 
 # -------
 
