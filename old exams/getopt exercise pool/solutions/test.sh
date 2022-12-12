@@ -41,8 +41,18 @@ ARGS="-a -c carg"
 ARGS="-a -35 -c cargg test1test2 test3"
 solution2
 
+<<solution3
 ELF="./solution3"
-ARGS=""
+ARGS="-b one two three four"
+ARGS="-b -c one two three four"
+ARGS="-b -a one two three four"
+ARGS="-a one two three four"
+ARGS="-aaarg one two three four"
+ARGS="-a aarg one two three four"
+ARGS="-c one two three four"
+ARGS="-c carg one two three four"
+ARGS="-ccarg one two three four"
+solution3
 
 # ----------
 

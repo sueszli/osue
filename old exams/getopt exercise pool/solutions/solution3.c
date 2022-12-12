@@ -7,6 +7,12 @@
 #include <string.h>
 #include <unistd.h>
 
+#define error(msg)      \
+  do {                  \
+    perror(msg);        \
+    exit(EXIT_FAILURE); \
+  } while (0)
+
 char *program_name = NULL;
 
 void usage(const char *message) {
@@ -24,10 +30,10 @@ void usage(const char *message) {
  *    - add all four files in reversed mentioned-order to totalString
  */
 int main(int argc, char **argv) {
-  if (argc < 5) {
+  if (argc < 6) {
     usage("too few arguments");
   }
-  if (argc > 6) {
+  if (argc > 7) {
     usage("too many arguments");
   }
   program_name = argv[0];
@@ -51,6 +57,7 @@ int main(int argc, char **argv) {
           usage("did not use option a xor b xor c");
         }
         optargA = optarg;
+        printf("-a %s\n", optargA);
         break;
 
       case 'b':
@@ -61,6 +68,7 @@ int main(int argc, char **argv) {
         if (optA || optC) {
           usage("did not use option a xor b xor c");
         }
+        printf("-b\n");
         break;
 
       case 'c':
@@ -71,6 +79,14 @@ int main(int argc, char **argv) {
         if (optA || optB) {
           usage("did not use option a xor b xor c");
         }
+        // always check argv[optind] before checking optarg -> the order matters
+        if ((argv[optind] != NULL) && (argv[optind][0] != '-')) {
+          optargC = argv[optind];
+        }
+        if ((optarg != NULL) && (optarg[0] != '-')) {
+          optargC = optarg;
+        }
+        printf("-c %s\n", optargC);
         break;
 
       default:
@@ -78,9 +94,48 @@ int main(int argc, char **argv) {
     }
   }
 
-  // must contain 4 files
-  // store them in reversed order (same as before but just flip the final
-  // string)
+  if (((argc - optind) != 0) && (optargC != NULL) &&
+      (strcmp(optargC, argv[optind]) == 0)) {
+    optind++;
+  }
+
+  if ((argc - optind) != 4) {
+    usage("not exactly 4 positional arguments given");
+  }
+
+  char *total = malloc(1 * sizeof(char));
+  if (total == NULL) {
+    error("malloc");
+  }
+  total[0] = '\0';
+
+  size_t counter = 0;
+  for (int i = optind; i < argc; i++) {
+    char *elem = argv[i];
+
+    char *newTotal =
+        realloc(total, (counter + strlen(elem) + 1) * sizeof(char));
+    if (newTotal == NULL) {
+      error("realloc");
+    }
+    total = newTotal;
+
+    for (size_t j = 0; j <= strlen(elem); j++) {
+      total[counter++] = elem[j];
+    }
+    counter--;
+  }
+  printf("total: %s\n", total);
+
+  char *totalReversed = malloc((strlen(total) + 1) * sizeof(char));
+  for (size_t i = 0; i < strlen(total); i++) {
+    totalReversed[i] = total[strlen(total) - i - 1];
+  }
+  totalReversed[strlen(total)] = '\0';
+  printf("total reversed: %s\n", totalReversed);
+
+  free(total);
+  free(totalReversed);
 
   return EXIT_SUCCESS;
 }
