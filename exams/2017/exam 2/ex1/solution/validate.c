@@ -98,18 +98,8 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
 
     } else if (isalpha(tmp[i])) {
       int val = tmp[i] - 55;
-
-      int fstInt = val / 10;
-      char fstChar[2] = {'\0', '\0'};
-      assert(fstInt < 10);
-      sprintf(fstChar, "%d", fstInt);
-      expr[expInd++] = fstChar[0];
-
-      int sndInt = val % 10;
-      char sndChar[2] = {'\0', '\0'};
-      assert(sndInt < 10);
-      sprintf(sndChar, "%d", sndInt);
-      expr[expInd++] = sndChar[0];
+      sprintf(expr + expInd, "%d", val);
+      expInd += 2;
 
     } else {
       usage();
