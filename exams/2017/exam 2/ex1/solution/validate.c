@@ -82,29 +82,12 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
     usage();
   }
 
-  // place first 4 chars at the end
-  char four[5];
-  memcpy(four, iban, 4);
-  four[4] = '\0';
-  printf("first four chars: %s\n", four);
-
-  // copy remaining chars
-  const size_t remainingLen = strlen(iban) - 4;
-  char *remaining = malloc((remainingLen + 1) * sizeof(char));
-  if (remaining == NULL) {
-    error_exit("malloc");
-  }
-  memcpy(remaining, iban + 4, remainingLen + 1);
-  printf("remaining chars: %s\n", remaining);
-
   // write into tmp in flipped order
-  char *tmp = malloc((strlen(iban) + 1) * sizeof(char));
-  if (tmp == NULL) {
-    error_exit("malloc");
-  }
-  memcpy(tmp, remaining, remainingLen);
-  memcpy(tmp + remainingLen, four, 5);
-  free(remaining);
+  char tmp[strlen(iban) + 1];
+  const size_t remainderLen = strlen(iban) - 4;
+  memcpy(tmp, iban + 4, remainderLen);  // first four
+  memcpy(tmp + remainderLen, iban, 4);  // remainder
+  tmp[strlen(tmp)] = '\0';
   printf("tmp: %s\n", tmp);
 
   // convert chars to digits, write into expr
@@ -132,7 +115,6 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
       usage();
     }
   }
-  free(tmp);
   expr[eCounter++] = ' ';
   expr[eCounter++] = '%';
   expr[eCounter++] = ' ';
