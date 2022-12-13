@@ -121,23 +121,7 @@ int main(int argc, char *argv[])
 void task_1a(void)
 {
     // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
-    //task_1a_DEMO(&shmfd, &shmp);
-    
-    // create shm
-    if ((shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT | O_EXCL, PERMISSIONS)) == -1) {
-        error_exit("shm_open failed");
-    }
-
-    // set the size of the shared memory object
-    if ((ftruncate(shmfd, sizeof(shmfd))) == -1) {
-	error_exit("ftruncate failed");
-    }
-
-    // map the shared memory object into the virtual address space
-    if ((shmp = mmap(NULL, sizeof(*shmp), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0)) == MAP_FAILED) {
-        error_exit("mmap failed");
-    }
-
+    task_1a_DEMO(&shmfd, &shmp);
 }
 
 /***********************************************************************
@@ -160,22 +144,7 @@ void task_1a(void)
 void task_1b(void)
 {
     // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
-    //task_1b_DEMO(&sem_server, &sem_ready, &sem_client);
-    
-    // create new semaphores
-    sem_server = sem_open(SEM_NAME_SERVER, O_CREAT | O_EXCL, PERMISSIONS, 0);
-    if (sem_server == SEM_FAILED) {
-        error_exit("sem_server open failed");
-    }
-    sem_client = sem_open(SEM_NAME_CLIENT, O_CREAT | O_EXCL, PERMISSIONS, 1);
-    if (sem_client == SEM_FAILED) {
-        error_exit("sem_client open failed");
-    }
-    sem_ready = sem_open(SEM_NAME_READY, O_CREAT | O_EXCL, PERMISSIONS, 0);
-    if (sem_ready == SEM_FAILED) {
-        error_exit("sem_ready open failed");
-    }
-
+    task_1b_DEMO(&sem_server, &sem_ready, &sem_client);
 }
 
 /***********************************************************************
@@ -200,23 +169,6 @@ void task_2(void)
     while (!quit) {
         // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
         task_2_DEMO(sem_server, sem_ready, sem_client, shmp);
-/*        
-        if (sem_wait(sem_server) == -1) {
-	    error_exit("wait sem_client failed");
-	}
-
-        if (sem_wait(sem_ready) == -1) {
-	    error_exit("wait sem_ready failed");
-	}
-
-
-        task_3(shmp);
-   
-	
-        if (sem_post(sem_ready) == -1) {
-	    error_exit("wait sem_ready failed");
-	}
-*/
     }
 }
 
@@ -236,25 +188,7 @@ void task_2(void)
 void task_3(shm_data_t * shmp)
 {
     // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
-    //task_3_DEMO(shmp);
-    int a = 0;
-    //printf("%i\n", shmp->cmd);
-    for (int i = 0; i < num_bank_accounts; i++) {
-	if (strcmp(shmp->iban, bank_accounts[i].iban) == 0) {
-	    a = 1;
-	    if (shmp->cmd == 1) {
-   		bank_accounts[i].balance += shmp->amount;
-		shmp->amount = bank_accounts[i].balance;
-	    } else {
-    		//printf("%i before\n", shmp->amount);
-		bank_accounts[i].balance -= shmp->amount;
-		shmp->amount = bank_accounts[i].balance;
-    		printf("%i after\n", shmp->amount);
-	    }
-	} else if (i == (num_bank_accounts-1) && a == 0) {
-	    shmp->amount = -1;
-	}
-    }
+    task_3_DEMO(shmp);
 }
 
 void free_resources(void)

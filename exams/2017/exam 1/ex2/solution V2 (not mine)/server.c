@@ -25,5 +25,38 @@ bool update_device_status(device_t * list, uint8_t id, uint8_t value)
 	 *******************************************************************/
 
 	/* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
-	return task_3_demo(list, id, value);
+	// return task_3_demo(list, id, value);
+	
+	while (list != NULL) {
+		if (list->id == id) {
+			switch(list->kind) {
+			case D_LIGHT:
+				if (value < 0 || value > 100)
+					return false;
+				break;
+			case D_POWER:
+				if (value < 0 || value > 1)
+					return false;
+				break;
+			case D_SUNBLIND:
+				if (value < 0 || value > 100)
+					return false;
+				break;
+			case D_LOCK:
+				if (value < 0 || value > 1)
+					return false;
+				break;
+			case D_ALARM:
+				if (value < 0 || value > 1)
+					return false;
+				break;
+			default:
+				break;;
+			}
+			*list->statep = value;
+			return true;
+		}
+		list = list->next;
+	}
+	return false;
 }

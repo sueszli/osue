@@ -43,7 +43,24 @@ int main(int argc, char **argv)
 	int sockfd;
 
 	/* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
- 	task_1_demo(&sockfd, &arguments);
+ 	// task_1_demo(&sockfd, &arguments);
+	struct addrinfo *ai = NULL;
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+	
+	int res = getaddrinfo(NULL, arguments.portstr, &hints, &ai);
+	if (res < 0)
+		error_exit(program_name);
+
+	sockfd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+	if (sockfd < 0)
+		error_exit(program_name);
+
+	if (connect(sockfd, ai->ai_addr, ai->ai_addrlen) < 0)
+		error_exit(program_name);
 
 
 	/*******************************************************************
