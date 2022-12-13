@@ -87,14 +87,14 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
   const size_t remainderLen = strlen(iban) - 4;
   memcpy(tmp, iban + 4, remainderLen);  // first four
   memcpy(tmp + remainderLen, iban, 4);  // remainder
-  tmp[strlen(tmp)] = '\0';
+  tmp[strlen(iban)] = '\0';
   printf("tmp: %s\n", tmp);
 
   // convert chars to digits, write into expr
-  size_t eCounter = 0;
+  size_t expInd = 0;
   for (size_t i = 0; i < strlen(tmp); i++) {
     if (isdigit(tmp[i])) {
-      expr[eCounter++] = tmp[i];
+      expr[expInd++] = tmp[i];
 
     } else if (isalpha(tmp[i])) {
       int val = tmp[i] - 55;
@@ -103,24 +103,24 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
       char fstChar[2] = {'\0', '\0'};
       assert(fstInt < 10);
       sprintf(fstChar, "%d", fstInt);
-      expr[eCounter++] = fstChar[0];
+      expr[expInd++] = fstChar[0];
 
       int sndInt = val % 10;
       char sndChar[2] = {'\0', '\0'};
       assert(sndInt < 10);
       sprintf(sndChar, "%d", sndInt);
-      expr[eCounter++] = sndChar[0];
+      expr[expInd++] = sndChar[0];
 
     } else {
       usage();
     }
   }
-  expr[eCounter++] = ' ';
-  expr[eCounter++] = '%';
-  expr[eCounter++] = ' ';
-  expr[eCounter++] = '9';
-  expr[eCounter++] = '7';
-  expr[eCounter] = '\0';
+  expr[expInd++] = ' ';
+  expr[expInd++] = '%';
+  expr[expInd++] = ' ';
+  expr[expInd++] = '9';
+  expr[expInd++] = '7';
+  expr[expInd] = '\0';
   printf("expr: %s\n", expr);
 
   // task_1_DEMO(iban, expr);
