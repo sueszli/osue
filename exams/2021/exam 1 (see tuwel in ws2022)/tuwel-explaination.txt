@@ -12,4 +12,7 @@ The (demo) test environment is installed in the lab. To activate the test enviro
 ```
 source /opt/osue/demo-exam-1-2021W/setenv
 ```
-in a terminal. (Do not forget to execute this command again for every new terminal window or new SSH connection.) You can then use the command `fetch` to copy the source files into your home directory and the command `deliver` to evaluate your implementation. Be aware that the test files are always created in the directory ~/osue-demo-demotest-1 (and not in the current directory).
+in a terminal.
+(Do not forget to execute this command again for every new terminal window or new SSH connection.)
+You can then use the command `fetch` to copy the source files into your home directory and the command `deliver` to evaluate your implementation.
+Be aware that the test files are always created in the directory ~/osue-demo-demotest-1 (and not in the current directory).
