@@ -105,12 +105,7 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
       usage();
     }
   }
-  expr[expInd++] = ' ';
-  expr[expInd++] = '%';
-  expr[expInd++] = ' ';
-  expr[expInd++] = '9';
-  expr[expInd++] = '7';
-  expr[expInd] = '\0';
+  sprintf(expr + expInd, " %% 97");
   printf("expr: %s\n", expr);
 
   // task_1_DEMO(iban, expr);
