@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
  */
 void task_1(char *iban, char expr[MAX_TEXTLEN]) {
   printf("input: %s\n", iban);
-  if (strlen(iban) > 999) {  // <--- test to get min size that is legal works
+  if (strlen(iban) < 5) {
     usage();
   }
 
@@ -94,10 +94,7 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
   if (remaining == NULL) {
     error_exit("malloc");
   }
-  size_t rCounter = 0;
-  for (size_t i = 4; i <= strlen(iban); i++) {
-    remaining[rCounter++] = iban[i];
-  }
+  memcpy(remaining, iban + 4, remainingLen + 1);
   printf("remaining chars: %s\n", remaining);
 
   // write into tmp in flipped order
@@ -105,14 +102,8 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
   if (tmp == NULL) {
     error_exit("malloc");
   }
-  size_t tCounter = 0;
-  for (size_t i = 0; i < strlen(remaining); i++) {
-    tmp[tCounter++] = remaining[i];
-  }
-  for (size_t i = 0; i < 4; i++) {
-    tmp[tCounter++] = four[i];
-  }
-  tmp[tCounter] = '\0';
+  memcpy(tmp, remaining, remainingLen);
+  memcpy(tmp + remainingLen, four, 5);
   free(remaining);
   printf("tmp: %s\n", tmp);
 
@@ -120,25 +111,21 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
   size_t eCounter = 0;
   for (size_t i = 0; i < strlen(tmp); i++) {
     if (isdigit(tmp[i])) {
-      printf("already digit: %c\n", tmp[i]);
       expr[eCounter++] = tmp[i];
 
     } else if (isalpha(tmp[i])) {
-      printf("not digit: %c\n", tmp[i]);
       int val = tmp[i] - 55;
 
       int fstInt = val / 10;
-      assert(fstInt < 10);
       char fstChar[2] = {'\0', '\0'};
+      assert(fstInt < 10);
       sprintf(fstChar, "%d", fstInt);
-      printf("fst: %c\n", fstChar[0]);
       expr[eCounter++] = fstChar[0];
 
       int sndInt = val % 10;
-      assert(sndInt < 10);
       char sndChar[2] = {'\0', '\0'};
+      assert(sndInt < 10);
       sprintf(sndChar, "%d", sndInt);
-      printf("snd: %c\n", sndChar[0]);
       expr[eCounter++] = sndChar[0];
 
     } else {
