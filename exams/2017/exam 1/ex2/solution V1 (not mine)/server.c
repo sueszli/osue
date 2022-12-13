@@ -13,8 +13,7 @@ extern const char *program_name;
 bool task_3_demo(device_t *, uint8_t, uint8_t);
 
 
-bool update_device_status(device_t * list, uint8_t id, uint8_t value)
-{
+bool update_device_status(device_t * list, uint8_t id, uint8_t value) {
     /*******************************************************************
      * Task 3
      * ------

@@ -17,8 +17,7 @@
 char *program_name = "client";
 
 /** program entry point */
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     struct args arguments;
 
     /* parse program arguments and fill 'arguments' [given] */
