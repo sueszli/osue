@@ -97,8 +97,7 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
       expr[expInd++] = tmp[i];
 
     } else if (isalpha(tmp[i])) {
-      int val = tmp[i] - 55;
-      sprintf(expr + expInd, "%d", val);
+      sprintf(expr + expInd, "%d", tmp[i] - 55);
       expInd += 2;
 
     } else {
