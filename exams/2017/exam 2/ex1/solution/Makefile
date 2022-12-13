@@ -10,7 +10,7 @@ validate: validate.o validate_lib.o
 	gcc -o validate validate.o validate_lib.o $(libs)
 
 validate.o: validate.c validate.h
-	gcc  -c -o validate.c $(cflags)
+	gcc -c -o validate.o validate.c $(cflags)
 
 clean:
 	rm -f validate validate.o
