@@ -3,16 +3,31 @@
 
 #include "common.h"
 
-/** A bank account. */
+/*
+had to put the other imports from "server.c" here because the microsoft C linter
+in VSCode forces you to put server.h at the top (which causes the type definitions
+here to break) 
+*/
+#include <assert.h>
+#include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <semaphore.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+
 typedef struct {
     char iban[LEN_IBAN];
     int  balance;
 } bank_account_t;
-
-/** Number of accounts in the array `bank_accounts`. */
-extern const size_t num_bank_accounts;
-/** Array of bank accounts. */
 extern bank_account_t bank_accounts[];
+extern const size_t num_bank_accounts; // bank_accounts[] size
 
 /******************************************************************************
  * Function declarations (all functions below are already implemented)

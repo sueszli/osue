@@ -1,19 +1,8 @@
-#include <assert.h>
-#include <errno.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <ctype.h>
 
-#include <sys/mman.h>
-#include <semaphore.h>
-#include <fcntl.h>
+#include "server.h"
+
 
 #include "common.h"
-#include "server.h"
 
 /******************************************************************************
  * Global variables
@@ -50,41 +39,37 @@ void free_resources(void);
 /*****************************************************************************/
 
 /** Signal handler that just sets the global variable 'quit' */
-static void signal_handler(int sig)
-{
-    quit = 1;
-}
+static void signal_handler(int sig) { quit = 1; }
 
-int main(int argc, char *argv[])
-{
-    pgm_name = argv[0];
+int main(int argc, char *argv[]) {
+  pgm_name = argv[0];
 
-    // Register signal handlers
-    struct sigaction s;
-    s.sa_handler = signal_handler;
-    s.sa_flags = 0;             // no SA_RESTART!
-    if (sigfillset(&s.sa_mask) < 0) {
-        error_exit("sigfillset");
-    }
-    if (sigaction(SIGINT, &s, NULL) < 0) {
-        error_exit("sigaction SIGINT");
-    }
-    if (sigaction(SIGTERM, &s, NULL) < 0) {
-        error_exit("sigaction SIGTERM");
-    }
-    // register function to free resources at normal process termination
-    if (atexit(free_resources) == -1) {
-        error_exit("atexit failed");
-    }
-    // allocate resources
-    task_1a();
-    task_1b();
+  // Register signal handlers
+  struct sigaction s;
+  s.sa_handler = signal_handler;
+  s.sa_flags = 0;  // no SA_RESTART!
+  if (sigfillset(&s.sa_mask) < 0) {
+    error_exit("sigfillset");
+  }
+  if (sigaction(SIGINT, &s, NULL) < 0) {
+    error_exit("sigaction SIGINT");
+  }
+  if (sigaction(SIGTERM, &s, NULL) < 0) {
+    error_exit("sigaction SIGTERM");
+  }
+  // register function to free resources at normal process termination
+  if (atexit(free_resources) == -1) {
+    error_exit("atexit failed");
+  }
+  // allocate resources
+  task_1a();
+  task_1b();
 
-    // service loop (calls task_3)
-    task_2();
+  // service loop (calls task_3)
+  task_2();
 
-    (void) fprintf(stderr, "server exiting regularly\n");
-    return EXIT_SUCCESS;
+  (void)fprintf(stderr, "server exiting regularly\n");
+  return EXIT_SUCCESS;
 }
 
 /***********************************************************************
@@ -118,10 +103,9 @@ int main(int argc, char *argv[])
  * See also: shm_overview(7), ftruncate(2), mmap(2)
  ***********************************************************************/
 
-void task_1a(void)
-{
-    // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
-    task_1a_DEMO(&shmfd, &shmp);
+void task_1a(void) {
+  // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
+  task_1a_DEMO(&shmfd, &shmp);
 }
 
 /***********************************************************************
@@ -141,10 +125,9 @@ void task_1a(void)
  * See also: sem_overview(7)
  ***********************************************************************/
 
-void task_1b(void)
-{
-    // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
-    task_1b_DEMO(&sem_server, &sem_ready, &sem_client);
+void task_1b(void) {
+  // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
+  task_1b_DEMO(&sem_server, &sem_ready, &sem_client);
 }
 
 /***********************************************************************
@@ -164,12 +147,11 @@ void task_1b(void)
  * See also: sem_overview(7)
  ***********************************************************************/
 
-void task_2(void)
-{
-    while (!quit) {
-        // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
-        task_2_DEMO(sem_server, sem_ready, sem_client, shmp);
-    }
+void task_2(void) {
+  while (!quit) {
+    // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
+    task_2_DEMO(sem_server, sem_ready, sem_client, shmp);
+  }
 }
 
 /***********************************************************************
@@ -185,50 +167,48 @@ void task_2(void)
  *
  ***********************************************************************/
 
-void task_3(shm_data_t * shmp)
-{
-    // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
-    task_3_DEMO(shmp);
+void task_3(shm_data_t *shmp) {
+  // REPLACE FOLLOWING LINE WITH YOUR SOLUTION
+  task_3_DEMO(shmp);
 }
 
-void free_resources(void)
-{
-    if (shmp != MAP_FAILED) {
-        if (munmap(shmp, sizeof *shmp) == -1) {
-            print_error("Could not unmap shared memory");
-        }
-        shmp = MAP_FAILED;
+void free_resources(void) {
+  if (shmp != MAP_FAILED) {
+    if (munmap(shmp, sizeof *shmp) == -1) {
+      print_error("Could not unmap shared memory");
     }
+    shmp = MAP_FAILED;
+  }
 
-    if (shmfd != -1) {
-        (void) close(shmfd);
-        if (shm_unlink(SHM_NAME) == -1) {
-            print_error("Could not remove shared memory");
-        }
-        shmfd = -1;
+  if (shmfd != -1) {
+    (void)close(shmfd);
+    if (shm_unlink(SHM_NAME) == -1) {
+      print_error("Could not remove shared memory");
     }
+    shmfd = -1;
+  }
 
-    if (sem_server != SEM_FAILED) {
-        (void) sem_close(sem_server);
-        if (sem_unlink(SEM_NAME_SERVER) == -1) {
-            print_error("Could not remove semaphore");
-        }
-        sem_server = SEM_FAILED;
+  if (sem_server != SEM_FAILED) {
+    (void)sem_close(sem_server);
+    if (sem_unlink(SEM_NAME_SERVER) == -1) {
+      print_error("Could not remove semaphore");
     }
+    sem_server = SEM_FAILED;
+  }
 
-    if (sem_client != SEM_FAILED) {
-        (void) sem_close(sem_client);
-        if (sem_unlink(SEM_NAME_CLIENT) == -1) {
-            print_error("Could not remove semaphore");
-        }
-        sem_client = SEM_FAILED;
+  if (sem_client != SEM_FAILED) {
+    (void)sem_close(sem_client);
+    if (sem_unlink(SEM_NAME_CLIENT) == -1) {
+      print_error("Could not remove semaphore");
     }
+    sem_client = SEM_FAILED;
+  }
 
-    if (sem_ready != SEM_FAILED) {
-        (void) sem_close(sem_ready);
-        if (sem_unlink(SEM_NAME_READY) == -1) {
-            print_error("Could not remove semaphore");
-        }
-        sem_ready = SEM_FAILED;
+  if (sem_ready != SEM_FAILED) {
+    (void)sem_close(sem_ready);
+    if (sem_unlink(SEM_NAME_READY) == -1) {
+      print_error("Could not remove semaphore");
     }
+    sem_ready = SEM_FAILED;
+  }
 }

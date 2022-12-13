@@ -1,17 +1,17 @@
 /****************************************************************/
 /* CLIENT in Pseudo-Code                                        */
 /*--------------------------------------------------------------*/
-/* open(shared_memory)                                          */
-/* open(sem_server)                                             */
-/* open(sem_client)                                             */
-/* open(sem_ready)                                              */
-/*                                                              */
-/* wait(sem_client)                                             */
-/* write(shared_memory)                                         */
-/* post(sem_server)                                             */
-/* wait(sem_ready)                                              */
-/* read(shared_memory)                                          */
-/* post(sem_client)                                             */
-/*                                                              */
-/* unmap(shared_memory)                                         */
-/****************************************************************/
+
+// open(shared_memory)  <--- set up
+// open(sem_server)
+// open(sem_client)
+// open(sem_ready)
+
+// wait(sem_client)     <--- client mutex
+// write(shared_memory)
+// post(sem_server)     <--- tell server to start processing
+// wait(sem_ready)      <--- wait until server is done processing
+// read(shared_memory)
+// post(sem_client)     <--- client mutex
+
+// unmap(shared_memory) <--- clean up
