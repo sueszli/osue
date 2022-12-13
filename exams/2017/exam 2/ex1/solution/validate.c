@@ -148,6 +148,7 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
     }
   }
   free(tmp);
+  expr[eCounter++] = ' ';
   expr[eCounter++] = '%';
   expr[eCounter++] = ' ';
   expr[eCounter++] = '9';
@@ -155,7 +156,7 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
   expr[eCounter] = '\0';
   printf("expr: %s\n", expr);
 
-  task_1_DEMO(iban, expr);
+  // task_1_DEMO(iban, expr);
 }
 
 /***************************************************************************
