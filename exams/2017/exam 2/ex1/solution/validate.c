@@ -84,9 +84,7 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
 
   // place first 4 chars at the end
   char four[5];
-  for (int i = 0; i < 4; i++) {  // <--- simplify these parts to memncpy
-    four[i] = iban[i];
-  }
+  memcpy(four, iban, 4);
   four[4] = '\0';
   printf("first four chars: %s\n", four);
 
