@@ -1,12 +1,12 @@
 #ifndef __VALIDATE_H__
 #define __VALIDATE_H__
 
-#define READ_END        0
-#define WRITE_END       1
+#define READ_END 0
+#define WRITE_END 1
 
-#define MAX_TEXTLEN     80
+#define MAX_TEXTLEN 80
 
-#define EXIT_EFORK      5
+#define EXIT_EFORK 5
 
 /******************************************************************************
  * Function declarations (all functions below are already implemented)
@@ -18,7 +18,7 @@
  * @param argv Array of command line arguments.
  * @param iban Pointer to the IBAN (C-String; IBAN without spaces).
  */
-void read_arguments(int argc, char** argv, char **iban);
+void read_arguments(int argc, char **argv, char **iban);
 
 /** Print an error message to stderr and exit with EXIT_FAILURE. */
 void error_exit(const char *msg);

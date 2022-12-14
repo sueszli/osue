@@ -1,35 +1,16 @@
-##
-# Makefile for exercise 1.
-##
-
-# config
-
-DEFS = -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809
-override CFLAGS += -Wall -g -std=c99 -pedantic $(DEFS)
-override LDFLAGS +=
-override LIBS += -pthread -lrt
-
-# objects to build
-OBJS = validate.o
-
-# objects to link (already built)
-LDOBJS = validate_lib.o
-
-# rules
+defs = -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809
+cflags = -std=c99 -pedantic -g3 -Wall -Wextra -Wwrite-strings -Wconversion $(defs)
+libs = -pthread -lrt
 
 .PHONY : all clean
 
 all: validate
 
-validate: $(OBJS) $(LDOBJS)
-	gcc $(LDFLAGS) -o $@ $^ $(LIBS)
-
-%.o: %.c
-	gcc $(CFLAGS) -c -o $@ $<
-
-clean:
-	rm -f validate $(OBJS)
-
-# dependencies
+validate: validate.o validate_lib.o
+	gcc -o validate validate.o validate_lib.o $(libs)
 
 validate.o: validate.c validate.h
+	gcc -c -o validate.o validate.c $(cflags)
+
+clean:
+	rm -f validate validate.o

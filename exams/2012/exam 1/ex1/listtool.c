@@ -19,10 +19,6 @@ static void insert_after(struct listelem *after, const char *const value) {
   /* TODO: insert your code */
   /* when setting 'val' of the list, use strdup(value); */
   /* if you do not use strdup(), destroy() will fail/crash */
-  struct listelem *next = malloc(sizeof(struct listelem));
-  next->val = strdup(value);
-  next->next = after->next;
-  after->next = next;
   return;
 }
 
@@ -97,14 +93,7 @@ int main(int argc, char **argv) {
    * 'yes,' if it is equal to <string>, else 'no,' */
 
   if (opt_s != -1) {
-    while (current != NULL) {
-      if (STREQ(current->val, optstr)) {
-        printf("yes,");
-      } else {
-        printf("no,");
-      }
-      current = current->next;
-    }
+    // ...
     printf("\n"); /* do not remove this line */
   }
   /* END OF CHALLENGE 1 */
@@ -116,10 +105,7 @@ int main(int argc, char **argv) {
    * 'print_list(head)' */
   if (opt_a != -1) {
     /* iterate over the list and stop at the right entry */
-    for (int i = 0; i < num && current->next != NULL;
-         i++) { /* TODO: change it */
-      // currefornt = current->next;
-    }
+    // ...
     print_list(head);
     insert_after(current, optstr); /* assuming you stopped at current */
     print_list(head);

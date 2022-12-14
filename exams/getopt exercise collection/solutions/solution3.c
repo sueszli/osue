@@ -30,7 +30,7 @@ void usage(const char *message) {
  *    - add all four files in reversed mentioned-order to totalString
  */
 int main(int argc, char **argv) {
-  if (argc < 6) {
+  if (argc < 5) {
     usage("too few arguments");
   }
   if (argc > 7) {

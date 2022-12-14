@@ -65,6 +65,9 @@ int main(int argc, char **argv) {
   if (argc > 6) {
     usage("too many options/arguments");
   }
+  if (argc < 2) {
+    usage("too few options/arguments");
+  }
 
   program_name = argv[0];
   struct args arguments = {DEFAULT_PORTNUM, DEFAULT_PORTNUM_STR, UNDEF, 0, 0};
