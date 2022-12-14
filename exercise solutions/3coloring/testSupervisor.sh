@@ -5,10 +5,10 @@ clear
 echo "--------- COMPILING ---------"
 make all
 
-echo "\n\n--------- RUNNING WITH VALGRIND ---------"
+echo -e "\n\n--------- RUNNING WITH VALGRIND ---------"
 valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./supervisor
 
-echo "\n\n--------- CLEANING ---------"
+echo -e "\n\n--------- CLEANING ---------"
 make clean
 echo "Content of '/dev/shm':"
 cd "/dev/shm"

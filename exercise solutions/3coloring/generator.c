@@ -1,70 +1,6 @@
-#include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <semaphore.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <unistd.h>
-
 #include "common.h"
 
-#define error(msg)      \
-  do {                  \
-    perror(msg);        \
-    exit(EXIT_FAILURE); \
-  } while (true)
-
-#define usage(msg)                                                            \
-  do {                                                                        \
-    fprintf(stderr, "%s\n", msg);                                             \
-    fprintf(                                                                  \
-        stderr,                                                               \
-        "SYNOPSIS\n\t./generator EDGE1...\nEXAMPLE\n\tgenerator 0-1 0-2 0-3 " \
-        "1-2 1-3 2-3");                                                       \
-    exit(EXIT_FAILURE);                                                       \
-  } while (0)
-
-#define MAX_NUM_EDGES (1024)  // we want to avoid using pointers in shm
-
-enum Color { RED = 0, GREEN = 1, BLUE = 2 };
-
-typedef struct Node {
-  size_t name;
-  enum Color color;
-} Node;
-
-typedef struct Edge {
-  Node from;
-  Node to;
-} Edge;
-
-typedef struct EdgeList {
-  Edge edges[MAX_NUM_EDGES];
-  size_t len;
-} EdgeList;
-
-static void printColoredEdgeList(EdgeList edgeList) {
-  for (size_t i = 0; i < edgeList.len; i++) {
-    printf("\t%ld (%d) | %ld (%d)\n", edgeList.edges[i].from.name,
-           edgeList.edges[i].from.color, edgeList.edges[i].to.name,
-           edgeList.edges[i].to.color);
-  }
-}
-
-static void printEdgeList(const char* name, EdgeList edgeList) {
-  printf("%s: ", name);
-  for (size_t i = 0; i < edgeList.len; i++) {
-    printf("%ld-%ld ", edgeList.edges[i].from.name, edgeList.edges[i].to.name);
-  }
-  printf("\n");
-}
+#define MAX_SOLUTION_LEN (64)
 
 static EdgeList parseInput(int argc, char* argv[]) {
   // validate
@@ -182,12 +118,12 @@ static EdgeList generateSolution(EdgeList edgeList) {
     }
   }
 
-  // add legal edges to solution
+  // add illegal edges to solution
   EdgeList solution;
   size_t sCounter = 0;
   for (size_t i = 0; i < edgeList.len; i++) {
     Edge e = edgeList.edges[i];
-    if (e.from.color != e.to.color) {
+    if (e.from.color == e.to.color) {
       solution.edges[sCounter++] = e;
     }
   }
@@ -195,13 +131,65 @@ static EdgeList generateSolution(EdgeList edgeList) {
   return solution;
 }
 
+static void writeSolution(EdgeList solution, Shm_t* shmp) {
+  if ((sem_wait(&shmp->writeMutex) == -1) && (errno != EINTR)) {
+    error("sem_wait");
+  }
+
+  // use bool flag so we don't need another semaphore
+  static bool updatedCounter = false;
+  if (!updatedCounter) {
+    shmp->numGenerators++;
+    updatedCounter = true;
+  }
+
+  if (solution.len < MAX_SOLUTION_LEN) {
+    shmp->buf[shmp->writeIndex] = solution;
+    shmp->writeIndex = (shmp->writeIndex + 1) % BUF_LEN;
+  }
+
+  if (sem_post(&shmp->writeMutex) == -1) {
+    error("sem_post");
+  }
+}
+
 int main(int argc, char* argv[]) {
   EdgeList input = parseInput(argc, argv);
 
   srand((unsigned int)time(NULL));
 
-  EdgeList solution = generateSolution(input);
-  printEdgeList("solution", solution);
+  int fd = shm_open(SHM_PATH, O_RDWR, 0);
+  if (fd == -1) {
+    error("shm_open");
+  }
+  Shm_t* shmp =
+      mmap(NULL, sizeof(*shmp), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (shmp == MAP_FAILED) {
+    error("mmap");
+  }
 
+  while (!shmp->terminateGenerators) {
+    if ((sem_wait(&shmp->numFree) == -1) && (errno != EINTR)) {
+      error("sem_wait");
+    }
+    if (shmp->terminateGenerators) {
+      // supervisor called sem_post() to free generators for shutdown
+      break;
+    }
+
+    EdgeList solution = generateSolution(input);
+    writeSolution(solution, &shmp);
+
+    if (sem_post(&shmp->numUsed) == -1) {
+      error("sem_post");
+    }
+  }
+
+  if (munmap(shmp, sizeof(*shmp)) == -1) {
+    error("munmap");
+  }
+  if (close(fd) == -1) {
+    error("close");
+  }
   exit(EXIT_SUCCESS);
 }
