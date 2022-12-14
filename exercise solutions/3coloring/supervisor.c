@@ -28,10 +28,10 @@ static void readSolution(Shm_t *shmp) {
     return;
   }
 
-  static size_t bestLen;
+  static size_t bestLen = ULONG_MAX;
   if (solution.len < bestLen) {
     bestLen = solution.len;
-    printf("[./supervisor] Solution with %d edges:\n", solution.len);
+    printf("[./supervisor] Solution with %ld edges:", solution.len);
     printEdgeList("", solution);
   }
 }
@@ -79,16 +79,16 @@ int main(int argc, char *argv[]) {
       error("sem_wait");
     }
 
-    readSolution(&shmp);
+    readSolution(shmp);
 
     if (sem_post(&shmp->numFree) == -1) {
       error("sem_post");
     }
   }
 
-  printf("Terminating the %d active generators...\n", shmp->numGenerators);
+  printf("Terminating the %ld active generators...\n", shmp->numGenerators);
   shmp->terminateGenerators = true;
-  for (int i = 0; i < shmp->numGenerators; i++) {
+  for (size_t i = 0; i < shmp->numGenerators; i++) {
     if (sem_post(&shmp->numFree) == -1) {
       perror("sem_post - error occured while freeing the waiting generators");
     }

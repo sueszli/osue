@@ -178,7 +178,7 @@ int main(int argc, char* argv[]) {
     }
 
     EdgeList solution = generateSolution(input);
-    writeSolution(solution, &shmp);
+    writeSolution(solution, shmp);
 
     if (sem_post(&shmp->numUsed) == -1) {
       error("sem_post");

@@ -67,7 +67,7 @@ typedef struct Shm_t {
   bool terminateGenerators;
   size_t numGenerators;
 
-  EdgeList buf[BUF_SIZE];
+  EdgeList buf[BUF_LEN];
   size_t readIndex;
   size_t writeIndex;
 
