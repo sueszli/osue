@@ -1,3 +1,5 @@
+# Tip: You should probably compile these exams on the inflab server
+
 If you try to run exams that depend on a pre-compiled object file with `make all` on your local machine, then you might get an error message like I did.
 
 I ran the Makefiles on the following architecture: <...> 5.10.102.1-microsoft-standard-WSL2 <...> x86_64 x86_64 x86_64 GNU/Linux.
