@@ -50,6 +50,14 @@ typedef struct EdgeList {
   size_t len;
 } EdgeList;
 
+static void printColoredEdgeList(EdgeList edgeList) {
+  for (size_t i = 0; i < edgeList.len; i++) {
+    printf("\t%ld (%d) | %ld (%d)\n", edgeList.edges[i].from.name,
+           edgeList.edges[i].from.color, edgeList.edges[i].to.name,
+           edgeList.edges[i].to.color);
+  }
+}
+
 static void printEdgeList(const char* name, EdgeList edgeList) {
   printf("%s: ", name);
   for (size_t i = 0; i < edgeList.len; i++) {
@@ -130,38 +138,34 @@ static EdgeList parseInput(int argc, char* argv[]) {
   return output;
 }
 
-static void generateColoring(EdgeList edgeList) {
-  // side-effect: adds color value to nodes in edgeList
-
-  // get nodeList
+static EdgeList generateSolution(EdgeList edgeList) {
+  // get nodeArray
   Node nodeArray[MAX_NUM_EDGES * 2];
   size_t counter = 0;
 
   for (size_t i = 0; i < edgeList.len; i++) {
     Node fst = edgeList.edges[i].from;
+    Node snd = edgeList.edges[i].to;
+
     bool foundFst = false;
+    bool foundSnd = false;
     for (size_t i = 0; i < counter; i++) {
       if (nodeArray[i].name == fst.name) {
         foundFst = true;
       }
-    }
-    if (!foundFst) {
-      nodeArray[counter++] = fst;
-    }
-
-    Node snd = edgeList.edges[i].to;
-    bool foundSnd = false;
-    for (size_t i = 0; i < counter; i++) {
       if (nodeArray[i].name == snd.name) {
         foundSnd = true;
       }
+    }
+    if (!foundFst) {
+      nodeArray[counter++] = fst;
     }
     if (!foundSnd) {
       nodeArray[counter++] = snd;
     }
   }
 
-  // color nodeList
+  // color nodeArray
   for (size_t i = 0; i < counter; i++) {
     nodeArray[i].color = rand() % 3;
   }
@@ -171,43 +175,32 @@ static void generateColoring(EdgeList edgeList) {
     for (size_t j = 0; j < counter; j++) {
       if (edgeList.edges[i].from.name == nodeArray[j].name) {
         edgeList.edges[i].from.color = nodeArray[j].color;
-        break;
       }
-    }
-    for (size_t j = 0; j < counter; j++) {
       if (edgeList.edges[i].to.name == nodeArray[j].name) {
         edgeList.edges[i].to.color = nodeArray[j].color;
-        break;
       }
     }
   }
 
+  // add legal edges to solution
+  EdgeList solution;
+  size_t sCounter = 0;
   for (size_t i = 0; i < edgeList.len; i++) {
     Edge e = edgeList.edges[i];
-    printf("\t%ld [%d] - %ld [%d]\n", e.from.name, e.from.color, e.to.name,
-           e.to.color);
+    if (e.from.color != e.to.color) {
+      solution.edges[sCounter++] = e;
+    }
   }
-}
-
-static EdgeList generateSolution(EdgeList edgeList) {
-  generateColoring(edgeList);
-
-  EdgeList output;
-  size_t counter = 0;
-
-  // add to output if not the same color
-
-  output.len = counter;
-  return output;
+  solution.len = sCounter;
+  return solution;
 }
 
 int main(int argc, char* argv[]) {
-  EdgeList edgeList = parseInput(argc, argv);
-  printEdgeList("input", edgeList);
+  EdgeList input = parseInput(argc, argv);
 
   srand((unsigned int)time(NULL));
 
-  EdgeList solution = generateSolution(edgeList);
+  EdgeList solution = generateSolution(input);
   printEdgeList("solution", solution);
 
   exit(EXIT_SUCCESS);
