@@ -1,0 +1,15 @@
+{
+  "files.associations": {
+    "common.h": "c",
+    "string.h": "c",
+    "stdio.h": "c",
+    "stdlib.h": "c",
+    "mman.h": "c",
+    "unistd.h": "c",
+    "strings.h": "c",
+    "stdbool.h": "c",
+    "limits": "c",
+    "*.tcc": "c",
+    "type_traits": "c"
+  }
+}
