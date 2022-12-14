@@ -2,8 +2,9 @@
 
 If you try to run exams that depend on a pre-compiled object file with `make all` on your local machine, then you might get an error message like I did.
 
-I ran the Makefiles on the following architecture: <...> 5.10.102.1-microsoft-standard-WSL2 <...> x86_64 x86_64 x86_64 GNU/Linux.
-I then got the following error messages:
+Check out your architecture with `uname -a`.
+
+I ran the Makefiles on `<...> 5.10.102.1-microsoft-standard-WSL2 <...> x86_64 x86_64 x86_64 GNU/Linux` and then got the following error messages:
 ```
 gcc -fPIE -fPIC -c -o listtool.o listtool.c 
 gcc -o listtool list.o listtool.o -lcrypt
@@ -14,10 +15,10 @@ make: *** [Makefile:10: listtool] Error 1
 ```
 
 I also did some research and used the `-fPIE` flag for compilation but it didn't make any difference.
-I don't know how to fix this problem.
 
-In conclusion: You can attempt to guess what the code behind the given object file my look like by disassembling it and writing everything from scratch, such that it can be compiled to run on any machine (but I really don't think it is worth the effort).
+In conclusion: You can attempt to guess what the code behind the given object file my look like by disassembling it and writing everything from scratch,
+such that it can be compiled to run on any machine (but I really don't think it is worth the effort).
 
-Instead, to run them, you can just into your inflab account on the inflab server via ssh and run them there.
+Instead, to run them, you can just into your inflab account on the inflab server via ssh and run them there (which worked fine after I tried it out).
 
-Good luck! 🌈🐸
+This is the architecture used on the inflab servers that I could get the executables to run with: ``<...> 3.10.0-1160.80.1.el7.x86_64 <...> x86_64 x86_64 x86_64 GNU/Linux`.
