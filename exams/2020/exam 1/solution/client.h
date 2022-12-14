@@ -1,9 +1,21 @@
 #ifndef _CLIENT_H_
 #define _CLIENT_H_
 
-/** Structure for the arguments. */
+#include <errno.h>
+#include <fcntl.h>
+#include <semaphore.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include "common.h"
+
 typedef struct {
-    char *password;
+  char *password;
 } args_t;
 
 void DEMO_parse_arguments(int argc, char *argv[], args_t *args);
@@ -15,4 +27,4 @@ void usage(const char *msg);
 void print_message(const char *msg);
 void error_exit(const char *msg);
 
-#endif  // _CLIENT_H_
+#endif
