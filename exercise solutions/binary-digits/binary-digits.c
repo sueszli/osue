@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 
 #define error(msg)      \
@@ -18,9 +19,18 @@
     exit(EXIT_FAILURE);                                                       \
   } while (0)
 
+static void wait(double totalTime) {
+  time_t seconds = (time_t)totalTime;  // truncate
+  long nanoseconds = (long)((totalTime - (double)seconds) * 1e9);
+  struct timespec config = {seconds, nanoseconds};
+  if (nanosleep(&config, NULL) == -1) {
+    error("nanosleep");
+  }
+}
+
 int main(int argc, char* argv[]) {
   bool optD = false;
-  double delay;
+  double sleepTime;
 
   bool optO = false;
   FILE* outputStream = stdout;
@@ -38,7 +48,7 @@ int main(int argc, char* argv[]) {
         }
         errno = 0;
         char* endptr;
-        delay = strtod(optarg, &endptr);
+        sleepTime = strtod(optarg, &endptr);
         if (errno != 0) {
           error("strtod");
         }
@@ -48,7 +58,7 @@ int main(int argc, char* argv[]) {
         if (*endptr != '\0') {
           usage("non digit suffix in argument");
         }
-        printf("-d %f\n", delay);
+        printf("-d %f\n", sleepTime);
         break;
 
       case 'o':
@@ -72,7 +82,6 @@ int main(int argc, char* argv[]) {
   }
 
   const bool chooseStdIn = (argc - optind) == 0;
-
   do {
     FILE* inputStream;
     if (chooseStdIn) {
@@ -86,13 +95,19 @@ int main(int argc, char* argv[]) {
       }
     }
 
-    int in;
-    while ((in = fgetc(inputStream)) != EOF) {
+    int byte;
+    while ((byte = fgetc(inputStream)) != EOF) {
+      // mask most significant bit with 1
       for (int i = 7; i >= 0; i--) {
-        if (in & (1 << i)) {  // get most significant bit
+        if (byte & (1 << i)) {
           fputc('1', outputStream);
         } else {
           fputc('0', outputStream);
+        }
+
+        if (optD) {
+          fflush(outputStream);
+          wait(sleepTime);
         }
       }
     }

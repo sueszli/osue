@@ -8,6 +8,8 @@ ARGS="-d 10.12345 test"
 ARGS="-d 10 -o ./text.txt path"
 ARGS="-d 10 ./text1.txt"
 ARGS="-d 10 ./text1.txt ./text2.txt"
+ARGS="-d 0.125"
+ARGS="-d 0.125 /dev/urandom"
 
 clear
 
