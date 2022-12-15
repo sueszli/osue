@@ -1,6 +1,11 @@
 #!/bin/bash
 
 ARGS=""
+ARGS="-i -o -s"
+ARGS="-i -o"
+ARGS="-i"
+ARGS="-i test"
+ARGS="test"
 
 clear
 

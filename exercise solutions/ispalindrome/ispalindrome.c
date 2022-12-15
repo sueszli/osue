@@ -105,7 +105,6 @@ int main(int argc, char *argv[]) {
     FILE *inputStream = NULL;
     if ((argc - optind) == 0) {
       inputStream = stdin;
-
     } else {
       fprintf(stderr, "processing path: %s\n", argv[optind]);
       inputStream = fopen(argv[optind], "r");

@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
         if ((optarg == NULL) || (optarg[0] == '-')) {
           usage("missing argument");
         }
-        outputStream = fopen(optarg, "r");
+        outputStream = fopen(optarg, "w+");
         if (outputStream == NULL) {
           error("fopen");
         }
@@ -85,7 +85,6 @@ int main(int argc, char* argv[]) {
     FILE* inputStream;
     if ((argc - optind) == 0) {
       inputStream = stdin;
-
     } else {
       fprintf(stderr, "processing path: %s\n", argv[optind]);
       inputStream = fopen(argv[optind], "r");

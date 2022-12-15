@@ -1,6 +1,9 @@
+#define _GNU_SOURCE
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #define error(msg)      \
@@ -18,38 +21,35 @@
   } while (0)
 
 int main(int argc, char* argv[]) {
-  bool optI = false;
+  bool ignoreLetterCasing = false;
 
-  bool optO = false;
+  bool setOutputPath = false;
   FILE* outputStream = stdout;
 
   int opt;
   while ((opt = getopt(argc, argv, "io:")) != -1) {
     switch (opt) {
       case 'i':
-        if (optI) {
+        if (ignoreLetterCasing) {
           usage("multiple usage of option");
         }
-        optI = true;
-        if ((optarg == NULL) || (optarg[0] == '-')) {
-          usage("missing argument");
-        }
-        printf("-i\n");
+        ignoreLetterCasing = true;
+        fprintf(stderr, "-i\n");
         break;
 
       case 'o':
-        if (optO) {
+        if (setOutputPath) {
           usage("multiple usage of option");
         }
-        optO = true;
+        setOutputPath = true;
         if ((optarg == NULL) || (optarg[0] == '-')) {
           usage("missing argument");
         }
-        outputStream = fopen(optarg, "r");
+        outputStream = fopen(optarg, "w+");
         if (outputStream == NULL) {
           error("fopen");
         }
-        printf("-o %s\n", optarg);
+        fprintf(stderr, "-o %s\n", optarg);
         break;
 
       default:
@@ -62,23 +62,37 @@ int main(int argc, char* argv[]) {
   }
   char* keyword = argv[optind++];
 
-  // WIP
-
   do {
-    FILE* inputStream;
+    FILE* inputStream = NULL;
     if ((argc - optind) == 0) {
       inputStream = stdin;
-
     } else {
-      printf("processing path: %s\n", argv[optind]);
+      fprintf(stderr, "processing path: %s\n", argv[optind]);
       inputStream = fopen(argv[optind], "r");
       if (inputStream == NULL) {
         error("fopen");
       }
     }
 
-    fprintf(outputStream, "\n");
+    char* line = NULL;
+    size_t len = 0;
+    while (getline(&line, &len, inputStream) != -1) {
+      line[strlen(line) - 1] = '\0';
+      if ((ignoreLetterCasing && (strcasestr(line, keyword) != NULL)) ||
+          (strstr(line, keyword) != NULL)) {
+        fprintf(outputStream, "%s\n", line);
+      }
+    }
+    free(line);
+
+    if (fclose(inputStream) == EOF) {
+      error("fclose");
+    }
   } while (++optind < argc);
+
+  if (fclose(outputStream) == EOF) {
+    error("fclose");
+  }
 
   exit(EXIT_SUCCESS);
 }
