@@ -11,61 +11,44 @@
     exit(EXIT_FAILURE);   \
   } while (0);
 
-#define errorUsage(msg)                                                 \
-  do {                                                                  \
-    fprintf(stderr,                                                     \
-            "Wrong usage: %s\nSYNOPSIS:\n\tispalindrome [-s] [-i] [-o " \
-            "outfile] [file...]\n",                                     \
-            msg);                                                       \
-    exit(EXIT_FAILURE);                                                 \
+#define errorUsage(msg)                                                  \
+  do {                                                                   \
+    fprintf(stderr, "%s\n", msg);                                        \
+    fprintf(stderr,                                                      \
+            "Usage: ./ispalindrome [-s] [-i] [-o outfile] [file...]\n"); \
+    exit(EXIT_FAILURE);                                                  \
   } while (0);
-
-static void removeWhitespace(char line[]) {
-  // side effect: line
-  // line may contain two '\0' characters
-  const size_t len = strlen(line);
-  size_t copyIndex = 0;
-  for (size_t i = 0; i < len; i++) {
-    if (!isblank(line[i])) {
-      line[copyIndex++] = line[i];
-    }
-  }
-  line[copyIndex] = '\0';
-}
-
-static void toLowerCase(char line[]) {
-  // side effect: line
-  const size_t len = strlen(line);
-  for (size_t i = 0; i < len; i++) {
-    line[i] = (char)tolower(line[i]);
-  }
-}
-
-static bool isPalindrome(char line[]) {
-  const size_t len = strlen(line);
-  for (size_t i = 0; i < len; i++) {
-    if (line[i] != line[len - i - 1]) {
-      return false;
-    }
-  }
-  return true;
-}
 
 static void writeResult(char line[], bool ignoreWhitespace,
                         bool ignoreLetterCasing, FILE *outputStream) {
-  // side effect: line
-  // line will contain two '\0' characters
   line[strlen(line) - 1] = '\0';
   fprintf(outputStream, "%s ", line);
 
   if (ignoreWhitespace) {
-    removeWhitespace(line);
-  }
-  if (ignoreLetterCasing) {
-    toLowerCase(line);
+    size_t copyIndex = 0;
+    for (size_t i = 0; i < strlen(line); i++) {
+      if (!isblank(line[i])) {
+        line[copyIndex++] = line[i];
+      }
+    }
+    line[copyIndex] = '\0';
   }
 
-  if (isPalindrome(line)) {
+  if (ignoreLetterCasing) {
+    for (size_t i = 0; i < strlen(line); i++) {
+      line[i] = (char)tolower(line[i]);
+    }
+  }
+
+  bool isPalindrome = true;
+  const size_t len = strlen(line);
+  for (size_t i = 0; i < len; i++) {
+    if (line[i] != line[len - i - 1]) {
+      isPalindrome = false;
+    }
+  }
+
+  if (isPalindrome) {
     fprintf(outputStream, "is a palindrome\n");
   } else {
     fprintf(outputStream, "is not a palindrome\n");
@@ -75,24 +58,42 @@ static void writeResult(char line[], bool ignoreWhitespace,
 int main(int argc, char *argv[]) {
   bool ignoreWhitespace = false;
   bool ignoreLetterCasing = false;
+  bool useOutputPath = false;
+
   FILE *outputStream = stdout;
 
   int opt;
   while ((opt = getopt(argc, argv, "sio:")) != -1) {
     switch (opt) {
       case 's':
+        if (ignoreWhitespace) {
+          errorUsage("repeated use of option");
+        }
         ignoreWhitespace = true;
+        fprintf(stderr, "-s\n");
         break;
 
       case 'i':
+        if (ignoreLetterCasing) {
+          errorUsage("repeated use of option");
+        }
         ignoreLetterCasing = true;
+        fprintf(stderr, "-i\n");
         break;
 
       case 'o':
+        if (useOutputPath) {
+          errorUsage("repeated use of option");
+        }
+        useOutputPath = true;
+        if (optarg[0] == '-') {
+          errorUsage("missing argument");
+        }
         outputStream = fopen(optarg, "w+");
         if (outputStream == NULL) {
           errorHandler("fopen");
         }
+        fprintf(stderr, "-o %s\n", optarg);
         break;
 
       default:
@@ -100,35 +101,34 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  const bool hasInputPaths = optind < argc;
-  char *line = NULL;
-  size_t len = 0;
+  do {
+    FILE *inputStream = NULL;
+    if ((argc - optind) == 0) {
+      inputStream = stdin;
 
-  // read from input paths (if there are any)
-  while (optind < argc) {
-    FILE *inputStream = fopen(argv[optind++], "r");
-    if (inputStream == NULL) {
-      errorHandler("fopen");
+    } else {
+      fprintf(stderr, "processing path: %s\n", argv[optind]);
+      inputStream = fopen(argv[optind], "r");
+      if (inputStream == NULL) {
+        errorHandler("fopen");
+      }
     }
+
+    char *line = NULL;
+    size_t len = 0;
     while (getline(&line, &len, inputStream) != -1) {
       writeResult(line, ignoreWhitespace, ignoreLetterCasing, outputStream);
     }
+    free(line);
+
     if (fclose(inputStream) == EOF) {
       errorHandler("fclose");
     }
-  }
-
-  // read from stdin (if there are not any)
-  if (!hasInputPaths) {
-    while (getline(&line, &len, stdin) != -1) {
-      writeResult(line, ignoreWhitespace, ignoreLetterCasing, outputStream);
-    }
-  }
-
-  free(line);
+  } while (++optind < argc);
 
   if (fclose(outputStream) == EOF) {
     errorHandler("fclose");
   }
+
   return EXIT_SUCCESS;
 }

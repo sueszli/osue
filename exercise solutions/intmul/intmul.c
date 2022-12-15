@@ -15,14 +15,14 @@
   do {                  \
     perror(msg);        \
     exit(EXIT_FAILURE); \
-  } while (true);
+  } while (0);
 
 #define usage(msg)                                                   \
   do {                                                               \
     fprintf(stderr, "Invalid input: %s\nSYNOPSIS: ./intmul\n", msg); \
     fflush(stderr);                                                  \
     exit(EXIT_FAILURE);                                              \
-  } while (true);
+  } while (0);
 
 typedef struct {
   char* a;

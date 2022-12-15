@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
         if (*endptr != '\0') {
           usage("non digit suffix in argument");
         }
-        printf("-d %f\n", sleepTime);
+        fprintf(stderr, "-d %f\n", sleepTime);
         break;
 
       case 'o':
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
         if (outputStream == NULL) {
           error("fopen");
         }
-        printf("-o %s\n", optarg);
+        fprintf(stderr, "-o %s\n", optarg);
         break;
 
       default:
@@ -81,14 +81,13 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  const bool chooseStdIn = (argc - optind) == 0;
   do {
     FILE* inputStream;
-    if (chooseStdIn) {
+    if ((argc - optind) == 0) {
       inputStream = stdin;
 
     } else {
-      printf("processing path: %s\n", argv[optind]);
+      fprintf(stderr, "processing path: %s\n", argv[optind]);
       inputStream = fopen(argv[optind], "r");
       if (inputStream == NULL) {
         error("fopen");
@@ -112,7 +111,14 @@ int main(int argc, char* argv[]) {
       }
     }
     fprintf(outputStream, "\n");
+
+    if (fclose(inputStream) == EOF) {
+      error("fclose");
+    }
   } while (++optind < argc);
 
+  if (fclose(outputStream) == EOF) {
+    error("fclose");
+  }
   exit(EXIT_SUCCESS);
 }
