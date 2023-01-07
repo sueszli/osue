@@ -9,7 +9,7 @@
   do {                                                                       \
     fprintf(stderr,                                                          \
             "Wrong usage: %s\nSYNOPSIS:\n\tclient [-p PORT] [ -o FILE | -d " \
-            "DIR ] URL\nEXAMPLE\n\tclient http://www.nonhttps.com/",         \
+            "DIR ] URL\nEXAMPLE\n\tclient http://www.neverssl.com/",         \
             msg);                                                            \
     exit(EXIT_FAILURE);                                                      \
   } while (0);
@@ -41,7 +41,6 @@ int main(int argc, char* argv[]) {
           usage("missing option p argument");
         }
         port = optarg;
-        printf("-p %s\n", port);
         break;
 
       case 'o':
@@ -56,7 +55,6 @@ int main(int argc, char* argv[]) {
           usage("missing option o argument");
         }
         outputFile = optarg;
-        printf("-o %s\n", outputFile);
         break;
 
       case 'd':
@@ -71,7 +69,6 @@ int main(int argc, char* argv[]) {
           usage("missing option d argument");
         }
         outputDirectory = optarg;
-        printf("-d %s\n", outputDirectory);
         break;
 
       default:
@@ -79,7 +76,45 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  // check positional argument
+  if ((argc - optind) != 1) {
+    usage("illegal number of positional arguments");
+  }
+  char* url = argv[optind];
+
+  printf("-p %s\n", port);
+  printf("-o %s\n", outputFile);
+  printf("-d %s\n", outputDirectory);
+  printf("url %s\n", url);
+
+  // --------------------------- VALIDATION ---------------------------
+
+  // if both o,d not given: write to stdout
+  /*
+    the directory -d:
+    name = word after the last '/'
+    store in: ./name/name.html
+
+    if (name == "") {
+      name = "index.html"
+    }
+  */
+
+  // validate input
+  /*
+    legal port range:
+    -
+  */
+
+  /*
+    legal filepaths:
+    -
+  */
+
+  /*
+    legal URL:
+    - must start with "http://"
+    - hostname is between "http://" and "; / ? : @ = &"
+  */
 
   exit(EXIT_SUCCESS);
 }
