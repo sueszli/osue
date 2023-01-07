@@ -2,7 +2,11 @@
 
 ARGS="test"
 ARGS="http://"
-ARGS="http://tester.com?test=1"
+ARGS="http://hostname.com/"
+ARGS="http://hostname.com"
+ARGS="http://hostname.com/filename?test=1#test"
+ARGS="http://hostname.com?test=1#test"
+ARGS="-d test http://hostname.com/stuff/filename?test=1#test"
 
 clear
 

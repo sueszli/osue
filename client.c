@@ -90,43 +90,19 @@ static Arguments parseArguments(int argc, char* argv[]) {
   }
   char* url = argv[optind];
 
-  printf("-p %s\n", port);
-  printf("-o %s\n", outputFile);
-  printf("-d %s\n", outputDirectory);
+  printf("port: %s\n", port);
+  printf("outputFile: %s\n", outputFile);
+  printf("outputDirectory: %s\n", outputDirectory);
   printf("url: %s\n", url);
+  printf("\n");
 
-  // get hostname from url (between "http://" and ";/?:@=&")
-  if (strncasecmp(url, "http://", 7) != 0) {
-    usage("url doesn't start with 'http://'");
-  }
-  if ((strlen(url) - 7) == 0) {
-    usage("no characters preceeding 'http://'");
-  }
-  char* start = url + 7;
-  char* end = strpbrk(start, ";/?:@=&");
-  if (end == NULL) {
-    end = url + strlen(url);
-  }
-  size_t hostnameLen = end - start;
-  char hostname[hostnameLen + 1];
-  strncpy(hostname, start, hostnameLen);
-  hostname[hostnameLen] = '\0';
-  printf("hostname: %s\n", hostname);
-
-  // get suffix from url (after ";/?:@=&")
-  char* suffix = end;
-  printf("suffix: %s\n", suffix);
-
-  // get resource location from suffix (after first "/" before ";?:@=&")
-
-  /*
   // validate
   if (optP) {
     if (strspn(port, "0123456789") != strlen(port)) {
       usage("port contains non digit characters");
     }
     errno = 0;
-    long portLong = strtoul(port, NULL, 10);
+    long portLong = strtol(port, NULL, 10);
     if (errno != 0) {
       error("strtoul");
     }
@@ -149,20 +125,70 @@ static Arguments parseArguments(int argc, char* argv[]) {
     if (strpbrk(outputDirectory, illegalChars) != NULL) {
       usage("file name contains illegal characters");
     }
-    // set outputfile through url
-    // check if directory name valid
-    // set directory
   }
-  */
 
-  // get outputPath and outputStream from given arguments
-  /*
-    get output stream (if both o,d not given: write to stdout)
-      -o: store output in "./<filename>"
-      -d: store output in "./<newdir>/<path in url | index.html>"
-  */
+  {
+    if (strncasecmp(url, "http://", 7) != 0) {
+      usage("url doesn't start with 'http://'");
+    }
+    if ((strlen(url) - 7) == 0) {
+      usage("no characters preceeding 'http://'");
+    }
+  }
 
+  // get suffix
+  char* suffix = strpbrk(url + 7, ";/?:@=&");
+  if (suffix == NULL) {
+    suffix = url + strlen(url);
+  }
+  printf("suffix: %s\n", suffix);
+
+  // get hostname
+  const ptrdiff_t hnLen = suffix - (url + 7);
+  char hostname[hnLen + 1];
+  strncpy(hostname, url + 7, (size_t)hnLen);
+  hostname[hnLen] = '\0';
+  printf("hostname: %s\n", hostname);
+
+  // get resourceName
+  char resourceName[strlen(suffix) + 1];
+  char* rnStart = rindex(suffix, '/');
+  if (rnStart == NULL) {
+    resourceName[0] = '\0';
+  } else {
+    rnStart++;
+    char* rnEnd = strpbrk(rnStart, ";?:@=&");
+    if (rnEnd == NULL) {
+      rnEnd = url + strlen(url);
+    }
+    const ptrdiff_t rnLen = rnEnd - rnStart;
+    strncpy(resourceName, rnStart, (size_t)rnLen);
+    resourceName[rnLen] = '\0';
+  }
+  // printf("resourceName: %s\n", resourceName);
+
+  // get outputPath
+  char outputPath[strlen(outputDirectory) + strlen(outputFile) +
+                  strlen(resourceName) + 3];
+  size_t curr = 0;
+  outputPath[curr++] = '.';
+  outputPath[curr++] = '/';
+  if (optD) {
+    strncpy(outputPath + curr, outputDirectory, strlen(outputDirectory));
+    curr += strlen(outputDirectory);
+    outputPath[curr++] = '/';
+    outputFile = resourceName;  // if !optD: index.html or outputFile
+  }
+  strncpy(outputPath + curr, outputFile, strlen(outputFile));
+  curr += strlen(outputFile);
+  outputPath[curr] = '\0';
+  printf("outputPath: %s\n", outputPath);
+
+  // get outputStream
   FILE* outputStream = stdout;
+  if (optO | optD) {
+    // fopen
+  }
 
   return (Arguments){url : NULL, port : port, outputStream : NULL};
 }
