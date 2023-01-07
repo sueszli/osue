@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -6,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #define usage(msg)                                                           \
@@ -24,7 +27,8 @@
   } while (0);
 
 typedef struct {
-  char* url;
+  char* hostname;
+  char* suffix;
   char* port;
   FILE* outputStream;
 } Arguments;
@@ -37,6 +41,7 @@ static Arguments parseArguments(int argc, char* argv[]) {
   char* port = "80";
   char* outputFile = "index.html";
   char* outputDirectory = "";
+  char* url = NULL;
 
   int opt;
   while ((opt = getopt(argc, argv, "p:o:d:")) != -1) {
@@ -84,11 +89,10 @@ static Arguments parseArguments(int argc, char* argv[]) {
         usage("illegal option");
     }
   }
-
   if ((argc - optind) != 1) {
     usage("illegal number of positional arguments");
   }
-  char* url = argv[optind];
+  url = argv[optind];
 
   printf("port: %s\n", port);
   printf("outputFile: %s\n", outputFile);
@@ -96,7 +100,7 @@ static Arguments parseArguments(int argc, char* argv[]) {
   printf("url: %s\n", url);
   printf("\n");
 
-  // validate
+  // ----------------- validate -----------------
   if (optP) {
     if (strspn(port, "0123456789") != strlen(port)) {
       usage("port contains non digit characters");
@@ -110,9 +114,8 @@ static Arguments parseArguments(int argc, char* argv[]) {
       usage("port not in legal range");
     }
   }
-
-  char* illegalChars = "/\\:*?\"<>|";  // unix is less strict
   if (optO) {
+    const char* illegalChars = "/\\:*?\"<>|";  // unix is less strict
     if (strpbrk(outputFile, illegalChars) != NULL) {
       usage("file name contains illegal characters");
     }
@@ -120,13 +123,12 @@ static Arguments parseArguments(int argc, char* argv[]) {
       usage("file name too long");
     }
   }
-
   if (optD) {
+    const char* illegalChars = "/\\:*?\"<>|";
     if (strpbrk(outputDirectory, illegalChars) != NULL) {
       usage("file name contains illegal characters");
     }
   }
-
   {
     if (strncasecmp(url, "http://", 7) != 0) {
       usage("url doesn't start with 'http://'");
@@ -136,21 +138,32 @@ static Arguments parseArguments(int argc, char* argv[]) {
     }
   }
 
-  // get suffix
+  // ----------------- parse arguments -----------------
+  Arguments args = {
+      .hostname = NULL,
+      .suffix = NULL,
+      .port = port,
+      .outputStream = NULL,
+  };
+
+  // get suffix from url
   char* suffix = strpbrk(url + 7, ";/?:@=&");
   if (suffix == NULL) {
-    suffix = url + strlen(url);
+    asprintf(&args.suffix, "/");
+  } else {
+    asprintf(&args.suffix, "%s", suffix);
   }
-  printf("suffix: %s\n", suffix);
+  printf("suffix: %s\n", args.suffix);
 
-  // get hostname
+  // get hostname from url
   const ptrdiff_t hnLen = suffix - (url + 7);
   char hostname[hnLen + 1];
   strncpy(hostname, url + 7, (size_t)hnLen);
   hostname[hnLen] = '\0';
+  asprintf(&args.hostname, "%s", hostname);
   printf("hostname: %s\n", hostname);
 
-  // get resourceName
+  // outputStream: get resourceName from url
   char resourceName[strlen(suffix) + 1];
   char* rnStart = rindex(suffix, '/');
   if (rnStart == NULL) {
@@ -165,9 +178,9 @@ static Arguments parseArguments(int argc, char* argv[]) {
     strncpy(resourceName, rnStart, (size_t)rnLen);
     resourceName[rnLen] = '\0';
   }
-  // printf("resourceName: %s\n", resourceName);
+  printf("resourceName: %s\n", resourceName);
 
-  // get outputPath
+  // outputStream: get outputPath
   char outputPath[strlen(outputDirectory) + strlen(outputFile) +
                   strlen(resourceName) + 3];
   size_t curr = 0;
@@ -177,25 +190,51 @@ static Arguments parseArguments(int argc, char* argv[]) {
     strncpy(outputPath + curr, outputDirectory, strlen(outputDirectory));
     curr += strlen(outputDirectory);
     outputPath[curr++] = '/';
-    outputFile = resourceName;  // if !optD: index.html or outputFile
+    outputFile = resourceName;  // if !optD -> index.html or outputFile
   }
   strncpy(outputPath + curr, outputFile, strlen(outputFile));
   curr += strlen(outputFile);
   outputPath[curr] = '\0';
   printf("outputPath: %s\n", outputPath);
+  printf("\n");
+
+  // make directory
+  if (optD) {
+    if ((mkdir(outputDirectory, 0777) == -1) && (errno != EEXIST)) {
+      error("mkdir");
+    }
+  }
 
   // get outputStream
   FILE* outputStream = stdout;
   if (optO | optD) {
-    // fopen
+    outputStream = fopen(outputPath, "w+");
+    if (outputStream == NULL) {
+      error("fopen");
+    }
   }
+  args.outputStream = outputStream;
 
-  return (Arguments){url : NULL, port : port, outputStream : NULL};
+  return args;
 }
 
 int main(int argc, char* argv[]) {
   Arguments args = parseArguments(argc, argv);
 
-  // fclose(args.outputStream);
+  // print
+  printf("hostname: %s\n", args.hostname);
+  printf("suffix: %s\n", args.suffix);
+  printf("port: %s\n", args.port);
+  printf("\n");
+
+  // write
+  fprintf(args.outputStream, "HELLO WORLD");
+
+  // free
+  free(args.hostname);
+  free(args.suffix);
+  if (fclose(args.outputStream) == -1) {
+    error("fclose");
+  }
   exit(EXIT_SUCCESS);
 }
