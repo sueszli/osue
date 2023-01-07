@@ -149,7 +149,7 @@ static Arguments parseArguments(int argc, char* argv[]) {
   // get suffix from url
   char* suffix = strpbrk(url + 7, ";/?:@=&");
   if (suffix == NULL) {
-    asprintf(&args.suffix, "/");
+    asprintf(&args.suffix, "");
   } else {
     asprintf(&args.suffix, "%s", suffix);
   }
