@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <errno.h>
+#include <netdb.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -7,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -223,7 +225,57 @@ static Arguments parseArguments(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
   Arguments args = parseArguments(argc, argv);
 
-  fprintf(args.outputStream, "HELLO WORLD\n");
+  // get list of sockets into &result
+  struct addrinfo hints;
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_flags = 0;
+  hints.ai_protocol = 0;
+
+  struct addrinfo* result;
+  if (getaddrinfo(args.hostname, args.port, &hints, &result) != 0) {
+    ERROR_EXIT("getaddrinfo");
+  }
+
+  // go through result list until you can connect to a socket
+  struct addrinfo* rp;
+  int sockfd;
+  for (rp = result; rp != NULL; rp = rp->ai_next) {
+    sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+    if (sockfd == -1) {
+      continue;
+    }
+
+    if (connect(sockfd, rp->ai_addr, rp->ai_addrlen) != -1) {
+      break;  // success
+    } else {
+      close(sockfd);
+    }
+  }
+
+  freeaddrinfo(result);
+  if (rp == NULL) {
+    error("no address could connect");
+  }
+
+  FILE* socketStream = fdopen(sockfd, "w+");
+  if (socketStream == NULL) {
+    error("fdopen");
+  }
+
+  // send request
+  fprintf(socketStream,
+          "GET %s HTTP/1.1\r\n"
+          "Host: %s\r\n"
+          "Connection: close\r\n\r\n",
+          args.suffix, args.hostname);
+
+  if (fflush(socketStream) == EOF) {
+    error("fflush");
+  }
+
+  // read response
 
   free(args.hostname);
   free(args.suffix);
