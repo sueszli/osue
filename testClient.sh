@@ -1,6 +1,8 @@
 #!/bin/bash
 
-ARGS=""
+ARGS="test"
+ARGS="http://"
+ARGS="http://tester.com?test=1"
 
 clear
 
