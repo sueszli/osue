@@ -39,8 +39,8 @@ static Arguments parseArguments(int argc, char* argv[]) {
   bool optD = false;
 
   char* port = "80";
-  char* outputFile = "index.html";
-  char* outputDirectory = "";
+  char* outputFile = NULL;
+  char* outputDirectory = NULL;
   char* url = NULL;
 
   int opt;
@@ -146,33 +146,31 @@ static Arguments parseArguments(int argc, char* argv[]) {
       .outputStream = NULL,
   };
 
-  // get suffix from url
+  // get suffix
   char* suffix = strpbrk(url + 7, ";/?:@=&");
   if (suffix == NULL) {
-    asprintf(&args.suffix, "");
+    suffix = "";
+    asprintf(&args.suffix, "%s", "");
   } else {
     asprintf(&args.suffix, "%s", suffix);
   }
   printf("suffix: %s\n", args.suffix);
 
-  // get hostname from url
-  const ptrdiff_t hnLen = suffix - (url + 7);
-  char hostname[hnLen + 1];
-  strncpy(hostname, url + 7, (size_t)hnLen);
-  hostname[hnLen] = '\0';
-  asprintf(&args.hostname, "%s", hostname);
-  printf("hostname: %s\n", hostname);
+  // get hostname
+  ptrdiff_t hostnameLen = suffix - (url + 7);
+  asprintf(&args.hostname, "%.*s", (int)hostnameLen, url + 7);
+  printf("hostname: %s\n", args.hostname);
 
-  // outputStream: get resourceName from url
+  // outputStream: get resourceName (set to index.html if empty)
   char resourceName[strlen(suffix) + 1];
   char* rnStart = rindex(suffix, '/');
-  if (rnStart == NULL) {
-    resourceName[0] = '\0';
+  if ((rnStart == NULL) || (strlen(rnStart) == 1)) {
+    strncpy(resourceName, "index.html", 11);
   } else {
     rnStart++;
     char* rnEnd = strpbrk(rnStart, ";?:@=&");
     if (rnEnd == NULL) {
-      rnEnd = url + strlen(url);
+      rnEnd = suffix + strlen(suffix);
     }
     const ptrdiff_t rnLen = rnEnd - rnStart;
     strncpy(resourceName, rnStart, (size_t)rnLen);
@@ -181,8 +179,13 @@ static Arguments parseArguments(int argc, char* argv[]) {
   printf("resourceName: %s\n", resourceName);
 
   // outputStream: get outputPath
-  char outputPath[strlen(outputDirectory) + strlen(outputFile) +
-                  strlen(resourceName) + 3];
+  if (!optO) {
+    outputFile = resourceName;
+  }
+  if (!optD) {
+    outputDirectory = "";
+  }
+  char outputPath[strlen(outputDirectory) + strlen(resourceName) + 3];
   size_t curr = 0;
   outputPath[curr++] = '.';
   outputPath[curr++] = '/';
@@ -190,7 +193,6 @@ static Arguments parseArguments(int argc, char* argv[]) {
     strncpy(outputPath + curr, outputDirectory, strlen(outputDirectory));
     curr += strlen(outputDirectory);
     outputPath[curr++] = '/';
-    outputFile = resourceName;  // if !optD -> index.html or outputFile
   }
   strncpy(outputPath + curr, outputFile, strlen(outputFile));
   curr += strlen(outputFile);
@@ -221,14 +223,7 @@ static Arguments parseArguments(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
   Arguments args = parseArguments(argc, argv);
 
-  // print
-  printf("hostname: %s\n", args.hostname);
-  printf("suffix: %s\n", args.suffix);
-  printf("port: %s\n", args.port);
-  printf("\n");
-
-  // write
-  fprintf(args.outputStream, "HELLO WORLD");
+  fprintf(args.outputStream, "HELLO WORLD\n");
 
   // free
   free(args.hostname);
