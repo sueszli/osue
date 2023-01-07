@@ -1,0 +1,19 @@
+Exercise 3
+
+Client requests file from server:
+
+| GET <path> HTTP/1.1                        
+| Host: www.name.com                         
+| <...>                                      <--- arbitrary number of header fields
+|                                            <--- no request body
+
+Server transfers file to client:
+
+| HTTP/1.1 200 OK
+| Date: <date>
+| Content-Type: text/html; charset=UTF-8
+| Content-Length: <length>
+| Last-Modified: <date>
+| Connection: close
+|
+| <response body / requested file>

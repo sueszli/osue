@@ -13,10 +13,10 @@ client: client.o
 server: server.o
 	gcc -o server server.o $(libs)
 
-client.o: client.c common.h
-	gcc $(verbose_mode) -c -o clienet.o client.c
+client.o: client.c
+	gcc $(verbose_mode) -c -o client.o client.c
 
-server.o: server.c common.h
+server.o: server.c
 	gcc $(verbose_mode) -c -o server.o server.c
 
 clean:
