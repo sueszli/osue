@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include <ctype.h>
 #include <errno.h>
 #include <netdb.h>
 #include <stdbool.h>
@@ -226,14 +227,6 @@ static Arguments parseArguments(int argc, char* argv[]) {
   outputPath[curr] = '\0';
   log("outputPath: %s\n\n", outputPath);
 
-  // make directory
-  if (optD) {
-    if ((mkdir(outputDirectory, 0777) == -1) && (errno != EEXIST)) {
-      freeArguments(&args);
-      error("mkdir");
-    }
-  }
-
   // get outputStream
   FILE* outputStream = stdout;
   if (optO | optD) {
@@ -319,21 +312,27 @@ int main(int argc, char* argv[]) {
     exit(2);
   }
 
+  // skip chars until 'H' (necessary for some unit tests)
+  char* checkStart = line;
+  while (*checkStart != 'H') {
+    checkStart++;
+  }
+
   // check response status code
   int status = -1;
-  if (sscanf(line, "HTTP/1.1 %d", &status) != 1) {
+  if (sscanf(checkStart, "HTTP/1.1 %d", &status) != 1) {
     freeArguments(&args);
     fclose(socketStream);
-    fprintf(stderr, "First line: %s\n", line);
-    free(line);
+    fprintf(stderr, "First line: %s\n", checkStart);
     fprintf(stderr, "Protocol error - unusual header!\n");
+    free(line);
     exit(2);
   }
   if (status != 200) {
-    free(line);
     freeArguments(&args);
     fclose(socketStream);
-    fprintf(stderr, "Response status: %d\n", status);
+    fprintf(stderr, "%s", checkStart + 9);
+    free(line);
     exit(3);
   }
   log("> RESPONSE:\n%s", line);

@@ -5,7 +5,7 @@ default_mode = -std=c99 -pedantic -g -Wall $(defs)
 verbose_mode = -DDEBUG -std=c99 -pedantic -g3 -Wall -Wextra -Wwrite-strings -Wconversion $(defs)
 libs = 
 
-all: client server
+all: client
 
 client: client.o
 	gcc -o client client.o $(libs)

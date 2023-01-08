@@ -34,6 +34,8 @@ ARGS="-p -2 http://localhost/"
 ARGS="-p 65599 http://localhost/"
 
 ARGS="http://www.neverssl.com/"
+ARGS="-p 9999 http://localhost/"
+ARGS="-p 9999 -d test.dir http://localhost/t"
 
 clear
 
