@@ -16,7 +16,7 @@
 #ifdef DEBUG
 #define log(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__)
 #else
-#define log(ignored)
+#define log(ignored, ...)
 #endif
 
 #define usage(msg)                                                           \
