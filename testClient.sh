@@ -30,6 +30,7 @@ ARGS="-p 9999 http://"
 ARGS="-p 9999 http://?getparam"
 ARGS="-p 9999 http://localhost/"
 ARGS="-p 9999 http://localhost/hello.html"
+ARGS="-p 9999 -o lines1.html http://127.0.0.1/longlines.html"
 
 echo -e "--------- COMPILING ---------"
 make all

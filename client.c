@@ -34,12 +34,6 @@
     exit(EXIT_FAILURE); \
   } while (0);
 
-#define protocolError()                   \
-  do {                                    \
-    fprintf(stderr, "Protocol error!\n"); \
-    exit(2);                              \
-  } while (0);
-
 typedef struct {
   char* hostname;
   char* suffix;
@@ -321,22 +315,25 @@ int main(int argc, char* argv[]) {
   if ((getline(&line, &len, socketStream) == -1) && (errno != 0)) {
     freeArguments(&args);
     fclose(socketStream);
-    protocolError();
+    fprintf(stderr, "Protocol error - empty response!\n");
+    exit(2);
   }
 
   // check response status code
   int status = -1;
   if (sscanf(line, "HTTP/1.1 %d", &status) != 1) {
-    free(line);
     freeArguments(&args);
     fclose(socketStream);
-    protocolError();
+    fprintf(stderr, "First line: %s\n", line);
+    free(line);
+    fprintf(stderr, "Protocol error - unusual header!\n");
+    exit(2);
   }
   if (status != 200) {
     free(line);
     freeArguments(&args);
     fclose(socketStream);
-    fprintf(stderr, "Status not OK: %d\n", status);
+    fprintf(stderr, "Response status: %d\n", status);
     exit(3);
   }
   log("> RESPONSE:\n%s", line);
@@ -360,12 +357,10 @@ int main(int argc, char* argv[]) {
   free(line);
 
   // copy content to outputStream
-  unsigned int bufLen = 1 << 10;
-  uint8_t buf[bufLen];
-  while (!feof(socketStream)) {
-    size_t read = fread(buf, sizeof(uint8_t), bufLen, socketStream);
-    log("%.*s", (int)read, buf);
-    fwrite(buf, sizeof(uint8_t), read, socketStream);
+  int c;
+  while ((c = fgetc(socketStream)) != EOF) {
+    log("%c", c);
+    fputc(c, args.outputStream);
   }
 
   freeArguments(&args);
