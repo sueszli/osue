@@ -28,6 +28,12 @@
     exit(EXIT_FAILURE); \
   } while (0);
 
+#define protocolError()                   \
+  do {                                    \
+    fprintf(stderr, "Protocol error!\n"); \
+    exit(2);                              \
+  } while (0);
+
 typedef struct {
   char* hostname;
   char* suffix;
@@ -53,7 +59,7 @@ static void validateArguments(char* port, char* outputFile,
 
   const char* illegalChars = "/\\:*?\"<>|";  // unix is less strict
   if (outputFile != NULL) {
-    if (strpbrk(outputFile, illegalChars) != NULL) {
+    if (strcspn(outputFile, illegalChars) != 0) {
       usage("file name contains illegal characters");
     }
     if (strlen(outputFile) > 255) {
@@ -62,7 +68,7 @@ static void validateArguments(char* port, char* outputFile,
   }
 
   if (outputDirectory != NULL) {
-    if (strpbrk(outputDirectory, illegalChars) != NULL) {
+    if (strcspn(outputDirectory, illegalChars) != 0) {
       usage("file name contains illegal characters");
     }
   }
@@ -153,15 +159,15 @@ static Arguments parseArguments(int argc, char* argv[]) {
       .outputStream = NULL,
   };
 
-  // get suffix
+  // get suffix (everything after first ";/?:@=&")
   char* suffix = strpbrk(url + 7, ";/?:@=&");
   if (suffix == NULL) {
-    suffix = "/";
+    suffix = "/";  // never empty
   }
   asprintf(&args.suffix, "%s", suffix);
   printf("suffix: %s\n", args.suffix);
 
-  // get hostname
+  // get hostname (everything between "http://" and suffix)
   asprintf(&args.hostname, "%.*s", (int)(suffix - (url + 7)), url + 7);
   printf("hostname: %s\n", args.hostname);
 
@@ -222,23 +228,94 @@ static Arguments parseArguments(int argc, char* argv[]) {
   return args;
 }
 
+static void sendRequest(Arguments args, FILE* socketStream) {
+  fprintf(socketStream,
+          "GET %s HTTP/1.1\r\n"
+          "Host: %s\r\n"
+          "Connection: close\r\n\r\n",
+          args.suffix, args.hostname);
+
+  if (fflush(socketStream) == EOF) {
+    error("fflush");
+  }
+}
+
+static void readResponse(FILE* socketStream, FILE* outputStream) {
+  char* line = NULL;
+  size_t len = 0;
+  if (getline(&line, &len, socketStream) == -1) {
+    free(line);
+    protocolError();
+  }
+
+  char* part = strtok(line, " ");
+  if (part == NULL || strcmp(part, "HTTP/1.1") != 0) {
+    free(line);
+    protocolError();
+  }
+
+  char* status_code = strtok(NULL, " ");
+  char* status_text = strtok(NULL, "\r\n");
+  if (status_code == NULL || status_text == NULL) {
+    free(line);
+    protocolError();
+  }
+
+  char* endptr;
+  strtol(status_code, &endptr, 10);
+  if (endptr != status_code + strlen(status_code)) {
+    // The statuscode is not a number
+    free(line);
+    protocolError();
+  }
+
+  if (strncmp(status_code, "200", 3) != 0) {
+    // Statuscode is not 200
+    fprintf(stderr, "STATUS: %s %s\n", status_code, status_text);
+    free(line);
+    return 3;
+  }
+
+  // Read the rest of the headers line by line
+  bool is_compressed = false;
+  bool is_chunked = false;
+  while (true) {
+    if (getline(&line, &len, socketStream) == -1) {
+      error("No response content");
+      fprintf(stderr, "ERROR: No content.\n");
+      free(line);
+      return 1;
+    };
+
+    if (strcmp(line, "\r\n") == 0) {
+      break;
+    }
+  }
+  free(line);
+
+  // copy content
+  unsigned long BUFFER_SIZE = 1024;
+  uint8_t buf[BUFFER_SIZE];
+  while (!feof(socketStream)) {
+    size_t read = fread(buf, sizeof(uint8_t), BUFFER_SIZE, socketStream);
+    fwrite(buf, sizeof(uint8_t), read, outputStream);
+  }
+}
+
 int main(int argc, char* argv[]) {
   Arguments args = parseArguments(argc, argv);
 
-  // get list of sockets into &result
+  // get socket list and store in &result
+  struct addrinfo* result;
   struct addrinfo hints;
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = 0;
-  hints.ai_protocol = 0;
-
-  struct addrinfo* result;
   if (getaddrinfo(args.hostname, args.port, &hints, &result) != 0) {
-    ERROR_EXIT("getaddrinfo");
+    error("getaddrinfo");
   }
 
-  // go through result list until you can connect to a socket
+  // iterate through result list until a connection was successful
   struct addrinfo* rp;
   int sockfd;
   for (rp = result; rp != NULL; rp = rp->ai_next) {
@@ -253,29 +330,21 @@ int main(int argc, char* argv[]) {
       close(sockfd);
     }
   }
-
   freeaddrinfo(result);
   if (rp == NULL) {
     error("no address could connect");
   }
 
+  // open unbuffered stream
   FILE* socketStream = fdopen(sockfd, "w+");
   if (socketStream == NULL) {
     error("fdopen");
   }
+  setvbuf(socketStream, NULL, _IONBF, 0);
 
-  // send request
-  fprintf(socketStream,
-          "GET %s HTTP/1.1\r\n"
-          "Host: %s\r\n"
-          "Connection: close\r\n\r\n",
-          args.suffix, args.hostname);
+  sendRequest(args, socketStream);
 
-  if (fflush(socketStream) == EOF) {
-    error("fflush");
-  }
-
-  // read response
+  readResponse(socketStream, args.outputStream);
 
   free(args.hostname);
   free(args.suffix);
