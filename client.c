@@ -54,9 +54,6 @@ static void freeArguments(Arguments* args) {
   if (args->suffix != NULL) {
     free(args->suffix);
   }
-  if (args->port != NULL) {
-    free(args->port);
-  }
   if (args->outputStream != NULL) {
     fclose(args->outputStream);
   }
