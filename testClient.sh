@@ -35,6 +35,8 @@ ARGS="-p 65599 http://localhost/"
 
 ARGS="http://www.neverssl.com/"
 
+clear
+
 echo -e "--------- COMPILING ---------"
 make all
 

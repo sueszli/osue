@@ -359,7 +359,7 @@ int main(int argc, char* argv[]) {
   // copy content to outputStream
   int c;
   while ((c = fgetc(socketStream)) != EOF) {
-    log("%c", c);
+    // log("%c", c);
     fputc(c, args.outputStream);
   }
 
