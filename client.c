@@ -13,6 +13,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifdef DEBUG
+#define log(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__)
+#else
+#define log(ignored)
+#endif
+
 #define usage(msg)                                                           \
   do {                                                                       \
     fprintf(stderr,                                                          \
@@ -41,6 +47,21 @@ typedef struct {
   FILE* outputStream;
 } Arguments;
 
+static void freeArguments(Arguments* args) {
+  if (args->hostname != NULL) {
+    free(args->hostname);
+  }
+  if (args->suffix != NULL) {
+    free(args->suffix);
+  }
+  if (args->port != NULL) {
+    free(args->port);
+  }
+  if (args->outputStream != NULL) {
+    fclose(args->outputStream);
+  }
+}
+
 static void validateArguments(char* port, char* outputFile,
                               char* outputDirectory, char* url) {
   if (port != NULL) {
@@ -59,7 +80,7 @@ static void validateArguments(char* port, char* outputFile,
 
   const char* illegalChars = "/\\:*?\"<>|";  // unix is less strict
   if (outputFile != NULL) {
-    if (strcspn(outputFile, illegalChars) != 0) {
+    if (strspn(outputFile, illegalChars) != 0) {
       usage("file name contains illegal characters");
     }
     if (strlen(outputFile) > 255) {
@@ -68,8 +89,8 @@ static void validateArguments(char* port, char* outputFile,
   }
 
   if (outputDirectory != NULL) {
-    if (strcspn(outputDirectory, illegalChars) != 0) {
-      usage("file name contains illegal characters");
+    if (strspn(outputDirectory, illegalChars) != 0) {
+      usage("directory name contains illegal characters");
     }
   }
 
@@ -88,7 +109,7 @@ static Arguments parseArguments(int argc, char* argv[]) {
   bool optO = false;
   bool optD = false;
 
-  char* port = "80";
+  char* port = (char*)"80";
   char* outputFile = NULL;
   char* outputDirectory = NULL;
   char* url = NULL;
@@ -144,14 +165,14 @@ static Arguments parseArguments(int argc, char* argv[]) {
   }
   url = argv[optind];
 
-  printf("port: %s\n", port);
-  printf("outputFile: %s\n", outputFile);
-  printf("outputDirectory: %s\n", outputDirectory);
-  printf("url: %s\n", url);
-  printf("\n");
+  log("> USER INPUT:\nport: %s\n", port);
+  log("outputFile: %s\n", outputFile);
+  log("outputDirectory: %s\n", outputDirectory);
+  log("url: %s\n\n", url);
 
   validateArguments(port, outputFile, outputDirectory, url);
 
+  log("%s", "> PARSED INPUT:\n");
   Arguments args = {
       .hostname = NULL,
       .suffix = NULL,
@@ -160,40 +181,47 @@ static Arguments parseArguments(int argc, char* argv[]) {
   };
 
   // get suffix (everything after first ";/?:@=&")
-  char* suffix = strpbrk(url + 7, ";/?:@=&");
-  if (suffix == NULL) {
-    suffix = "/";  // never empty
+  // suffix must start with "/"
+  char* s = strpbrk(url + 7, ";/?:@=&");
+  if (s == NULL) {
+    asprintf(&args.suffix, "/");
+  } else if (s[0] != '/') {
+    asprintf(&args.suffix, "/%s", s);
+  } else {
+    asprintf(&args.suffix, "%s", s);
   }
-  asprintf(&args.suffix, "%s", suffix);
-  printf("suffix: %s\n", args.suffix);
+  log("suffix: %s\n", args.suffix);
 
-  // get hostname (everything between "http://" and suffix)
-  asprintf(&args.hostname, "%.*s", (int)(suffix - (url + 7)), url + 7);
-  printf("hostname: %s\n", args.hostname);
+  // get hostname (everything between "http://" and s)
+  asprintf(&args.hostname, "%.*s", (int)(s - (url + 7)), url + 7);
+  if (strlen(args.hostname) == 0) {
+    freeArguments(&args);
+    usage("no hostname preceeding 'http:");
+  }
+  log("hostname: %s\n", args.hostname);
 
   // outputStream -> get resourceName (set to index.html if empty)
-  char resourceName[strlen(suffix) + 1];
-  char* rnStart = rindex(suffix, '/');
-  if (strlen(rnStart) == 1) {
-    strncpy(resourceName, "index.html", 11);
-  } else {
-    rnStart++;
-    char* rnEnd = strpbrk(rnStart, ";?:@=&");
-    if (rnEnd == NULL) {
-      rnEnd = suffix + strlen(suffix);
-    }
-    const ptrdiff_t rnLen = rnEnd - rnStart;
-    strncpy(resourceName, rnStart, (size_t)rnLen);
-    resourceName[rnLen] = '\0';
+  char resourceName[strlen(args.suffix) + 1];
+  char* rnStart = rindex(args.suffix, '/');
+  rnStart++;
+  char* rnEnd = strpbrk(rnStart, ";?:@=&");
+  if (rnEnd == NULL) {
+    rnEnd = args.suffix + strlen(args.suffix);
   }
-  printf("resourceName: %s\n", resourceName);
+  const ptrdiff_t rnLen = rnEnd - rnStart;
+  strncpy(resourceName, rnStart, (size_t)rnLen);
+  resourceName[rnLen] = '\0';
+  if (strlen(resourceName) == 0) {
+    strncpy(resourceName, "index.html", 11);
+  }
+  log("resourceName: %s\n", resourceName);
 
   // outputStream -> get outputPath
   if (!optO) {
     outputFile = resourceName;
   }
   if (!optD) {
-    outputDirectory = "";
+    outputDirectory = (char*)"";
   }
   char outputPath[strlen(outputDirectory) + strlen(resourceName) + 1];
   size_t curr = 0;
@@ -205,12 +233,12 @@ static Arguments parseArguments(int argc, char* argv[]) {
   strncpy(outputPath + curr, outputFile, strlen(outputFile));
   curr += strlen(outputFile);
   outputPath[curr] = '\0';
-  printf("outputPath: %s\n", outputPath);
-  printf("\n");
+  log("outputPath: %s\n\n", outputPath);
 
   // make directory
   if (optD) {
     if ((mkdir(outputDirectory, 0777) == -1) && (errno != EEXIST)) {
+      freeArguments(&args);
       error("mkdir");
     }
   }
@@ -220,86 +248,13 @@ static Arguments parseArguments(int argc, char* argv[]) {
   if (optO | optD) {
     outputStream = fopen(outputPath, "w+");
     if (outputStream == NULL) {
+      freeArguments(&args);
       error("fopen");
     }
   }
   args.outputStream = outputStream;
 
   return args;
-}
-
-static void sendRequest(Arguments args, FILE* socketStream) {
-  fprintf(socketStream,
-          "GET %s HTTP/1.1\r\n"
-          "Host: %s\r\n"
-          "Connection: close\r\n\r\n",
-          args.suffix, args.hostname);
-
-  if (fflush(socketStream) == EOF) {
-    error("fflush");
-  }
-}
-
-static void readResponse(FILE* socketStream, FILE* outputStream) {
-  char* line = NULL;
-  size_t len = 0;
-  if (getline(&line, &len, socketStream) == -1) {
-    free(line);
-    protocolError();
-  }
-
-  char* part = strtok(line, " ");
-  if (part == NULL || strcmp(part, "HTTP/1.1") != 0) {
-    free(line);
-    protocolError();
-  }
-
-  char* status_code = strtok(NULL, " ");
-  char* status_text = strtok(NULL, "\r\n");
-  if (status_code == NULL || status_text == NULL) {
-    free(line);
-    protocolError();
-  }
-
-  char* endptr;
-  strtol(status_code, &endptr, 10);
-  if (endptr != status_code + strlen(status_code)) {
-    // The statuscode is not a number
-    free(line);
-    protocolError();
-  }
-
-  if (strncmp(status_code, "200", 3) != 0) {
-    // Statuscode is not 200
-    fprintf(stderr, "STATUS: %s %s\n", status_code, status_text);
-    free(line);
-    return 3;
-  }
-
-  // Read the rest of the headers line by line
-  bool is_compressed = false;
-  bool is_chunked = false;
-  while (true) {
-    if (getline(&line, &len, socketStream) == -1) {
-      error("No response content");
-      fprintf(stderr, "ERROR: No content.\n");
-      free(line);
-      return 1;
-    };
-
-    if (strcmp(line, "\r\n") == 0) {
-      break;
-    }
-  }
-  free(line);
-
-  // copy content
-  unsigned long BUFFER_SIZE = 1024;
-  uint8_t buf[BUFFER_SIZE];
-  while (!feof(socketStream)) {
-    size_t read = fread(buf, sizeof(uint8_t), BUFFER_SIZE, socketStream);
-    fwrite(buf, sizeof(uint8_t), read, outputStream);
-  }
 }
 
 int main(int argc, char* argv[]) {
@@ -311,11 +266,14 @@ int main(int argc, char* argv[]) {
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_STREAM;
-  if (getaddrinfo(args.hostname, args.port, &hints, &result) != 0) {
+  int s;
+  if ((s = getaddrinfo(args.hostname, args.port, &hints, &result)) != 0) {
+    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+    freeArguments(&args);
     error("getaddrinfo");
   }
 
-  // iterate through result list until a connection was successful
+  // iterate through results until a connection succeeds
   struct addrinfo* rp;
   int sockfd;
   for (rp = result; rp != NULL; rp = rp->ai_next) {
@@ -323,7 +281,6 @@ int main(int argc, char* argv[]) {
     if (sockfd == -1) {
       continue;
     }
-
     if (connect(sockfd, rp->ai_addr, rp->ai_addrlen) != -1) {
       break;  // success
     } else {
@@ -332,24 +289,89 @@ int main(int argc, char* argv[]) {
   }
   freeaddrinfo(result);
   if (rp == NULL) {
-    error("no address could connect");
+    freeArguments(&args);
+    error("no connection could be established");
   }
 
   // open unbuffered stream
   FILE* socketStream = fdopen(sockfd, "w+");
   if (socketStream == NULL) {
+    freeArguments(&args);
     error("fdopen");
   }
   setvbuf(socketStream, NULL, _IONBF, 0);
 
-  sendRequest(args, socketStream);
-
-  readResponse(socketStream, args.outputStream);
-
-  free(args.hostname);
-  free(args.suffix);
-  if (fclose(args.outputStream) == -1) {
-    error("fclose");
+  // send request
+  log("> REQUEST\n"
+      "GET %s HTTP/1.1\r\n"
+      "Host: %s\r\n"
+      "Connection: close\r\n\r\n",
+      args.suffix, args.hostname);
+  fprintf(socketStream,
+          "GET %s HTTP/1.1\r\n"
+          "Host: %s\r\n"
+          "Connection: close\r\n\r\n",
+          args.suffix, args.hostname);
+  if (fflush(socketStream) == EOF) {
+    freeArguments(&args);
+    fclose(socketStream);
+    error("fflush");
   }
+
+  // read first line of response
+  char* line = NULL;
+  size_t len = 0;
+  if ((getline(&line, &len, socketStream) == -1) && (errno != 0)) {
+    freeArguments(&args);
+    fclose(socketStream);
+    protocolError();
+  }
+
+  // check response status code
+  int status = -1;
+  if (sscanf(line, "HTTP/1.1 %d", &status) != 1) {
+    free(line);
+    freeArguments(&args);
+    fclose(socketStream);
+    protocolError();
+  }
+  if (status != 200) {
+    free(line);
+    freeArguments(&args);
+    fclose(socketStream);
+    fprintf(stderr, "Status not OK: %d\n", status);
+    exit(3);
+  }
+  log("> RESPONSE:\n%s", line);
+
+  // go to end of header
+  while (true) {
+    if ((getline(&line, &len, socketStream) == -1)) {
+      if (errno != 0) {
+        freeArguments(&args);
+        fclose(socketStream);
+        free(line);
+        error("getline");
+      }
+      break;
+    }
+    log("%s", line);
+    if (strcmp(line, "\r\n") == 0) {
+      break;
+    }
+  }
+  free(line);
+
+  // copy content to outputStream
+  unsigned int bufLen = 1 << 10;
+  uint8_t buf[bufLen];
+  while (!feof(socketStream)) {
+    size_t read = fread(buf, sizeof(uint8_t), bufLen, socketStream);
+    log("%.*s", (int)read, buf);
+    fwrite(buf, sizeof(uint8_t), read, socketStream);
+  }
+
+  freeArguments(&args);
+  fclose(socketStream);
   exit(EXIT_SUCCESS);
 }
