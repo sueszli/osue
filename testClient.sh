@@ -11,8 +11,6 @@ ARGS="http://hostname.com/stuff/filename?test=1#test"
 ARGS="-o customFileName http://hostname.com/stuff/filename?test=1#test"
 ARGS="-d test http://hostname.com/stuff/filename?test=1#test"
 
-ARGS="http://www.neverssl.com/"
-
 ARGS=""
 ARGS="-p abc"
 ARGS="-p 80x http://localhost/"
@@ -28,9 +26,14 @@ ARGS="-p 9999 -d test3 http://localhost?welcome=here"
 ARGS="-p 9999 foo://localhost"
 ARGS="-p 9999 http://"
 ARGS="-p 9999 http://?getparam"
-ARGS="-p 9999 http://localhost/"
 ARGS="-p 9999 http://localhost/hello.html"
 ARGS="-p 9999 -o lines1.html http://127.0.0.1/longlines.html"
+ARGS="-p 9999 -o lines2.html http://127.0.0.1/mixed.html"
+ARGS="-p 9999 http://localhost/"
+ARGS="-p -2 http://localhost/"
+ARGS="-p 65599 http://localhost/"
+
+ARGS="http://www.neverssl.com/"
 
 echo -e "--------- COMPILING ---------"
 make all
