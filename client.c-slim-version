@@ -1,16 +1,3 @@
-/**
- * @author Yahya Jabary <yahya.jabary@tuwien.ac.at>
- * @date 09.01.2023
- * @brief HTTP client implementation
- * @details This program is a bare bones HTTP/1.1 client implementation that
- * only sends GET requests and can only handle text, not binaries (ie. for
- * images). You can set the port and output path (file or directory). If the
- * requested resource has no name and you don't specify a file name, then it
- * will default to index.html.
- *
- * @see https://tools.ietf.org/html/rfc2616
- */
-
 #define _GNU_SOURCE
 #include <ctype.h>
 #include <errno.h>
@@ -42,11 +29,6 @@
     exit(EXIT_FAILURE); \
   } while (0);
 
-/**
- * @brief Holds the parsed user arguments
- * @details Holds the parsed user arguments after the final output path was
- * derived and an output stream was opened.
- */
 typedef struct {
   char* hostname;
   char* suffix;
@@ -54,10 +36,6 @@ typedef struct {
   FILE* outputStream;
 } Arguments;
 
-/**
- * @brief Frees the memory allocated for the arguments
- * @param args The arguments to free
- */
 static void freeArguments(Arguments* args) {
   if (args->hostname != NULL) {
     free(args->hostname);
@@ -70,14 +48,6 @@ static void freeArguments(Arguments* args) {
   }
 }
 
-/**
- * @brief Validates the user arguments
- * @param port The port number as a string (unsigned number in legal range)
- * @param outputFile The output file name as a string
- * @param outputDirectory The output directory name as a string (directory must
- * already exist)
- * @param url The url as a string
- */
 static void validateArguments(char* port, char* outputFile,
                               char* outputDirectory, char* url) {
   if (port != NULL) {
@@ -120,13 +90,6 @@ static void validateArguments(char* port, char* outputFile,
   }
 }
 
-/**
- * @brief Parses the user arguments and converts them to a dynamically allocated
- * struct Arguments.
- * @post Free the content of the returned struct with freeArguments()
- * @param argc The number of arguments from the command line
- * @param argv The arguments from the command line
- */
 static Arguments parseArguments(int argc, char* argv[]) {
   bool optP = false;
   bool optO = false;
@@ -262,15 +225,6 @@ static Arguments parseArguments(int argc, char* argv[]) {
   return args;
 }
 
-/**
- * @brief Main function which holds the core logic for client
- * @details Parses the arguments, gets the socket list, connects to the server,
- * sends the request, receives the response and writes it to the output stream.
- * @param argc The number of arguments from the command line (parsed with
- * parseArguments())
- * @param argv The arguments from the command line (parsed with
- * parseArguments())
- */
 int main(int argc, char* argv[]) {
   Arguments args = parseArguments(argc, argv);
 
@@ -377,7 +331,7 @@ int main(int argc, char* argv[]) {
   }
   free(line);
 
-  // copy content to outputStream (don't use a buffer or unit tests break)
+  // copy content to outputStream
   int c;
   while ((c = fgetc(socketStream)) != EOF) {
     fputc(c, args.outputStream);
