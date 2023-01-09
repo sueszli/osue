@@ -5,13 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define errorHandler(msg) \
+#define error(msg) \
   do {                    \
     perror(msg);          \
     exit(EXIT_FAILURE);   \
   } while (0);
 
-#define errorUsage(msg)                                                  \
+#define usage(msg)                                                  \
   do {                                                                   \
     fprintf(stderr, "%s\n", msg);                                        \
     fprintf(stderr,                                                      \
@@ -67,37 +67,34 @@ int main(int argc, char *argv[]) {
     switch (opt) {
       case 's':
         if (ignoreWhitespace) {
-          errorUsage("repeated use of option");
+          usage("repeated use of option");
         }
         ignoreWhitespace = true;
-        fprintf(stderr, "-s\n");
         break;
 
       case 'i':
         if (ignoreLetterCasing) {
-          errorUsage("repeated use of option");
+          usage("repeated use of option");
         }
         ignoreLetterCasing = true;
-        fprintf(stderr, "-i\n");
         break;
 
       case 'o':
         if (useOutputPath) {
-          errorUsage("repeated use of option");
+          usage("repeated use of option");
         }
         useOutputPath = true;
         if (optarg[0] == '-') {
-          errorUsage("missing argument");
+          usage("missing argument");
         }
         outputStream = fopen(optarg, "w+");
         if (outputStream == NULL) {
-          errorHandler("fopen");
+          error("fopen");
         }
-        fprintf(stderr, "-o %s\n", optarg);
         break;
 
       default:
-        errorUsage("invalid option");
+        usage("invalid option");
     }
   }
 
@@ -106,10 +103,9 @@ int main(int argc, char *argv[]) {
     if ((argc - optind) == 0) {
       inputStream = stdin;
     } else {
-      fprintf(stderr, "processing path: %s\n", argv[optind]);
       inputStream = fopen(argv[optind], "r");
       if (inputStream == NULL) {
-        errorHandler("fopen");
+        error("fopen");
       }
     }
 
@@ -120,14 +116,9 @@ int main(int argc, char *argv[]) {
     }
     free(line);
 
-    if (fclose(inputStream) == EOF) {
-      errorHandler("fclose");
-    }
+    fclose(inputStream);
   } while (++optind < argc);
 
-  if (fclose(outputStream) == EOF) {
-    errorHandler("fclose");
-  }
-
+  fclose(outputStream);
   return EXIT_SUCCESS;
 }

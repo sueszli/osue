@@ -143,6 +143,9 @@ static HexStringQuad splitToQuad(HexStringPair pair) {
   quad.bH = malloc(size * sizeof(char));
   quad.aL = malloc(size * sizeof(char));
   quad.bL = malloc(size * sizeof(char));
+  if ((quad.aH == NULL) || (quad.bH == NULL) || (quad.aL == NULL) || (quad.bL == NULL)) {
+    error("malloc");
+  } 
 
   memcpy(quad.aH, pair.a, size - 1);  // high digits (left side)
   memcpy(quad.bH, pair.b, size - 1);
@@ -218,6 +221,9 @@ static char* addHexStrings(char str1[], char str2[]) {
   // reverse
   const size_t len = strlen(reversedOutput);
   char* output = malloc((len + 1) * sizeof(char));
+  if (output == NULL) {
+    error("malloc");
+  }
   // alternative to malloc:
   // char output[len + 1]; -> then use memcpy() to output pointer
   size_t j;
@@ -251,7 +257,10 @@ int main(int argc, char* argv[]) {
   int p2c[4][2];  // parent 2 child pipe
   int c2p[4][2];  // child 2 parent pipe
   for (int i = 0; i < 4; i++) {
-    if ((pipe(p2c[i]) == -1) || (pipe(c2p[i]) == -1)) {
+    if (pipe(p2c[i]) == -1) {
+      error("pipe");
+    }
+    if (pipe(c2p[i]) == -1) {
       error("pipe");
     }
   }
@@ -261,20 +270,20 @@ int main(int argc, char* argv[]) {
 
   pid_t cpid[4];
   for (int i = 0; i < 4; i++) {
-    cpid[i] = fork();
+    cpid[i] = fork();  
     if (cpid[i] == -1) {
-      error("fork");  // also duplicates pipes for child
+      error("fork");
     }
-    if (cpid[i] == 0) {
+    if (cpid[i] == 0) { // also duplicates pipes for child
       if ((dup2(p2c[i][READ], STDIN_FILENO) == -1) ||
           (dup2(c2p[i][WRITE], STDOUT_FILENO) == -1)) {
         error("dup2");
       }
       for (int j = 0; j < 4; j++) {
-        if ((close(p2c[j][READ]) == -1) || (close(p2c[j][WRITE]) == -1) ||
-            (close(c2p[j][READ]) == -1) || (close(c2p[j][WRITE]) == -1)) {
-          error("close");
-        }
+        close(p2c[j][READ]);
+        close(p2c[j][WRITE]);
+        close(c2p[j][READ]);
+        close(c2p[j][WRITE]);
       }
 
       execlp(argv[0], argv[0], NULL);
@@ -284,9 +293,8 @@ int main(int argc, char* argv[]) {
 
   // close unnecessary ends
   for (int i = 0; i < 4; i++) {
-    if ((close(p2c[i][READ]) == -1) || (close(c2p[i][WRITE]) == -1)) {
-      error("close");
-    }
+    close(p2c[i][READ]);
+    close(c2p[i][WRITE]);
   }
 
   // write into p2c
@@ -320,9 +328,7 @@ int main(int argc, char* argv[]) {
     }
     fprintf(stream, "%.*s\n", (int)quad.len, arg1);
     fprintf(stream, "%.*s\n", (int)quad.len, arg2);
-    if (fclose(stream) == -1) {
-      error("fclose");
-    }
+    fclose(stream);
   }
   free(quad.aH);
   free(quad.aL);
