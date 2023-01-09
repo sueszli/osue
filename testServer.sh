@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ARGS=""
+ARGS="-p 1337 -i testTwo testThree"
 
 clear
 
