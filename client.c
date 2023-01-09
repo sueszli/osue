@@ -311,10 +311,11 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "Protocol error - empty response!\n");
     exit(2);
   }
+  log("> RESPONSE:\n%s", line);
 
   // skip chars until 'H' (necessary for some unit tests)
   char* checkStart = line;
-  while (*checkStart != 'H') {
+  while ((*checkStart != 'H') && (*checkStart != '\0')) {
     checkStart++;
   }
 
@@ -323,7 +324,7 @@ int main(int argc, char* argv[]) {
   if (sscanf(checkStart, "HTTP/1.1 %d", &status) != 1) {
     freeArguments(&args);
     fclose(socketStream);
-    fprintf(stderr, "First line: %s\n", checkStart);
+    log("%s", "First line: %s\n", checkStart);
     fprintf(stderr, "Protocol error - unusual header!\n");
     free(line);
     exit(2);
@@ -335,7 +336,6 @@ int main(int argc, char* argv[]) {
     free(line);
     exit(3);
   }
-  log("> RESPONSE:\n%s", line);
 
   // go to end of header
   while (true) {
@@ -358,7 +358,6 @@ int main(int argc, char* argv[]) {
   // copy content to outputStream
   int c;
   while ((c = fgetc(socketStream)) != EOF) {
-    // log("%c", c);
     fputc(c, args.outputStream);
   }
 

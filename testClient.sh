@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# use "sudo update-alternatives --config nc" to toggle netcat version during unit tests
+
 ARGS="test"
 ARGS="http://"
 ARGS="http://hostname.com/filename?test=1#test"
@@ -32,10 +34,10 @@ ARGS="-p 9999 -o lines2.html http://127.0.0.1/mixed.html"
 ARGS="-p 9999 http://localhost/"
 ARGS="-p -2 http://localhost/"
 ARGS="-p 65599 http://localhost/"
+ARGS="-p 9999 -d test.dir http://localhost/t"
 
 ARGS="http://www.neverssl.com/"
 ARGS="-p 9999 http://localhost/"
-ARGS="-p 9999 -d test.dir http://localhost/t"
 
 clear
 
