@@ -5,13 +5,13 @@ default_mode = -std=c99 -pedantic -g -Wall $(defs)
 verbose_mode = -DDEBUG -std=c99 -pedantic -g3 -Wall -Wextra -Wwrite-strings -Wconversion $(defs)
 libs = 
 
-all: client
+all: server
 
-client: client.o
-	gcc -o client client.o $(libs)
+server: server.o
+	gcc -o server server.o $(libs)
 
-client.o: client.c
-	gcc $(default_mode) -c -o client.o client.c
+server.o: server.c
+	gcc $(verbose_mode) -c -o server.o server.c
 
 clean:
-	rm -rf *.o client
+	rm -rf *.o server
