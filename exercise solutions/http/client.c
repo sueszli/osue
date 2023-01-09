@@ -242,8 +242,8 @@ int main(int argc, char* argv[]) {
   }
 
   // iterate through results until a connection succeeds
-  struct addrinfo* rp;
   int sockfd;
+  struct addrinfo* rp;
   for (rp = result; rp != NULL; rp = rp->ai_next) {
     sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
     if (sockfd == -1) {
@@ -251,9 +251,8 @@ int main(int argc, char* argv[]) {
     }
     if (connect(sockfd, rp->ai_addr, rp->ai_addrlen) != -1) {
       break;  // success
-    } else {
-      close(sockfd);
     }
+    close(sockfd);
   }
   freeaddrinfo(result);
   if (rp == NULL) {
