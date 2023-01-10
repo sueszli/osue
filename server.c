@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #define usage(msg)                                                       \
@@ -31,6 +32,17 @@
     perror(msg);        \
     exit(EXIT_FAILURE); \
   } while (0);
+
+typedef struct {
+  char* port;
+  char* defaultFileName;
+  char* rootPath;
+} Arguments;
+
+typedef struct {
+  int httpStatusCode;
+  FILE* resourceStream;
+} Response;
 
 static volatile sig_atomic_t quit = false;
 static void onSignal(int sig, siginfo_t* si, void* unused) { quit = true; }
@@ -50,12 +62,6 @@ static void initSignalListener(void) {
     error("sigaction");
   }
 }
-
-typedef struct {
-  char* port;
-  char* defaultFileName;
-  char* rootPath;
-} Arguments;
 
 static void validateArguments(Arguments args) {
   if (args.port != NULL) {
@@ -141,6 +147,121 @@ static Arguments parseArguments(int argc, char* argv[]) {
   return args;
 }
 
+static Response generateResponse(Arguments args, FILE* socketStream) {
+  Response resp = {.httpStatusCode = 200, .resourceStream = NULL};
+
+  // read first line: "GET /<name> HTTP/1.1"
+  char* line = NULL;
+  size_t len = 0;
+  if ((getline(&line, &len, socketStream) == -1) && (errno != EINTR)) {
+    fclose(socketStream);
+    error("getline");
+  }
+  char str[strlen(line) + 1];
+  memcpy(str, line, strlen(line) + 1);
+  free(line);
+
+  char* reqMethod = strtok(str, " ");
+  char* reqPath = strtok(NULL, " ");
+  char* reqProtocol = strtok(NULL, " ");
+  char* empty = strtok(NULL, "\r\n");
+
+  // get status code
+  if ((reqMethod == NULL) || (reqPath == NULL) || (reqProtocol == NULL) ||
+      (empty != NULL) || (reqPath[0] != '/') ||
+      (strcmp(reqProtocol, "HTTP/1.1\r\n") != 0)) {
+    resp.httpStatusCode = 400;
+  } else if (strcmp(reqMethod, "GET") != 0) {
+    resp.httpStatusCode = 501;
+  }
+
+  // get full path
+  char fullPath[strlen(args.rootPath) + strlen(reqPath) + 1];
+  strcpy(fullPath, args.rootPath);
+  strcat(fullPath, reqPath);
+  if (reqPath[strlen(reqPath) - 1] == '/') {
+    strcat(fullPath, args.defaultFileName);
+  }
+
+  printf("> Full resource path: %s\n", fullPath);
+
+  // open stream for full path
+  FILE* resourceStream = fopen(fullPath, "r+");
+  if (resourceStream == NULL) {
+    if (errno == ENOENT) {
+      resp.httpStatusCode = 404;
+    } else {
+      fclose(socketStream);
+      error("fopen");
+    }
+  }
+  resp.resourceStream = resourceStream;
+
+  // read and discard the rest of request
+  while (fgetc(socketStream) != EOF) {
+  }
+
+  return resp;
+}
+
+static void sendResponse(Response resp, FILE* socketStream) {
+  // write status
+  char* httpStatus = NULL;
+  switch (resp.httpStatusCode) {
+    case -1:
+      httpStatus = "Internal Server Error";
+      break;
+
+    case 200:
+      httpStatus = "OK";
+      break;
+
+    case 400:
+      httpStatus = "Bad Request";
+      break;
+
+    case 404:
+      httpStatus = "Not Found";
+      break;
+
+    case 501:
+      httpStatus = "Not Implemented";
+      break;
+
+    default:
+      error("illegal state");
+  }
+  fprintf(socketStream, "HTTP/1.1 %d %s\r\n", resp.httpStatusCode, httpStatus);
+
+  // write date
+  char* date = malloc(100 * sizeof(char));
+  time_t rtime;
+  time(&rtime);
+  struct tm* info = gmtime(&rtime);
+  strftime(date, sizeof(date), "Date: %a, %d %b %y %H:%M:%S GMT\r\n", info);
+  fprintf(socketStream, "%s", date);
+  free(date);
+
+  // write content type
+
+  // write content-length
+  fseek(resp.resourceStream, 0L, SEEK_END);
+  int len = ftell(resp.resourceStream);
+  rewind(resp.resourceStream);
+  fprintf(socketStream, "Content-Length: %d\r\n", len);
+
+  // write last modified
+
+  // write connection: close
+  fprintf(socketStream, "%s", "Connection: close\r\n\r\n");
+
+  // write body
+  int c;
+  while ((c = fgetc(resp.resourceStream)) != EOF) {
+    fputc(c, socketStream);
+  }
+}
+
 int main(int argc, char* argv[]) {
   Arguments args = parseArguments(argc, argv);
 
@@ -180,7 +301,7 @@ int main(int argc, char* argv[]) {
     error("no connection could be established");
   }
 
-  // set port to be immediately reusable
+  // set socket to be immediately reusable
   const int optval = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
 
@@ -189,10 +310,10 @@ int main(int argc, char* argv[]) {
     error("listen");
   }
 
-  // respond to requests
+  // listen to requests
   while (!quit) {
     int reqfd = accept(sockfd, NULL, NULL);
-    if (reqfd == -1) {
+    if ((reqfd == -1) && (errno != EINTR)) {
       perror("accept");
       continue;
     }
@@ -203,61 +324,15 @@ int main(int argc, char* argv[]) {
       continue;
     }
 
-    // read first line
-    char* line = NULL;
-    size_t len = 0;
-    if ((getline(&line, &len, socketStream) == -1) && (errno != 0)) {
-      fclose(socketStream);
-      fprintf(stderr, "Protocol error - empty request!\n");
-      exit(2);
-    }
+    Response resp = generateResponse(args, socketStream);
+    sendResponse(resp, socketStream);
 
-    // get requested file name
-    char reqPath[strlen(line) + 1];
-    if (sscanf(line, "GET %s", &reqPath) != 1) {
-      fclose(socketStream);
-      free(line);
-      fprintf(stderr, "Protocol error - unusual header!\n");
-      exit(2);
-    }
-    free(line);
-
-    if (reqPath[0] != '/') {
-      fclose(socketStream);
-      fprintf(stderr,
-              "Protocol error - requested resource does not start with '/'!\n");
-      exit(2);
-    }
-
-    // get full path
-    bool useDefaultFileName = reqPath[strlen(reqPath) - 1] == '/';
-    char fullPath[strlen(args.rootPath) + strlen(reqPath) + 1];
-    char* curr = fullPath;
-    memcpy(curr, args.rootPath, strlen(args.rootPath));
-    curr = fullPath + strlen(args.rootPath);
-    if (useDefaultFileName) {
-      memcpy(curr, args.defaultFileName, strlen(args.defaultFileName) + 1);
-    } else {
-      memcpy(curr, reqPath, strlen(reqPath) + 1);
-    }
-
-    printf("> Requested resource: %s\n", fullPath);
-
-    // open file
-    FILE* resourceStream = fopen(fullPath, "r+");
-    if (resourceStream == NULL) {
-      fclose(socketStream);
-      error("fopen");
-    }
-
-    // ...
-
-    // send response body
-    int c;
-    while ((c = fgetc(resourceStream)) != EOF) {
-      fputc(c, socketStream);
+    fclose(socketStream);
+    if (resp.resourceStream != NULL) {
+      fclose(resp.resourceStream);
     }
   }
 
+  close(sockfd);
   exit(EXIT_SUCCESS);
 }
