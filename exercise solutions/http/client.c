@@ -338,5 +338,6 @@ int main(int argc, char* argv[]) {
 
   freeArguments(&args);
   fclose(socketStream);
+  close(sockfd);
   exit(EXIT_SUCCESS);
 }
