@@ -72,6 +72,7 @@ static void initSignalListener(void) {
 }
 
 static void validateArguments(Arguments args) {
+  // WORKS
   if (args.port != NULL) {
     if (strspn(args.port, "0123456789") != strlen(args.port)) {
       usage("port contains non digit characters");
@@ -86,25 +87,30 @@ static void validateArguments(Arguments args) {
     }
   }
 
-  const char* illegalFileChars = "/\\:*?\"<>|";  // unix is less strict
   if (args.defaultFileName != NULL) {
-    if (strspn(args.defaultFileName, illegalFileChars) != 0) {
+    log("%s", "[REACEHD THIS]\n");
+    size_t l = strspn(args.defaultFileName, "/\\:*?\"<>|");
+    log(">>>>>l: %zu\n", l);
+    if (strspn(args.defaultFileName, "/\\:*?\"<>|") != 0) {
       usage("default file name contains illegal characters");
     }
-    if (strlen(args.defaultFileName) > 255) {
+    if (strlen(args.defaultFileName) > 255) {  // WORKS
       usage("default file name too long");
     }
   }
 
-  const char* illegalPathChars = "\\:*?\"<>|";
+  // DOESN'T WORK
   if (args.rootPath != NULL) {
-    if (strspn(args.rootPath, illegalPathChars) != 0) {
+    if (strspn(args.rootPath, "\\:*?\"<>|") != 0) {
       usage("root path name contains illegal characters");
     }
-    if (access(args.rootPath, R_OK) == -1) {
-      usage("root path not accessible");
-    }
+    // if (access(args.rootPath, R_OK) == -1) {
+    //  usage("root path not accessible");
+    // }
   }
+
+  log("> args:\n%s\n%s\n%s\n\n", args.port, args.defaultFileName,
+      args.rootPath);
 }
 
 static Arguments parseArguments(int argc, char* argv[]) {
@@ -302,9 +308,6 @@ int main(int argc, char* argv[]) {
 
   Arguments args = parseArguments(argc, argv);
 
-  log("> parsed args:\n%s\n%s\n%s\n", args.rootPath, args.port,
-      args.defaultFileName);
-
   // get socket list and store in &result
   struct addrinfo* result;
   struct addrinfo hints;
@@ -353,6 +356,8 @@ int main(int argc, char* argv[]) {
       break;
     }
 
+    log("%s", "> created connection\n\n");
+
     FILE* socketStream = fdopen(reqfd, "w+");
     if (socketStream == NULL) {
       close(reqfd);
@@ -365,6 +370,9 @@ int main(int argc, char* argv[]) {
     sendResponse(resp, socketStream);
 
     fclose(socketStream);
+
+    log("%s", "> closed connection\n\n");
+
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
