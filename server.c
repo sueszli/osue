@@ -33,6 +33,8 @@
     exit(EXIT_FAILURE); \
   } while (0);
 
+#define log(fmt, ...) (void)fprintf(stderr, fmt, ##__VA_ARGS__)
+
 typedef struct {
   char* port;
   char* defaultFileName;
@@ -46,7 +48,12 @@ typedef struct {
 } Response;
 
 static volatile sig_atomic_t quit = false;
-static void onSignal(int sig, siginfo_t* si, void* unused) { quit = true; }
+static void onSignal(int u1, siginfo_t* u2, void* u3) {
+  (void)u1;
+  (void)u2;
+  (void)u3;
+  quit = true;
+}
 static void initSignalListener(void) {
   struct sigaction sa;
   sa.sa_flags = SA_SIGINFO;
@@ -161,6 +168,10 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
     fclose(socketStream);
     error("getline");
   }
+  if (strlen(line) < 16) {
+    resp.httpStatusCode = 400;
+    return resp;
+  }
 
   char reqMethod[strlen(line) + 1];
   char reqPath[strlen(line) + 1];
@@ -169,18 +180,17 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
     return resp;
   }
   free(line);
-  if (strlen(reqPath) < 1) {
-    resp.httpStatusCode = 400;
-    return resp;
-  }
   if (strcmp(reqMethod, "GET") != 0) {
     resp.httpStatusCode = 501;
     return resp;
   }
 
   // join to full path
-  char fullPath[strlen(args.rootPath) + strlen(reqPath) + 1];
+  char fullPath[strlen(args.rootPath) + strlen(reqPath) + 2];
   strcpy(fullPath, args.rootPath);
+  if (args.rootPath[strlen(args.rootPath) - 1] != '/') {
+    strcpy(fullPath, "/");
+  }
   strcat(fullPath, reqPath);
   if (reqPath[strlen(reqPath) - 1] == '/') {
     strcat(fullPath, args.defaultFileName);
@@ -192,11 +202,11 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
     resp.httpStatusCode = 501;
     return resp;
   } else if ((strcmp(mime, ".html") == 0) || (strcmp(mime, ".htm") == 0)) {
-    resp.mime = "text/html";
+    resp.mime = (char*)"text/html";
   } else if (strcmp(mime, ".css") == 0) {
-    resp.mime = "text/css";
+    resp.mime = (char*)"text/css";
   } else if (strcmp(mime, ".js") == 0) {
-    resp.mime = "application/javascript";
+    resp.mime = (char*)"application/javascript";
   } else {
     resp.httpStatusCode = 501;
     return resp;
@@ -223,28 +233,28 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
 }
 
 static void sendResponse(Response resp, FILE* socketStream) {
-  // status code
+  // send status code
   char* httpStatusWord = NULL;
   switch (resp.httpStatusCode) {
     case -1:
-      httpStatusWord = "Internal Server Error";
+      httpStatusWord = (char*)"Internal Server Error";
       resp.httpStatusCode = 500;
       break;
 
     case 200:
-      httpStatusWord = "OK";
+      httpStatusWord = (char*)"OK";
       break;
 
     case 400:
-      httpStatusWord = "Bad Request";
+      httpStatusWord = (char*)"Bad Request";
       break;
 
     case 404:
-      httpStatusWord = "Not Found";
+      httpStatusWord = (char*)"Not Found";
       break;
 
     case 501:
-      httpStatusWord = "Not Implemented";
+      httpStatusWord = (char*)"Not Implemented";
       break;
 
     default:
@@ -253,16 +263,16 @@ static void sendResponse(Response resp, FILE* socketStream) {
   fprintf(socketStream, "HTTP/1.1 %d %s\r\n", resp.httpStatusCode,
           httpStatusWord);
 
-  // connection: close
+  // send connection: close
   fprintf(socketStream, "Connection: close\r\n");
 
-  // stop here if error
+  // (stop here if error)
   if (resp.httpStatusCode != 200) {
     fprintf(socketStream, "\r\n");
     return;
   }
 
-  // write RFC-822 time
+  // send RFC-822 time
   char date[100];
   time_t rtime;
   time(&rtime);
@@ -270,16 +280,16 @@ static void sendResponse(Response resp, FILE* socketStream) {
            gmtime(&rtime));
   fprintf(socketStream, "%s", date);
 
-  // content type
+  // send content type
   fprintf(socketStream, "Content-Type: %s\r\n", resp.mime);
 
-  // content-length
+  // send content-length
   fseek(resp.resourceStream, 0L, SEEK_END);
-  size_t len = ftell(resp.resourceStream);
+  long int len = ftell(resp.resourceStream);
   rewind(resp.resourceStream);
   fprintf(socketStream, "Content-Length: %lu\r\n", len);
 
-  // body
+  // send body
   fprintf(socketStream, "\r\n");
   int c;
   while ((c = fgetc(resp.resourceStream)) != EOF) {
@@ -288,9 +298,12 @@ static void sendResponse(Response resp, FILE* socketStream) {
 }
 
 int main(int argc, char* argv[]) {
+  initSignalListener();
+
   Arguments args = parseArguments(argc, argv);
 
-  initSignalListener();
+  log("> parsed args:\n%s\n%s\n%s\n", args.rootPath, args.port,
+      args.defaultFileName);
 
   // get socket list and store in &result
   struct addrinfo* result;
