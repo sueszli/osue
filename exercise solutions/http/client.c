@@ -257,6 +257,7 @@ int main(int argc, char* argv[]) {
   freeaddrinfo(result);
   if (rp == NULL) {
     freeArguments(&args);
+    close(sockfd);
     error("no connection could be established");
   }
 
@@ -264,6 +265,7 @@ int main(int argc, char* argv[]) {
   FILE* socketStream = fdopen(sockfd, "w+");
   if (socketStream == NULL) {
     freeArguments(&args);
+    close(sockfd);
     error("fdopen");
   }
   setvbuf(socketStream, NULL, _IONBF, 0);
@@ -277,6 +279,7 @@ int main(int argc, char* argv[]) {
   if (fflush(socketStream) == EOF) {
     freeArguments(&args);
     fclose(socketStream);
+    close(sockfd);
     error("fflush");
   }
 
@@ -286,6 +289,7 @@ int main(int argc, char* argv[]) {
   if ((getline(&line, &len, socketStream) == -1) && (errno != 0)) {
     freeArguments(&args);
     fclose(socketStream);
+    close(sockfd);
     fprintf(stderr, "Protocol error - empty response!\n");
     exit(2);
   }
@@ -301,6 +305,7 @@ int main(int argc, char* argv[]) {
   if (sscanf(checkStart, "HTTP/1.1 %d", &status) != 1) {
     freeArguments(&args);
     fclose(socketStream);
+    close(sockfd);
     free(line);
     fprintf(stderr, "Protocol error - unusual header!\n");
     exit(2);
@@ -308,6 +313,7 @@ int main(int argc, char* argv[]) {
   if (status != 200) {
     freeArguments(&args);
     fclose(socketStream);
+    close(sockfd);
     fprintf(stderr, "%s", checkStart + 9);
     free(line);
     exit(3);
@@ -319,6 +325,7 @@ int main(int argc, char* argv[]) {
       if (errno != 0) {
         freeArguments(&args);
         fclose(socketStream);
+        close(sockfd);
         free(line);
         error("getline");
       }
