@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+#include <ctype.h>
 #include <errno.h>
 #include <netdb.h>
 #include <signal.h>
@@ -7,8 +9,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -140,6 +144,9 @@ static Arguments parseArguments(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
   Arguments args = parseArguments(argc, argv);
 
+  printf("> Received arguments:\n %s\n %s\n %s\n", args.port,
+         args.defaultFileName, args.rootPath);
+
   initSignalListener();
 
   // get socket list and store in &result
@@ -150,7 +157,7 @@ int main(int argc, char* argv[]) {
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
   int s;
-  if ((getaddrinfo(NULL, args.port, &hints, &result)) != 0) {
+  if ((s = getaddrinfo(NULL, args.port, &hints, &result)) != 0) {
     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
     error("getaddrinfo");
   }
@@ -177,22 +184,78 @@ int main(int argc, char* argv[]) {
   const int optval = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
 
-  // open socket
   const int queueLen = 1 << 4;
   if (listen(sockfd, queueLen) == -1) {
     error("listen");
   }
 
-  // listen to requests
+  // respond to requests
   while (!quit) {
     int reqfd = accept(sockfd, NULL, NULL);
     if (reqfd == -1) {
-      error("accept");
+      perror("accept");
+      continue;
     }
 
     FILE* socketStream = fdopen(reqfd, "w+");
     if (socketStream == NULL) {
-      error("fdopen");
+      perror("fdopen");
+      continue;
+    }
+
+    // read first line
+    char* line = NULL;
+    size_t len = 0;
+    if ((getline(&line, &len, socketStream) == -1) && (errno != 0)) {
+      fclose(socketStream);
+      fprintf(stderr, "Protocol error - empty request!\n");
+      exit(2);
+    }
+
+    // get requested file name
+    char reqPath[strlen(line) + 1];
+    if (sscanf(line, "GET %s", &reqPath) != 1) {
+      fclose(socketStream);
+      free(line);
+      fprintf(stderr, "Protocol error - unusual header!\n");
+      exit(2);
+    }
+    free(line);
+
+    if (reqPath[0] != '/') {
+      fclose(socketStream);
+      fprintf(stderr,
+              "Protocol error - requested resource does not start with '/'!\n");
+      exit(2);
+    }
+
+    // get full path
+    bool useDefaultFileName = reqPath[strlen(reqPath) - 1] == '/';
+    char fullPath[strlen(args.rootPath) + strlen(reqPath) + 1];
+    char* curr = fullPath;
+    memcpy(curr, args.rootPath, strlen(args.rootPath));
+    curr = fullPath + strlen(args.rootPath);
+    if (useDefaultFileName) {
+      memcpy(curr, args.defaultFileName, strlen(args.defaultFileName) + 1);
+    } else {
+      memcpy(curr, reqPath, strlen(reqPath) + 1);
+    }
+
+    printf("> Requested resource: %s\n", fullPath);
+
+    // open file
+    FILE* resourceStream = fopen(fullPath, "r+");
+    if (resourceStream == NULL) {
+      fclose(socketStream);
+      error("fopen");
+    }
+
+    // ...
+
+    // send response body
+    int c;
+    while ((c = fgetc(resourceStream)) != EOF) {
+      fputc(c, socketStream);
     }
   }
 
