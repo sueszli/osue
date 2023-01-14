@@ -170,36 +170,49 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
     error("getline");
   }
   if (strlen(line) < 16) {
+    log("> request line too short: %s\n", line);
     resp.httpStatusCode = 400;
+    free(line);
     return resp;
   }
 
   char reqMethod[strlen(line) + 1];
-  char reqPath[strlen(line) + 1];
-  if (sscanf(line, "%[^ ] /%[^ ] HTTP/1.1\r\n", reqMethod, reqPath) != 2) {
+  char reqFile[strlen(line) + 1];
+  reqMethod[0] = '\0';
+  reqFile[0] = '\0';
+  if ((sscanf(line, "%[^ ] /%[^ ] HTTP/1.1\r\n", reqMethod, reqFile) != 2) &&
+      (errno != EINTR) && (strlen(reqMethod) == 0)) {
+    log("> invalid request line: %s\n", line);
+    log("> reqMethod: %s\n", reqMethod);
+    log("> reqFile: %s\n", reqFile);
     resp.httpStatusCode = 400;
+    free(line);
     return resp;
   }
   free(line);
   if (strcmp(reqMethod, "GET") != 0) {
+    log("> request line has no GET: %s\n", line);
     resp.httpStatusCode = 501;
     return resp;
   }
 
   // create full path
-  char fullPath[strlen(args.rootPath) + strlen(reqPath) + 2];
+  char fullPath[strlen(args.rootPath) + strlen(reqFile) + 4];
   strcpy(fullPath, args.rootPath);
   if (args.rootPath[strlen(args.rootPath) - 1] != '/') {
     strcat(fullPath, "/");
   }
-  strcat(fullPath, reqPath);
-  if (reqPath[strlen(reqPath) - 1] == '/') {
+  strcat(fullPath, reqFile);
+  if ((strlen(reqFile) == 0) || (reqFile[strlen(reqFile) - 1] == '/')) {
     strcat(fullPath, args.defaultFileName);
   }
+
+  log("> full path: %s\n", fullPath);
 
   // get mime type (don't use substring from fullPath to avoid free())
   char* mime = rindex(fullPath, '.');
   if (mime == NULL) {
+    log("> no mime: %s\n", mime);
     resp.httpStatusCode = 501;
     return resp;
   } else if ((strcmp(mime, ".html") == 0) || (strcmp(mime, ".htm") == 0)) {
@@ -209,6 +222,7 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   } else if (strcmp(mime, ".js") == 0) {
     resp.mime = (char*)"application/javascript";
   } else {
+    log("> invalid mime: %s\n", mime);
     resp.httpStatusCode = 501;
     return resp;
   }
@@ -217,6 +231,7 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   FILE* resourceStream = fopen(fullPath, "r+");
   if (resourceStream == NULL) {
     if (errno == ENOENT) {
+      log("> %s\n", "file not found");
       resp.httpStatusCode = 404;
       return resp;
     } else {

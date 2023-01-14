@@ -1,11 +1,18 @@
 #!/bin/bash
 
 # use: wget http://localhost:9999/index.html -O - | cat -e
+# use: wget http://localhost:9999/index.html -O - 2>/dev/null
 
 ARGS=""
 ARGS="-p 1337 -i testTwo testThree"
 ARGS="-p 9999 ./serve"
+
 ARGS=""
+ARGS="-p abc ."
+ARGS="-p 80z ."
+ARGS="-p 80 -p 81"
+ARGS="-a"
+ARGS="-p 9999 docroot"
 
 clear
 
