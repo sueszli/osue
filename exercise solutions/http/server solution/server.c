@@ -211,20 +211,14 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
 
   // get mime type (don't use substring from fullPath to avoid free())
   char* mime = rindex(fullPath, '.');
-  if (mime == NULL) {
-    log("> no mime: %s\n", mime);
-    resp.httpStatusCode = 501;
-    return resp;
-  } else if ((strcmp(mime, ".html") == 0) || (strcmp(mime, ".htm") == 0)) {
-    resp.mime = (char*)"text/html";
-  } else if (strcmp(mime, ".css") == 0) {
-    resp.mime = (char*)"text/css";
-  } else if (strcmp(mime, ".js") == 0) {
-    resp.mime = (char*)"application/javascript";
-  } else {
-    log("> invalid mime: %s\n", mime);
-    resp.httpStatusCode = 501;
-    return resp;
+  if (mime != NULL) {
+    if ((strcmp(mime, ".html") == 0) || (strcmp(mime, ".htm") == 0)) {
+      resp.mime = (char*)"text/html";
+    } else if (strcmp(mime, ".css") == 0) {
+      resp.mime = (char*)"text/css";
+    } else if (strcmp(mime, ".js") == 0) {
+      resp.mime = (char*)"application/javascript";
+    }
   }
 
   // open stream of full path
@@ -275,7 +269,7 @@ static void sendResponse(Response resp, FILE* socketStream) {
       break;
 
     case 404:
-      httpStatusWord = (char*)"Not Found";
+      httpStatusWord = (char*)"(Not Found)";  // paranthesis required by test
       break;
 
     case 501:
@@ -310,8 +304,10 @@ static void sendResponse(Response resp, FILE* socketStream) {
   fprintf(socketStream, "%s", date);
 
   // send content type
-  log("Content-Type: %s\n", resp.mime);
-  fprintf(socketStream, "Content-Type: %s\r\n", resp.mime);
+  if (resp.mime != NULL) {
+    log("Content-Type: %s\n", resp.mime);
+    fprintf(socketStream, "Content-Type: %s\r\n", resp.mime);
+  }
 
   // send content-length
   fseek(resp.resourceStream, 0L, SEEK_END);

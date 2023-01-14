@@ -13,6 +13,8 @@ ARGS="-p 80z ."
 ARGS="-p 80 -p 81"
 ARGS="-a"
 ARGS="-p 9999 docroot"
+ARGS="-p 9999 -i main.file docroot"
+ARGS="-p 9999 docroot"
 
 clear
 
