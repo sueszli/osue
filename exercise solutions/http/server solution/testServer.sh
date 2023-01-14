@@ -2,7 +2,7 @@
 
 ARGS=""
 ARGS="-p 1337 -i testTwo testThree"
-ARGS="./serve"
+ARGS="-p 9999 ./serve"
 
 clear
 

@@ -34,6 +34,9 @@
   } while (0);
 
 #define log(fmt, ...) (void)fprintf(stderr, fmt, ##__VA_ARGS__)
+#define logKill()                \
+  log("%s", "> REACHED KILL\n"); \
+  exit(EXIT_SUCCESS);
 
 typedef struct {
   char* port;
@@ -308,8 +311,8 @@ int main(int argc, char* argv[]) {
 
   Arguments args = parseArguments(argc, argv);
 
-  log("> args:\n%s\n%s\n%s\n\n", args.port, args.defaultFileName,
-      args.rootPath);
+  log("> port: %s\n> default file name: %s\n> root path: %s\n\n", args.port,
+      args.defaultFileName, args.rootPath);
 
   // get socket list and store in &result
   struct addrinfo* result;
@@ -351,15 +354,20 @@ int main(int argc, char* argv[]) {
     error("listen");
   }
 
+  // ------------------------------ WORKS UNTIL HERE
+
   // listen to requests
   while (!quit) {
     int reqfd = accept(sockfd, NULL, NULL);
-    if ((reqfd == -1) && (errno != EINTR)) {
-      perror("accept");
+    if (reqfd == -1) {
+      if (errno != EINTR) {  // not a signal
+        perror("accept");
+      }
       break;
     }
 
     log("%s", "> created connection\n\n");
+    // logKill();
 
     FILE* socketStream = fdopen(reqfd, "w+");
     if (socketStream == NULL) {
