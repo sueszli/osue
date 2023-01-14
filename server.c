@@ -72,7 +72,6 @@ static void initSignalListener(void) {
 }
 
 static void validateArguments(Arguments args) {
-  // WORKS
   if (args.port != NULL) {
     if (strspn(args.port, "0123456789") != strlen(args.port)) {
       usage("port contains non digit characters");
@@ -87,11 +86,10 @@ static void validateArguments(Arguments args) {
     }
   }
 
+  // THIS IS THE LAST PART THAT MUST WORK
   if (args.defaultFileName != NULL) {
-    log("%s", "[REACEHD THIS]\n");
-    size_t l = strspn(args.defaultFileName, "/\\:*?\"<>|");
-    log(">>>>>l: %zu\n", l);
-    if (strspn(args.defaultFileName, "/\\:*?\"<>|") != 0) {
+    size_t l = strcspn(args.defaultFileName, "/\\:*?\"<>|");
+    if (strcspn(args.defaultFileName, "/\\:*?\"<>|") != 0) {
       usage("default file name contains illegal characters");
     }
     if (strlen(args.defaultFileName) > 255) {  // WORKS
@@ -101,7 +99,7 @@ static void validateArguments(Arguments args) {
 
   // DOESN'T WORK
   if (args.rootPath != NULL) {
-    if (strspn(args.rootPath, "\\:*?\"<>|") != 0) {
+    if (strcspn(args.rootPath, "\\:*?\"<>|") != 0) {
       usage("root path name contains illegal characters");
     }
     // if (access(args.rootPath, R_OK) == -1) {
