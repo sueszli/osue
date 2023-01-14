@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# use: wget http://localhost:9999/index.html -O - | cat -e
+
 ARGS=""
 ARGS="-p 1337 -i testTwo testThree"
 ARGS="-p 9999 ./serve"

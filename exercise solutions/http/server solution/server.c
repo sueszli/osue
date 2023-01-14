@@ -34,9 +34,6 @@
   } while (0);
 
 #define log(fmt, ...) (void)fprintf(stderr, fmt, ##__VA_ARGS__)
-#define logKill()                \
-  log("%s", "> REACHED KILL\n"); \
-  exit(EXIT_SUCCESS);
 
 typedef struct {
   char* port;
@@ -51,12 +48,7 @@ typedef struct {
 } Response;
 
 static volatile sig_atomic_t quit = false;
-static void onSignal(int u1, siginfo_t* u2, void* u3) {
-  (void)u1;
-  (void)u2;
-  (void)u3;
-  quit = true;
-}
+static void onSignal(int sig, siginfo_t* si, void* unused) { quit = true; }
 static void initSignalListener(void) {
   struct sigaction sa;
   sa.sa_flags = SA_SIGINFO;
@@ -194,11 +186,11 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
     return resp;
   }
 
-  // join to full path
+  // create full path
   char fullPath[strlen(args.rootPath) + strlen(reqPath) + 2];
   strcpy(fullPath, args.rootPath);
   if (args.rootPath[strlen(args.rootPath) - 1] != '/') {
-    strcpy(fullPath, "/");
+    strcat(fullPath, "/");
   }
   strcat(fullPath, reqPath);
   if (reqPath[strlen(reqPath) - 1] == '/') {
@@ -234,9 +226,18 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   }
   resp.resourceStream = resourceStream;
 
-  // read and discard the rest of request
-  while (fgetc(socketStream) != EOF) {
+  // read and discard the rest
+  char* line2 = NULL;
+  size_t maxIterations = 500;
+  while ((getline(&line2, &len, socketStream) != -1) && (errno != EINTR)) {
+    if (strcmp(line2, "\r\n") == 0) {
+      break;
+    }
+    if ((maxIterations--) == 0) {
+      break;
+    }
   }
+  free(line2);
 
   return resp;
 }
@@ -269,14 +270,17 @@ static void sendResponse(Response resp, FILE* socketStream) {
     default:
       error("illegal state: received unkonwn http status code");
   }
+  log("HTTP/1.1 %d %s\n", resp.httpStatusCode, httpStatusWord);
   fprintf(socketStream, "HTTP/1.1 %d %s\r\n", resp.httpStatusCode,
           httpStatusWord);
 
   // send connection: close
+  log("%s", "Connection: close\n");
   fprintf(socketStream, "Connection: close\r\n");
 
   // (stop here if error)
   if (resp.httpStatusCode != 200) {
+    log("%s", "\n");
     fprintf(socketStream, "\r\n");
     return;
   }
@@ -287,23 +291,28 @@ static void sendResponse(Response resp, FILE* socketStream) {
   time(&rtime);
   strftime(date, sizeof(date), "Date: %a, %d %b %y %H:%M:%S GMT\r\n",
            gmtime(&rtime));
+  log("%s", date);
   fprintf(socketStream, "%s", date);
 
   // send content type
+  log("Content-Type: %s\n", resp.mime);
   fprintf(socketStream, "Content-Type: %s\r\n", resp.mime);
 
   // send content-length
   fseek(resp.resourceStream, 0L, SEEK_END);
   long int len = ftell(resp.resourceStream);
   rewind(resp.resourceStream);
+  log("Content-Length: %ld\n", len);
   fprintf(socketStream, "Content-Length: %lu\r\n", len);
 
   // send body
   fprintf(socketStream, "\r\n");
   int c;
   while ((c = fgetc(resp.resourceStream)) != EOF) {
+    log("%c", c);
     fputc(c, socketStream);
   }
+  log("%s", "\n\n");
 }
 
 int main(int argc, char* argv[]) {
@@ -354,8 +363,6 @@ int main(int argc, char* argv[]) {
     error("listen");
   }
 
-  // ------------------------------ WORKS UNTIL HERE
-
   // listen to requests
   while (!quit) {
     int reqfd = accept(sockfd, NULL, NULL);
@@ -366,8 +373,7 @@ int main(int argc, char* argv[]) {
       break;
     }
 
-    log("%s", "> created connection\n\n");
-    // logKill();
+    log("%s", "> created connection\n");
 
     FILE* socketStream = fdopen(reqfd, "w+");
     if (socketStream == NULL) {
