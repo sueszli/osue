@@ -5,6 +5,7 @@
 ARGS=""
 ARGS="-p 1337 -i testTwo testThree"
 ARGS="-p 9999 ./serve"
+ARGS=""
 
 clear
 
