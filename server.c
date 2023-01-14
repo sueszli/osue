@@ -86,25 +86,25 @@ static void validateArguments(Arguments args) {
     }
   }
 
-  // THIS IS THE LAST PART THAT MUST WORK
+  const char* illegalDirectoryChars = "/\\:*?\"<>|";
   if (args.defaultFileName != NULL) {
-    size_t l = strcspn(args.defaultFileName, "/\\:*?\"<>|");
-    if (strcspn(args.defaultFileName, "/\\:*?\"<>|") != 0) {
+    if (strcspn(args.defaultFileName, illegalDirectoryChars) !=
+        strlen(args.defaultFileName)) {
       usage("default file name contains illegal characters");
     }
-    if (strlen(args.defaultFileName) > 255) {  // WORKS
+    if (strlen(args.defaultFileName) > 255) {
       usage("default file name too long");
     }
   }
 
-  // DOESN'T WORK
+  const char* illegalFileChars = "\\:*?\"<>|";
   if (args.rootPath != NULL) {
-    if (strcspn(args.rootPath, "\\:*?\"<>|") != 0) {
+    if (strcspn(args.rootPath, illegalFileChars) != strlen(args.rootPath)) {
       usage("root path name contains illegal characters");
     }
-    // if (access(args.rootPath, R_OK) == -1) {
-    //  usage("root path not accessible");
-    // }
+    if (access(args.rootPath, R_OK) == -1) {
+      usage("root path not accessible");
+    }
   }
 
   log("> args:\n%s\n%s\n%s\n\n", args.port, args.defaultFileName,

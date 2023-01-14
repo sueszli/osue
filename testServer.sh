@@ -3,7 +3,6 @@
 ARGS=""
 ARGS="-p 1337 -i testTwo testThree"
 ARGS="./serve"
-ARGS="-i na\:me ./ser:er"
 
 clear
 
