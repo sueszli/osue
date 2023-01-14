@@ -102,13 +102,15 @@ static void validateArguments(Arguments args) {
     if (strcspn(args.rootPath, illegalFileChars) != strlen(args.rootPath)) {
       usage("root path name contains illegal characters");
     }
-    if (access(args.rootPath, R_OK) == -1) {
-      usage("root path not accessible");
+    struct stat sb;
+    memset(&sb, 0, sizeof(sb));
+    if (stat(args.rootPath, &sb) == -1) {
+      error("stat");
+    }
+    if (!S_ISDIR(sb.st_mode)) {
+      usage("root path directory doesn't exist");
     }
   }
-
-  log("> args:\n%s\n%s\n%s\n\n", args.port, args.defaultFileName,
-      args.rootPath);
 }
 
 static Arguments parseArguments(int argc, char* argv[]) {
@@ -305,6 +307,9 @@ int main(int argc, char* argv[]) {
   initSignalListener();
 
   Arguments args = parseArguments(argc, argv);
+
+  log("> args:\n%s\n%s\n%s\n\n", args.port, args.defaultFileName,
+      args.rootPath);
 
   // get socket list and store in &result
   struct addrinfo* result;
