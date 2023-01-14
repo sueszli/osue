@@ -191,7 +191,9 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   }
   free(line);
   if (strcmp(reqMethod, "GET") != 0) {
-    log("> request line has no GET: %s\n", line);
+    log("%s", "> request line has no GET\n");
+    log("> reqMethod: %s\n", reqMethod);
+    log("> reqFile: %s\n", reqFile);
     resp.httpStatusCode = 501;
     return resp;
   }
@@ -256,7 +258,7 @@ static void sendResponse(Response resp, FILE* socketStream) {
   char* httpStatusWord = NULL;
   switch (resp.httpStatusCode) {
     case -1:
-      httpStatusWord = (char*)"Internal Server Error";
+      httpStatusWord = (char*)"(Internal Server Error)";
       resp.httpStatusCode = 500;
       break;
 
@@ -265,15 +267,15 @@ static void sendResponse(Response resp, FILE* socketStream) {
       break;
 
     case 400:
-      httpStatusWord = (char*)"Bad Request";
+      httpStatusWord = (char*)"(Bad Request)";
       break;
 
     case 404:
-      httpStatusWord = (char*)"(Not Found)";  // paranthesis required by test
+      httpStatusWord = (char*)"(Not Found)";
       break;
 
     case 501:
-      httpStatusWord = (char*)"Not Implemented";
+      httpStatusWord = (char*)"(Not Implemented)";
       break;
 
     default:
@@ -283,14 +285,10 @@ static void sendResponse(Response resp, FILE* socketStream) {
   fprintf(socketStream, "HTTP/1.1 %d %s\r\n", resp.httpStatusCode,
           httpStatusWord);
 
-  // send connection: close
-  log("%s", "Connection: close\n");
-  fprintf(socketStream, "Connection: close\r\n");
-
   // (stop here if error)
   if (resp.httpStatusCode != 200) {
-    log("%s", "\n");
-    fprintf(socketStream, "\r\n");
+    log("%s", "Connection: close\n");
+    fprintf(socketStream, "Connection: close\r\n\r\n");
     return;
   }
 
@@ -298,7 +296,7 @@ static void sendResponse(Response resp, FILE* socketStream) {
   char date[100];
   time_t rtime;
   time(&rtime);
-  strftime(date, sizeof(date), "Date: %a, %d %b %y %H:%M:%S GMT\r\n",
+  strftime(date, sizeof(date), "Date: %a, %d %b %y %H:%M:%S\r\n",
            gmtime(&rtime));
   log("%s", date);
   fprintf(socketStream, "%s", date);
@@ -315,6 +313,10 @@ static void sendResponse(Response resp, FILE* socketStream) {
   rewind(resp.resourceStream);
   log("Content-Length: %ld\n", len);
   fprintf(socketStream, "Content-Length: %lu\r\n", len);
+
+  // send connection: close
+  log("%s", "Connection: close\n");
+  fprintf(socketStream, "Connection: close\r\n");
 
   // send body
   fprintf(socketStream, "\r\n");
