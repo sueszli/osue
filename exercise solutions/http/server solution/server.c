@@ -251,18 +251,8 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   resp.resourceStream = resourceStream;
 
   // read and discard the rest
-  size_t len = 0;
-  char* line2 = NULL;
-  size_t maxIterations = 500;
-  while (getline(&line2, &len, socketStream) != -1) {
-    if (strcmp(line2, "\r\n") == 0) {
-      break;
-    }
-    if ((maxIterations--) == 0) {
-      break;
-    }
+  while (fgetc(socketStream) != EOF) {
   }
-  free(line2);
 
   return resp;
 }
