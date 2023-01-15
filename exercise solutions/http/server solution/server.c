@@ -167,31 +167,36 @@ static Arguments parseArguments(int argc, char* argv[]) {
 static Response generateResponse(Arguments args, FILE* socketStream) {
   Response resp = {.httpStatusCode = 200, .mime = NULL, .resourceStream = NULL};
 
-  // set to wide char mode
-  fwide(socketStream, 1);
-
   // read first line: "GET /<name> HTTP/1.1"
-  char* line = NULL;
-  size_t len = 0;
-
-  if (getline(&line, &len, socketStream) == -1) {
-    if ((errno == 84) || (errno == 0)) {
-      resp.httpStatusCode = 400;  // non utf-8 character
-      free(line);
+  // (getline doesn't work with non-ASCII characters)
+  wchar_t wcline[1 << 10];
+  wcline[0] = '\0';
+  if (fgetws(wcline, sizeof(wcline), socketStream) == NULL) {
+    if (errno == EILSEQ) {
+      log("%s", "> fgetws: EILSEQ\n");
+      resp.httpStatusCode = 400;
       return resp;
     }
     fclose(socketStream);
-    error("getline");
+    error("fgetws");
   }
+  log("> wcline: %ls\n", wcline);
+
+  // convert to UTF-8
+  char line[1 << 10];
+  line[0] = '\0';
+  if (wcstombs(line, wcline, sizeof(line)) == (size_t)-1) {
+    error("wcstombs");
+  }
+  log("> line: %s\n", line);
 
   if (strlen(line) < 16) {
+    log("%s", "> line too short\n");
     resp.httpStatusCode = 400;
-    free(line);
     return resp;
   }
 
   // validate line
-  log("> line: %s\n", line);
   char* reqMethod = strtok(line, " ");
   char* reqPath = strtok(NULL, " ");
   char* httpVersion = strtok(NULL, "\r\n");
@@ -202,7 +207,6 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
       (strcmp(reqMethod, "GET") != 0) ||
       (strcmp(httpVersion, "HTTP/1.1") != 0)) {
     resp.httpStatusCode = 400;
-    free(line);
     return resp;
   }
 
@@ -217,7 +221,6 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   if (reqPath[strlen(reqPath) - 1] == '/') {
     strcat(fullPath, args.defaultFileName);
   }
-  free(line);
 
   log("> full path: %s\n", fullPath);
 
@@ -248,6 +251,7 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   resp.resourceStream = resourceStream;
 
   // read and discard the rest
+  size_t len = 0;
   char* line2 = NULL;
   size_t maxIterations = 500;
   while (getline(&line2, &len, socketStream) != -1) {
