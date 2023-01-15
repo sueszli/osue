@@ -1,3 +1,5 @@
+#pragma region works
+
 #define _GNU_SOURCE
 #include <ctype.h>
 #include <errno.h>
@@ -16,6 +18,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <wchar.h>
 
 #define usage(msg)                                                       \
   do {                                                                   \
@@ -159,55 +162,62 @@ static Arguments parseArguments(int argc, char* argv[]) {
   return args;
 }
 
+#pragma endregion works
+
 static Response generateResponse(Arguments args, FILE* socketStream) {
   Response resp = {.httpStatusCode = 200, .mime = NULL, .resourceStream = NULL};
+
+  // set to wide char mode
+  fwide(socketStream, 1);
 
   // read first line: "GET /<name> HTTP/1.1"
   char* line = NULL;
   size_t len = 0;
-  if ((getline(&line, &len, socketStream) == -1) && (errno != EINTR)) {
+
+  if (getline(&line, &len, socketStream) == -1) {
+    if ((errno == 84) || (errno == 0)) {
+      resp.httpStatusCode = 400;  // non utf-8 character
+      free(line);
+      return resp;
+    }
     fclose(socketStream);
     error("getline");
   }
+
   if (strlen(line) < 16) {
-    log("> request line too short: %s\n", line);
     resp.httpStatusCode = 400;
     free(line);
     return resp;
   }
 
-  char reqMethod[strlen(line) + 1];
-  char reqFile[strlen(line) + 1];
-  reqMethod[0] = '\0';
-  reqFile[0] = '\0';
-  if ((sscanf(line, "%[^ ] /%[^ ] HTTP/1.1\r\n", reqMethod, reqFile) != 2) &&
-      (errno != EINTR) && (strlen(reqMethod) == 0)) {
-    log("> invalid request line: %s\n", line);
-    log("> reqMethod: %s\n", reqMethod);
-    log("> reqFile: %s\n", reqFile);
+  // validate line
+  log("> line: %s\n", line);
+  char* reqMethod = strtok(line, " ");
+  char* reqPath = strtok(NULL, " ");
+  char* httpVersion = strtok(NULL, "\r\n");
+
+  log("> reqPath: %s\n", reqPath);
+
+  if ((reqMethod == NULL) || (reqPath == NULL) || (httpVersion == NULL) ||
+      (strcmp(reqMethod, "GET") != 0) ||
+      (strcmp(httpVersion, "HTTP/1.1") != 0)) {
     resp.httpStatusCode = 400;
     free(line);
     return resp;
   }
-  free(line);
-  if (strcmp(reqMethod, "GET") != 0) {
-    log("%s", "> request line has no GET\n");
-    log("> reqMethod: %s\n", reqMethod);
-    log("> reqFile: %s\n", reqFile);
-    resp.httpStatusCode = 501;
-    return resp;
-  }
 
-  // create full path
-  char fullPath[strlen(args.rootPath) + strlen(reqFile) + 4];
+  // get full path
+  char fullPath[strlen(args.rootPath) + strlen(reqPath) + 4];
   strcpy(fullPath, args.rootPath);
-  if (args.rootPath[strlen(args.rootPath) - 1] != '/') {
+  if ((args.rootPath[strlen(args.rootPath) - 1] != '/') &&
+      (reqPath[0] != '/')) {
     strcat(fullPath, "/");
   }
-  strcat(fullPath, reqFile);
-  if ((strlen(reqFile) == 0) || (reqFile[strlen(reqFile) - 1] == '/')) {
+  strcat(fullPath, reqPath);
+  if (reqPath[strlen(reqPath) - 1] == '/') {
     strcat(fullPath, args.defaultFileName);
   }
+  free(line);
 
   log("> full path: %s\n", fullPath);
 
@@ -240,7 +250,7 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   // read and discard the rest
   char* line2 = NULL;
   size_t maxIterations = 500;
-  while ((getline(&line2, &len, socketStream) != -1) && (errno != EINTR)) {
+  while (getline(&line2, &len, socketStream) != -1) {
     if (strcmp(line2, "\r\n") == 0) {
       break;
     }
@@ -386,7 +396,7 @@ int main(int argc, char* argv[]) {
       break;
     }
 
-    log("%s", "> created connection\n");
+    log("%s", "----------------------------------------------\n");
 
     FILE* socketStream = fdopen(reqfd, "w+");
     if (socketStream == NULL) {
@@ -400,8 +410,9 @@ int main(int argc, char* argv[]) {
     sendResponse(resp, socketStream);
 
     fclose(socketStream);
+    // use fcloseall() to close all open streams instead
 
-    log("%s", "> closed connection\n\n");
+    log("%s", "----------------------------------------------\n\n");
 
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
