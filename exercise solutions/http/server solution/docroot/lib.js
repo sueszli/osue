@@ -1,1 +1,0 @@
-content of lib.js.

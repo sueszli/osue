@@ -36,8 +36,8 @@
     exit(EXIT_FAILURE); \
   } while (0);
 
-#define log(fmt, ...) (void)fprintf(stderr, fmt, ##__VA_ARGS__)
-// #define log(fmt, ...) (void)0
+// #define log(fmt, ...) (void)fprintf(stderr, fmt, ##__VA_ARGS__)
+#define log(fmt, ...) (void)0
 
 typedef struct {
   char* port;
