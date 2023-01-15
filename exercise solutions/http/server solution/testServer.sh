@@ -1,6 +1,7 @@
 #!/bin/bash
 
 <<TEST_CASES
+
 User input validation in test-cases 1-5 and 22-23:
   - no arguments
   - port: abc
@@ -65,9 +66,10 @@ TEST_CASES
 
 
 ARGS="-p 9999 -i main.file docroot"
-ARGS="-p 9991 docroot"
-
-
+ARGS="-p 3333 docroot"
+ARGS="-p 2222 docroot"
+ARGS="-p 4444 docroot"
+ARGS="-p 9999 docroot"  
 
 clear
 

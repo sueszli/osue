@@ -34,8 +34,11 @@
     exit(EXIT_FAILURE); \
   } while (0);
 
+#ifdef DEBUG
 #define log(fmt, ...) (void)fprintf(stderr, fmt, ##__VA_ARGS__)
-// #define log(fmt, ...) (void)0
+#elif
+#define log(fmt, ...) (void)0
+#endif
 
 typedef struct {
   char* port;
@@ -49,7 +52,6 @@ typedef struct {
   FILE* resourceStream;
 } Response;
 
-// WORKS
 static volatile sig_atomic_t quit = false;
 static void onSignal(int sig, siginfo_t* si, void* unused) { quit = true; }
 static void initSignalListener(void) {
@@ -69,7 +71,6 @@ static void initSignalListener(void) {
   }
 }
 
-// WORKS
 static void validateArguments(Arguments args) {
   if (args.port != NULL) {
     if (strspn(args.port, "0123456789") != strlen(args.port)) {
@@ -112,7 +113,6 @@ static void validateArguments(Arguments args) {
   }
 }
 
-// WORKS
 static Arguments parseArguments(int argc, char* argv[]) {
   bool optP = false;
   bool optI = false;
@@ -164,28 +164,10 @@ static Arguments parseArguments(int argc, char* argv[]) {
   return args;
 }
 
-static void skip(FILE* socketStream) {
-  char* line = NULL;
-  size_t len = 0;
-
-  while (true) {
-    if ((getline(&line, &len, socketStream) == -1)) {
-      if (errno != 0) {
-        error("getline");
-      }
-      break;
-    }
-    if (strcmp(line, "\r\n") == 0) {
-      break;
-    }
-  }
-  free(line);
-}
-
 static Response generateResponse(Arguments args, FILE* socketStream) {
   Response resp = {.httpStatusCode = 200, .mime = NULL, .resourceStream = NULL};
 
-  // read first line: "GET /<name> HTTP/1.1" (can be wide character)
+  // read first line (can be wide character): "GET /file HTTP/1.1"
   size_t bufSize = 1 << 10;
   wchar_t wcline[bufSize];
   wcline[0] = '\0';
@@ -206,8 +188,8 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   if (wcstombs(line, wcline, sizeof(line)) == (size_t)-1) {
     error("wcstombs");
   }
-  log("> wc line: %ls\n", wcline);
-  log("> line: %s\n", line);
+  log("> wc line: %ls", wcline);
+  log("> line: %s", line);
 
   // validate line
   if (strlen(line) < 16) {
@@ -218,9 +200,7 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   char* reqMethod = strtok(line, " ");
   char* reqPath = strtok(NULL, " ");
   char* httpVersion = strtok(NULL, "\r\n");
-
   log("> reqPath: %s\n", reqPath);
-
   if ((reqMethod == NULL) || (reqPath == NULL) || (httpVersion == NULL) ||
       (strcmp(httpVersion, "HTTP/1.1") != 0)) {
     resp.httpStatusCode = 400;
@@ -242,7 +222,6 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   if (reqPath[strlen(reqPath) - 1] == '/') {
     strcat(fullPath, args.defaultFileName);
   }
-
   log("> full path: %s\n", fullPath);
 
   // get mime type
@@ -303,6 +282,7 @@ static void sendResponse(Response resp, FILE* socketStream) {
       error("illegal state: received unkonwn http status code");
   }
   log("HTTP/1.1 %d %s\n", resp.httpStatusCode, httpStatusWord);
+
   fprintf(socketStream, "HTTP/1.1 %d %s\r\n", resp.httpStatusCode,
           httpStatusWord);
 
@@ -406,6 +386,18 @@ int main(int argc, char* argv[]) {
       break;
     }
 
+    /*
+    char buffer[1024];
+    int bytes_received;
+    while ((bytes_received = recv(reqfd, buffer, sizeof(buffer), 0)) > 0) {
+      printf("%.*s", bytes_received, buffer);
+    }
+    if (bytes_received < 0) {
+      perror("recv");
+      break;
+    }
+    */
+
     log("%s", "----------------------------------------------\n");
 
     FILE* socketStream = fdopen(reqfd, "w+");
@@ -417,20 +409,18 @@ int main(int argc, char* argv[]) {
     setvbuf(socketStream, NULL, _IONBF, 0);
 
     Response resp = generateResponse(args, socketStream);
-    skip(socketStream);
     shutdown(reqfd, SHUT_RD);
 
     sendResponse(resp, socketStream);
     shutdown(reqfd, SHUT_WR);
-    fclose(socketStream);
 
     log("%s", "----------------------------------------------\n\n");
 
+    fclose(socketStream);
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
   }
 
-  fcloseall();
   exit(EXIT_SUCCESS);
 }
