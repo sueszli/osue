@@ -37,6 +37,7 @@
   } while (0);
 
 #define log(fmt, ...) (void)fprintf(stderr, fmt, ##__VA_ARGS__)
+// #define log(fmt, ...) (void)0
 
 typedef struct {
   char* port;
@@ -164,39 +165,69 @@ static Arguments parseArguments(int argc, char* argv[]) {
 
 #pragma endregion works
 
+static void skipContent(FILE* socketStream) {
+  /*
+  char* buf = malloc(sizeof(char) * (1 << 10));
+  while (fgets(buf, sizeof(buf), socketStream) != NULL) {
+    if (strcmp(buf, "\r\n") == 0) {
+      break;
+    }
+  }
+  free(buf);
+  */
+
+  char* line = NULL;
+  size_t len = 0;
+  while (true) {
+    if ((getline(&line, &len, socketStream) == -1)) {
+      if (errno != 0) {
+        error("getline");
+      }
+      break;
+    }
+    if (strcmp(line, "\r\n") == 0) {
+      break;
+    }
+  }
+  free(line);
+
+  // fflush(socketStream);
+}
+
 static Response generateResponse(Arguments args, FILE* socketStream) {
   Response resp = {.httpStatusCode = 200, .mime = NULL, .resourceStream = NULL};
 
   // read first line: "GET /<name> HTTP/1.1"
-  // (getline doesn't work with non-ASCII characters)
-  wchar_t wcline[1 << 10];
+  // (getline and fgets don't work with non-ASCII / wide characters)
+  size_t bufSize = 1 << 10;
+  wchar_t wcline[bufSize];
   wcline[0] = '\0';
-  if (fgetws(wcline, sizeof(wcline), socketStream) == NULL) {
+  if (fgetws(wcline, (int)sizeof(wcline), socketStream) == NULL) {
+    if (errno == EINTR) {
+      log("%s", "> interrupted -> retry\n");
+      return generateResponse(args, socketStream);
+    }
     if (errno == EILSEQ) {
-      log("%s", "> fgetws: EILSEQ\n");
+      log("%s", "> non ascii chars\n");
       resp.httpStatusCode = 400;
       return resp;
     }
     fclose(socketStream);
     error("fgetws");
   }
-  log("> wcline: %ls\n", wcline);
-
-  // convert to UTF-8
-  char line[1 << 10];
-  line[0] = '\0';
+  char line[bufSize];
   if (wcstombs(line, wcline, sizeof(line)) == (size_t)-1) {
     error("wcstombs");
   }
+  log("> wc line: %ls\n", wcline);
   log("> line: %s\n", line);
 
+  // validate line
   if (strlen(line) < 16) {
     log("%s", "> line too short\n");
     resp.httpStatusCode = 400;
     return resp;
   }
-
-  // validate line
   char* reqMethod = strtok(line, " ");
   char* reqPath = strtok(NULL, " ");
   char* httpVersion = strtok(NULL, "\r\n");
@@ -204,9 +235,12 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
   log("> reqPath: %s\n", reqPath);
 
   if ((reqMethod == NULL) || (reqPath == NULL) || (httpVersion == NULL) ||
-      (strcmp(reqMethod, "GET") != 0) ||
       (strcmp(httpVersion, "HTTP/1.1") != 0)) {
     resp.httpStatusCode = 400;
+    return resp;
+  }
+  if (strcmp(reqMethod, "GET") != 0) {
+    resp.httpStatusCode = 501;
     return resp;
   }
 
@@ -224,7 +258,7 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
 
   log("> full path: %s\n", fullPath);
 
-  // get mime type (don't use substring from fullPath to avoid free())
+  // get mime type
   char* mime = rindex(fullPath, '.');
   if (mime != NULL) {
     if ((strcmp(mime, ".html") == 0) || (strcmp(mime, ".htm") == 0)) {
@@ -236,7 +270,7 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
     }
   }
 
-  // open stream of full path
+  // open file stream
   FILE* resourceStream = fopen(fullPath, "r+");
   if (resourceStream == NULL) {
     if (errno == ENOENT) {
@@ -249,10 +283,6 @@ static Response generateResponse(Arguments args, FILE* socketStream) {
     }
   }
   resp.resourceStream = resourceStream;
-
-  // read and discard the rest
-  while (fgetc(socketStream) != EOF) {
-  }
 
   return resp;
 }
@@ -329,7 +359,6 @@ static void sendResponse(Response resp, FILE* socketStream) {
     log("%c", c);
     fputc(c, socketStream);
   }
-  log("%s", "\n\n");
 }
 
 int main(int argc, char* argv[]) {
@@ -401,10 +430,11 @@ int main(int argc, char* argv[]) {
     setvbuf(socketStream, NULL, _IONBF, 0);
 
     Response resp = generateResponse(args, socketStream);
+    // skipContent(socketStream);
     sendResponse(resp, socketStream);
 
+    shutdown(reqfd, SHUT_WR);  // close the write end of the socket
     fclose(socketStream);
-    // use fcloseall() to close all open streams instead
 
     log("%s", "----------------------------------------------\n\n");
 
@@ -413,5 +443,6 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  fcloseall();
   exit(EXIT_SUCCESS);
 }
