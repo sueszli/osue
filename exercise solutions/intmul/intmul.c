@@ -355,7 +355,7 @@ int main(int argc, char* argv[]) {
       error("fdopen");
     }
     childResult[i] = NULL;
-    if (getline(&childResult[i], &len, stream) < 0) {
+    if (getline(&childResult[i], &len, stream) == -1) {
       error("getline");
     }
     childResult[i][strlen(childResult[i]) - 1] = '\0';
