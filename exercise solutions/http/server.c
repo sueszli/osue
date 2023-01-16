@@ -408,6 +408,7 @@ int main(int argc, char* argv[]) {
     shutdown(reqfd, SHUT_WR);
 
     // clean
+    close(reqfd);
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
