@@ -1,4 +1,4 @@
-The collection includes all previous exams and exercises from the operating systems course at TU Wien until the 2022 Winter Semester.
+This collection includes all previous exams and exercises from the operating systems course at TU Wien until the 2022 Winter Semester.
 
 All exams were solved and the solutions for exercises "ispalindrome," "fb_arc_set," and "http" received the maximum number of points.
 
