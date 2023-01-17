@@ -52,7 +52,6 @@ static void initSignalListener(void) {
   sa.sa_flags = SA_SIGINFO;
   sigemptyset(&sa.sa_mask);
   sa.sa_sigaction = onSignal;
-
   if (sigaction(SIGINT, &sa, NULL) == -1) {
     error("sigaction");
   }
