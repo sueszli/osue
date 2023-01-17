@@ -278,6 +278,7 @@ static void sendResponse(Response resp, int reqfd) {
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
+    close(reqfd);
     error("write");
   }
 
@@ -288,6 +289,7 @@ static void sendResponse(Response resp, int reqfd) {
       if (resp.resourceStream != NULL) {
         fclose(resp.resourceStream);
       }
+      close(reqfd);
       error("write");
     }
     return;
@@ -303,6 +305,7 @@ static void sendResponse(Response resp, int reqfd) {
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
+    close(reqfd);
     error("write");
   }
 
@@ -313,6 +316,7 @@ static void sendResponse(Response resp, int reqfd) {
       if (resp.resourceStream != NULL) {
         fclose(resp.resourceStream);
       }
+      close(reqfd);
       error("write");
     }
   }
@@ -326,6 +330,7 @@ static void sendResponse(Response resp, int reqfd) {
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
+    close(reqfd);
     error("write");
   }
 
@@ -334,6 +339,7 @@ static void sendResponse(Response resp, int reqfd) {
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
+    close(reqfd);
     error("write");
   }
 
