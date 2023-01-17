@@ -387,6 +387,7 @@ int main(int argc, char* argv[]) {
 
   const int queueLen = 1 << 4;
   if (listen(sockfd, queueLen) == -1) {
+    close(sockfd);
     error("listen");
   }
 
@@ -394,6 +395,7 @@ int main(int argc, char* argv[]) {
     int reqfd = accept(sockfd, NULL, NULL);
     if (reqfd == -1) {
       if (errno != EINTR) {
+        close(sockfd);
         error("accept");
       }
       break;
@@ -413,7 +415,6 @@ int main(int argc, char* argv[]) {
       fclose(resp.resourceStream);
     }
   }
-  
   
   close(sockfd);
   exit(EXIT_SUCCESS);
