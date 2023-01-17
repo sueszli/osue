@@ -158,7 +158,7 @@ static Arguments parseArguments(int argc, char* argv[]) {
 }
 
 /**
- * Don't refactor by using `getline()` instead of `write()` because it will not
+ * Don't refactor by using `getline()` instead of `read()` because it will not
  * detect `errno == EILSEQ` and will get stuck in an infinite loop.
  */
 static Response generateResponse(Arguments args, int reqfd) {
