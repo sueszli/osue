@@ -413,6 +413,8 @@ int main(int argc, char* argv[]) {
       fclose(resp.resourceStream);
     }
   }
-
+  
+  
+  close(sockfd);
   exit(EXIT_SUCCESS);
 }
