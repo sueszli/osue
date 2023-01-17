@@ -359,9 +359,7 @@ int main(int argc, char* argv[]) {
       error("getline");
     }
     childResult[i][strlen(childResult[i]) - 1] = '\0';
-    if (fclose(stream) == -1) {
-      error("fclose");
-    }
+    fclose(stream);
   }
 
   // print total sum
