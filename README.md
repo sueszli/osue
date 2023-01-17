@@ -1,6 +1,6 @@
 This collection includes all previous exams and exercises from the operating systems course at TU Wien up until the 2022 Winter Semester and my solutions to (most) of them.
 
-All exams were solved and the solutions for exercises "ispalindrome," "fb_arc_set," and "http" received the maximum number of points.
+The solutions for exercises "ispalindrome," "fb_arc_set," and "http" received the maximum number of points.
 
 You are welcome to fork and expand the collection. Additionally, be sure to check out similar projects from my colleagues below:
 
