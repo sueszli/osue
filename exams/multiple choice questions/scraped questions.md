@@ -47,8 +47,6 @@ Zur Auswahl für das letzte Argument stehen:
 2. `"p?"`
 3. `"p!"`
 
-Lösung: `getopt(argc, argv, "p:", C);`
-
 <br><br><br>
 
 # Frage 3:
