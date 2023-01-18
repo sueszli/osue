@@ -1,6 +1,6 @@
 # Tip: You should probably compile these exams on the inflab server
 
-If you try to run exams that depend on a pre-compiled object file with `make all` on your local machine, then you might get an error message like I did.
+If you try to run some of the exams that depend on a pre-compiled object file with `make all` on your local machine, then you might get an error message like I did.
 
 Check out your architecture with `uname -a`.
 
@@ -16,9 +16,8 @@ make: *** [Makefile:10: listtool] Error 1
 
 I also did some research and used the `-fPIE` flag for compilation but it didn't make any difference.
 
-In conclusion: You can attempt to guess what the code behind the given object file my look like by disassembling it and writing everything from scratch,
-such that it can be compiled to run on any machine (but I really don't think it is worth the effort).
+---
 
-Instead, to run them, you can just into your inflab account on the inflab server via ssh and run them there (which worked fine after I tried it out).
+Conclusion: You can reverse-engineer the code by using Ghidra or your favorite disassembler and rewriting the source code, use a virtual machine, or just run them via ssh on your Inflab account, which would be a lot easier (+ I tried it out and it worked fine).
 
 This is the architecture used on the inflab servers that I could get the executables to run with: ``<...> 3.10.0-1160.80.1.el7.x86_64 <...> x86_64 x86_64 x86_64 GNU/Linux`.
