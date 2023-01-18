@@ -57,7 +57,7 @@ static void validateArguments(char* port, char* outputFile,
     errno = 0;
     long portLong = strtol(port, NULL, 10);
     if (errno != 0) {
-      error("strtoul");
+      error("strtol");
     }
     if ((portLong < 0) || (portLong > 65535)) {
       usage("port not in legal range");
