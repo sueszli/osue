@@ -1,4 +1,4 @@
-# multiple choice questions collection
+# secret multiple choice questions
 
 Sie haben folgenden Code-Teil gegeben(nehmen Sie als System die Labor-Umgebung an).
 
