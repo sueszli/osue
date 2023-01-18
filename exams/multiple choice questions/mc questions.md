@@ -1,4 +1,4 @@
-# secret multiple choice questions
+# Frage 1:
 
 Sie haben folgenden Code-Teil gegeben(nehmen Sie als System die Labor-Umgebung an).
 
@@ -22,7 +22,9 @@ Welche Aussagen treffen zu? (es können mehrere zutreffen)
 5. Das Programm durchläuft diesen Teil ohne Fehler (zB. SIGSEGV).
 6. Ausgabe “hh”
 
----
+<br><br><br>
+
+# Frage 2:
 
 Welche Argumente muss man `getopt()` übergeben?
 
@@ -47,7 +49,9 @@ Zur Auswahl für das letzte Argument stehen:
 
 Lösung: `getopt(argc, argv, "p:", C);`
 
----
+<br><br><br>
+
+# Frage 3:
 
 Welche der folgenden Aussagen über eine Deklaration treffen zu? (es können mehrere zutreffen)
 
