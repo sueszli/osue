@@ -8,6 +8,8 @@ Topics include (but are not limited to):
 * Semaphores
 * Shared memory
 
+<br><br>
+
 ### Generating pdf files
 
 To generate the pdf documents, you must first latex.
@@ -20,6 +22,8 @@ Run the script:
 $ chmod +x ./genpdfs.sh
 $ ./genpdfs.sh
 ```
+
+<br><br>
 
 ### Which ones to choose
 

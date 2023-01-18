@@ -143,9 +143,10 @@ static HexStringQuad splitToQuad(HexStringPair pair) {
   quad.bH = malloc(size * sizeof(char));
   quad.aL = malloc(size * sizeof(char));
   quad.bL = malloc(size * sizeof(char));
-  if ((quad.aH == NULL) || (quad.bH == NULL) || (quad.aL == NULL) || (quad.bL == NULL)) {
+  if ((quad.aH == NULL) || (quad.bH == NULL) || (quad.aL == NULL) ||
+      (quad.bL == NULL)) {
     error("malloc");
-  } 
+  }
 
   memcpy(quad.aH, pair.a, size - 1);  // high digits (left side)
   memcpy(quad.bH, pair.b, size - 1);
@@ -270,11 +271,11 @@ int main(int argc, char* argv[]) {
 
   pid_t cpid[4];
   for (int i = 0; i < 4; i++) {
-    cpid[i] = fork();  
+    cpid[i] = fork();
     if (cpid[i] == -1) {
       error("fork");
     }
-    if (cpid[i] == 0) { // also duplicates pipes for child
+    if (cpid[i] == 0) {  // also duplicates pipes for child
       if ((dup2(p2c[i][READ], STDIN_FILENO) == -1) ||
           (dup2(c2p[i][WRITE], STDOUT_FILENO) == -1)) {
         error("dup2");
@@ -359,9 +360,7 @@ int main(int argc, char* argv[]) {
       error("getline");
     }
     childResult[i][strlen(childResult[i]) - 1] = '\0';
-    if (fclose(stream) == -1) {
-      error("fclose");
-    }
+    fclose(stream);
   }
 
   // print total sum

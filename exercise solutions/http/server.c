@@ -52,7 +52,6 @@ static void initSignalListener(void) {
   sa.sa_flags = SA_SIGINFO;
   sigemptyset(&sa.sa_mask);
   sa.sa_sigaction = onSignal;
-
   if (sigaction(SIGINT, &sa, NULL) == -1) {
     error("sigaction");
   }
@@ -158,7 +157,7 @@ static Arguments parseArguments(int argc, char* argv[]) {
 }
 
 /**
- * Don't refactor by using `getline()` instead of `write()` because it will not
+ * Don't refactor by using `getline()` instead of `read()` because it will not
  * detect `errno == EILSEQ` and will get stuck in an infinite loop.
  */
 static Response generateResponse(Arguments args, int reqfd) {
@@ -279,6 +278,7 @@ static void sendResponse(Response resp, int reqfd) {
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
+    close(reqfd);
     error("write");
   }
 
@@ -289,6 +289,7 @@ static void sendResponse(Response resp, int reqfd) {
       if (resp.resourceStream != NULL) {
         fclose(resp.resourceStream);
       }
+      close(reqfd);
       error("write");
     }
     return;
@@ -304,6 +305,7 @@ static void sendResponse(Response resp, int reqfd) {
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
+    close(reqfd);
     error("write");
   }
 
@@ -314,6 +316,7 @@ static void sendResponse(Response resp, int reqfd) {
       if (resp.resourceStream != NULL) {
         fclose(resp.resourceStream);
       }
+      close(reqfd);
       error("write");
     }
   }
@@ -327,6 +330,7 @@ static void sendResponse(Response resp, int reqfd) {
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
+    close(reqfd);
     error("write");
   }
 
@@ -335,6 +339,7 @@ static void sendResponse(Response resp, int reqfd) {
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
+    close(reqfd);
     error("write");
   }
 
@@ -387,6 +392,7 @@ int main(int argc, char* argv[]) {
 
   const int queueLen = 1 << 4;
   if (listen(sockfd, queueLen) == -1) {
+    close(sockfd);
     error("listen");
   }
 
@@ -394,6 +400,7 @@ int main(int argc, char* argv[]) {
     int reqfd = accept(sockfd, NULL, NULL);
     if (reqfd == -1) {
       if (errno != EINTR) {
+        close(sockfd);
         error("accept");
       }
       break;
@@ -408,10 +415,12 @@ int main(int argc, char* argv[]) {
     shutdown(reqfd, SHUT_WR);
 
     // clean
+    close(reqfd);
     if (resp.resourceStream != NULL) {
       fclose(resp.resourceStream);
     }
   }
-
+  
+  close(sockfd);
   exit(EXIT_SUCCESS);
 }
