@@ -25,17 +25,10 @@
 #define READ (0)
 #define WRITE (1)
 
-static int storeErrorMsg(char* msg) {
+static int writeToDatabase(char* msg) {
   // stores data in mock database (could be writing into a file or anything ...)
-  int status = fprintf(stdout, "%s\n", msg);
+  int status = printf("database received: %s\n", msg);
   return (status == -1 ? -1 : 0);
-}
-
-static int closePipes(int p1[2], int p2[2]) {
-  close(p1[READ]);
-  close(p1[WRITE]);
-  close(p2[READ]);
-  close(p2[WRITE]);
 }
 
 int main(int argc, char* argv[]) {
@@ -44,6 +37,7 @@ int main(int argc, char* argv[]) {
   }
   const char* prog = argv[1];
   const char* log = argv[2];
+  printf("prog: %s log: %s\n", prog, log);
 
   // prog.stderr --> database
   int error2database[2];
@@ -57,6 +51,8 @@ int main(int argc, char* argv[]) {
     error("pipe");
   }
 
+  printf(">>> arrived here!\n");
+
   // run prog
   pid_t progPid = fork();
   if (progPid == -1) {
@@ -69,7 +65,11 @@ int main(int argc, char* argv[]) {
     if (dup2(stdOut2logStdIn[WRITE], fileno(stdout)) == -1) {
       error("dup");
     }
-    closePipes(error2database, stdOut2logStdIn);
+    close(error2database[READ]);
+    close(error2database[WRITE]);
+    close(stdOut2logStdIn[READ]);
+    close(stdOut2logStdIn[WRITE]);
+
     execlp(prog, NULL);
     error("execlp");
   }
@@ -80,21 +80,25 @@ int main(int argc, char* argv[]) {
     error("fork");
 
   } else if (logPid == 0) {
-    if (dup2(fileno(stdin), stdOut2logStdIn[READ]) == -1) {
+    if (dup2(stdOut2logStdIn[READ], fileno(stdin)) == -1) {
       error("dup");
     }
-    closePipes(error2database, stdOut2logStdIn);
+    close(error2database[READ]);
+    close(error2database[WRITE]);
+    close(stdOut2logStdIn[READ]);
+    close(stdOut2logStdIn[WRITE]);
+
     execlp(log, NULL);
     error("execlp");
   }
 
   // continue as parent
-  if (dup2(fileno(stdin), stdOut2logStdIn[READ]) == -1) {
-    error("dup");
-  }
+  close(error2database[WRITE]);
+  close(stdOut2logStdIn[READ]);
+  close(stdOut2logStdIn[WRITE]);
+
   char buf[BUFFER_SIZE];
   memset(&buf, (int)'\0', BUFFER_SIZE);
-
   int progStatus;
   int logStatus;
 
@@ -110,11 +114,11 @@ int main(int argc, char* argv[]) {
     }
 
     read(error2database[READ], &buf, BUFFER_SIZE);
-    if (storeErrorMsg(buf) != -1) {
-      error("mock database failed unexpectedly");
+    if (writeToDatabase(buf) != -1) {
+      error("writing to mock database failed");
     }
   }
-  closePipes(error2database, stdOut2logStdIn);
+  close(error2database[READ]);
 
   // check childrens exit codes
   if (WEXITSTATUS(progStatus) == EXIT_FAILURE) {
