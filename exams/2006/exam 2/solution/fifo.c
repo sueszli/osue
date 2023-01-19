@@ -16,7 +16,6 @@
     exit(EXIT_FAILURE); \
   } while (0)
 
-// #region common
 #define SHM_PATH "/11912007shm"
 #define BUF_SIZE (50)
 
@@ -81,9 +80,7 @@ static void removeShm(void) {
     error("shm_unlink");
   }
 }
-// #endregion common
 
-// #region interface
 static int getSize(void) {
   int numUsed = 0;
   if (sem_getvalue(&shmp->num_used, &numUsed) == -1) {
@@ -131,7 +128,6 @@ static int get(int *data) {
 
   return getSize() - 1;
 }
-// #endregion interface
 
 int main(int argc, char *argv[]) {
   initShm();

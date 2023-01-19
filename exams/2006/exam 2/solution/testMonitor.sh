@@ -1,4 +1,4 @@
-ARGS=""
+ARGS="ls cat"
 
 # -------
 
