@@ -9,7 +9,7 @@ listtool: listtool.o
 	gcc -o listtool listtool.o list.o $(libs)
 
 listtool.o: listtool.c list.h
-	gcc -c -o listtool.o listtool.c $(CFLAGS) 
+	gcc -c -o listtool.o listtool.c $(FLAGS) 
 
 clean:
 	rm -f listtool listtool.o
