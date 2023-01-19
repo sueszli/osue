@@ -22,9 +22,6 @@
 
 #define BUFFER_SIZE (80)
 
-#define READ (0)
-#define WRITE (1)
-
 static int writeToDatabase(char* msg) {
   // stores data in mock database (could be writing into a file or anything ...)
   int status = printf("database received: %s\n", msg);
@@ -40,6 +37,8 @@ int main(int argc, char* argv[]) {
   if (argc != 3) {
     usage("invalid number of arguments");
   }
+
+  enum pipe_ends { READ, WRITE };
 
   // prog.stderr --> database
   int stderr2database[2];
