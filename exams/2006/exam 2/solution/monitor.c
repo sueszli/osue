@@ -11,4 +11,16 @@
     exit(EXIT_FAILURE); \
   } while (0)
 
-int main(int argc, char* argv[]) {}
+#define usage(msg)                                               \
+  do {                                                           \
+    fprintf(stderr, "Usage: %s\nSYNOPSIS:\n\tmonitor prog log"); \
+    exit(EXIT_FAILURE);                                          \
+  } while (0)
+
+int main(int argc, char* argv[]) {
+  if (argc != 3) {
+    usage("invalid number of arguments");
+  }
+  char* prog = argv[1];
+  char* log = argv[2];
+}
