@@ -31,26 +31,27 @@ static int writeToDatabase(char* msg) {
   return (status == -1 ? -1 : 0);
 }
 
-/**
- * To be able to test the program, we are just ignoring the arguments and inserting them ourselves directly into the program
- * We assume that ./prog is "echo" and ./log is "cat".
- */
 int main(int argc, char* argv[]) {
   if (argc != 3) {
     usage("invalid number of arguments");
   }
+  const char* prog = argv[1];
+  const char* log = argv[2];
+  printf("monitor: prog='%s', log='%s'\n", prog, log);
 
   // prog.stderr --> database
-  int stderr2database[2];
-  if ((pipe(stderr2database) == -1)) {
+  int error2database[2];
+  if ((pipe(error2database) == -1)) {
     error("pipe");
   }
 
   // prog.stdout --> log.stdin
-  int stdout2log[2];
-  if (pipe(stdout2log) == -1) {
+  int stdOut2logStdIn[2];
+  if (pipe(stdOut2logStdIn) == -1) {
     error("pipe");
   }
+
+  printf(">>> arrived here!\n");
 
   // run prog
   pid_t progPid = fork();
@@ -58,19 +59,18 @@ int main(int argc, char* argv[]) {
     error("fork");
 
   } else if (progPid == 0) {
-    if (dup2(stderr2database[WRITE], fileno(stderr)) == -1) {
+    if (dup2(error2database[WRITE], fileno(stderr)) == -1) {
       error("dup");
     }
-    if (dup2(stdout2log[WRITE], fileno(stdout)) == -1) {
+    if (dup2(stdOut2logStdIn[WRITE], fileno(stdout)) == -1) {
       error("dup");
     }
-    close(stderr2database[READ]);
-    close(stderr2database[WRITE]);
-    close(stdout2log[READ]);
-    close(stdout2log[WRITE]);
+    close(error2database[READ]);
+    close(error2database[WRITE]);
+    close(stdOut2logStdIn[READ]);
+    close(stdOut2logStdIn[WRITE]);
 
-    const char* msg = "THIS IS A MESSAGE FROM PROG!\n";
-    execl("/bin/echo", "echo", "-e", msg, (char*)NULL);
+    execl("/bin/sh", "sh", "-c", prog, (char*)NULL);
     error("execl");
   }
 
@@ -80,23 +80,22 @@ int main(int argc, char* argv[]) {
     error("fork");
 
   } else if (logPid == 0) {
-    if (dup2(stdout2log[READ], fileno(stdin)) == -1) {
+    if (dup2(stdOut2logStdIn[READ], fileno(stdin)) == -1) {
       error("dup");
     }
-    close(stderr2database[READ]);
-    close(stderr2database[WRITE]);
-    close(stdout2log[READ]);
-    close(stdout2log[WRITE]);
+    close(error2database[READ]);
+    close(error2database[WRITE]);
+    close(stdOut2logStdIn[READ]);
+    close(stdOut2logStdIn[WRITE]);
 
-    // DO STUFF HERE: "cat" reads from stdin and writes to stdout
-    execl("/bin/cat", "cat", (char *)NULL);
+    execl("/bin/sh", "sh", "-c", log, (char*)NULL);
     error("execl");
   }
 
   // continue as parent
-  close(stderr2database[WRITE]);
-  close(stdout2log[READ]);
-  close(stdout2log[WRITE]);
+  close(error2database[WRITE]);
+  close(stdOut2logStdIn[READ]);
+  close(stdOut2logStdIn[WRITE]);
 
   char buf[BUFFER_SIZE];
   memset(&buf, (int)'\0', BUFFER_SIZE);
@@ -114,12 +113,12 @@ int main(int argc, char* argv[]) {
       break;
     }
 
-    read(stderr2database[READ], &buf, BUFFER_SIZE);
+    read(error2database[READ], &buf, BUFFER_SIZE);
     if (writeToDatabase(buf) != -1) {
       error("writing to mock database failed");
     }
   }
-  close(stderr2database[READ]);
+  close(error2database[READ]);
 
   // check childrens exit codes
   if (WEXITSTATUS(progStatus) == EXIT_FAILURE) {

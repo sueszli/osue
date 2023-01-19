@@ -1,4 +1,8 @@
-ARGS="ls cat"
+# prog: should write something to stderr and stdout
+# stderr content gets written to console
+# stderr content gets sent to stdin of log
+
+ARGS="echo echo"
 
 # -------
 
