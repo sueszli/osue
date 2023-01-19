@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,15 +20,15 @@
     exit(EXIT_FAILURE);                                               \
   } while (0)
 
+#define BUFFER_SIZE (80)
+
 #define READ (0)
 #define WRITE (1)
 
 static int storeErrorMsg(char* msg) {
-  // stores data in mock database (could be writing into a file)
-  if (msg != NULL) {
-    return 0;
-  }
-  return -1;
+  // stores data in mock database (could be writing into a file or anything ...)
+  int status = fprintf(stdout, "%s\n", msg);
+  return (status == -1 ? -1 : 0);
 }
 
 static int closePipes(int p1[2], int p2[2]) {
@@ -69,7 +70,6 @@ int main(int argc, char* argv[]) {
       error("dup");
     }
     closePipes(error2database, stdOut2logStdIn);
-
     execlp(prog, NULL);
     error("execlp");
   }
@@ -84,14 +84,45 @@ int main(int argc, char* argv[]) {
       error("dup");
     }
     closePipes(error2database, stdOut2logStdIn);
-
     execlp(log, NULL);
     error("execlp");
   }
 
-  // read output
+  // continue as parent
   if (dup2(fileno(stdin), stdOut2logStdIn[READ]) == -1) {
     error("dup");
   }
+  char buf[BUFFER_SIZE];
+  memset(&buf, (int)'\0', BUFFER_SIZE);
+
+  int progStatus;
+  int logStatus;
+
+  while (true) {
+    waitpid(progPid, &progStatus, WUNTRACED | WCONTINUED);
+    bool progAlive = !WIFEXITED(progStatus) && !WIFSIGNALED(progStatus);
+
+    waitpid(logPid, &logStatus, WUNTRACED | WCONTINUED);
+    bool logAlive = !WIFEXITED(logStatus) && !WIFSIGNALED(logStatus);
+
+    if (!logAlive || !progAlive) {
+      break;
+    }
+
+    read(error2database[READ], &buf, BUFFER_SIZE);
+    if (storeErrorMsg(buf) != -1) {
+      error("mock database failed unexpectedly");
+    }
+  }
   closePipes(error2database, stdOut2logStdIn);
+
+  // check childrens exit codes
+  if (WEXITSTATUS(progStatus) == EXIT_FAILURE) {
+    error("error in a prog childprocess");
+  }
+  if (WEXITSTATUS(logStatus) == EXIT_FAILURE) {
+    error("error in a log childprocess");
+  }
+
+  exit(EXIT_SUCCESS);
 }
