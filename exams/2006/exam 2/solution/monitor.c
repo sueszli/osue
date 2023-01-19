@@ -32,8 +32,9 @@ static int writeToDatabase(char* msg) {
 }
 
 /**
- * To be able to test the program, we are just ignoring the arguments and inserting them ourselves directly into the program
- * We assume that ./prog is "echo" and ./log is "cat".
+ * I ignored the arguments and just used "echo" and "cat" for testing purposes.
+ * The only thing that should be changed are the excl calls in the child
+ * processes.
  */
 int main(int argc, char* argv[]) {
   if (argc != 3) {
@@ -69,8 +70,9 @@ int main(int argc, char* argv[]) {
     close(stdout2log[READ]);
     close(stdout2log[WRITE]);
 
-    const char* msg = "THIS IS A MESSAGE FROM PROG!\n";
-    execl("/bin/echo", "echo", "-e", msg, (char*)NULL);
+    // TODO: should be execlp(./prog) instead of "echo"
+    fprintf(stderr, "STDERR MESSAGE FROM PROG!");
+    execl("/bin/echo", "echo", "-e", "STDOUT MESSAGE FROM PROG!", (char*)NULL);
     error("execl");
   }
 
@@ -88,8 +90,9 @@ int main(int argc, char* argv[]) {
     close(stdout2log[READ]);
     close(stdout2log[WRITE]);
 
-    // DO STUFF HERE: "cat" reads from stdin and writes to stdout
-    execl("/bin/cat", "cat", (char *)NULL);
+    // TODO: should be execlp(./log) instead of "cat"
+    execl("/bin/sh", "sh", "-c", "cat | sed 's/^/log received: /'",
+          (char*)NULL);
     error("execl");
   }
 
@@ -104,19 +107,19 @@ int main(int argc, char* argv[]) {
   int logStatus;
 
   while (true) {
+    read(stderr2database[READ], &buf, BUFFER_SIZE);
+    if (writeToDatabase(buf) == -1) {
+      error("writing to mock database failed");
+    }
+
     waitpid(progPid, &progStatus, WUNTRACED | WCONTINUED);
     bool progAlive = !WIFEXITED(progStatus) && !WIFSIGNALED(progStatus);
 
     waitpid(logPid, &logStatus, WUNTRACED | WCONTINUED);
     bool logAlive = !WIFEXITED(logStatus) && !WIFSIGNALED(logStatus);
 
-    if (!logAlive || !progAlive) {
+    if (!progAlive && !logAlive) {
       break;
-    }
-
-    read(stderr2database[READ], &buf, BUFFER_SIZE);
-    if (writeToDatabase(buf) != -1) {
-      error("writing to mock database failed");
     }
   }
   close(stderr2database[READ]);
