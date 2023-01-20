@@ -55,7 +55,6 @@ static int connectToPort(uint16_t connect_port) {
     return -1;
   }
 
-  
   memset(&addr, 0, sizeof(addr));
   addr.sin_port = htons(connect_port);
   addr.sin_family = AF_INET;
@@ -67,7 +66,6 @@ static int connectToPort(uint16_t connect_port) {
     return -1;
   }
 
-  
   if (connect(cfd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
     shutdown(cfd, SHUT_RDWR);
     close(cfd);
@@ -79,7 +77,6 @@ static int connectToPort(uint16_t connect_port) {
 }
 
 static void communicate(int sockfd, mode_t mode) {
-
   // send request
   msg_t request;
   memset(request, 0, sizeof(request));
