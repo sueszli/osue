@@ -101,8 +101,7 @@ int main(int argc, char **argv) {
     usage();
   }
 
-  /* Create socket */
-
+  // create socket
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
   if (sockfd < 0) {
@@ -110,8 +109,7 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
 
-  /* Resolve host / convert IP String */
-
+  // resolve host / convert IP string to binary form
   struct sockaddr_in serv;
 
   serv.sin_port = htons(server_port);
@@ -122,10 +120,10 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
 
-  /* Connect to server on server_port */
+  // connect to server
   int error = connect(sockfd, (struct sockaddr *)&serv, sizeof(serv));
 
-  /* On error, try to connect to backup_port (if specified) */
+  // try to connect to backup_port (if specified)
   if (error < 0 && backup_port > 0) {
     serv.sin_port = htons(backup_port);
     error = connect(sockfd, (struct sockaddr *)&serv, sizeof(serv));
@@ -135,10 +133,9 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
 
-  /* prepare message, and send it to the server */
-  (void)memset(message, 0x0, sizeof(msg_t));
+  // send request
+  memset(message, 0x0, sizeof(msg_t));
 
-  // char msg[];
   if (mode == mode_request) {
     strcpy(message, "request");
   } else {
@@ -150,8 +147,7 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
 
-  /* In mode -r, receive and print reply (followed by newline) */
-
+  // print response
   if (mode == mode_request) {
     msg_t response;
     if (read(sockfd, response, sizeof(msg_t)) < 0) {
