@@ -1,7 +1,14 @@
+/**
+ * Here I removed getaddrinfo but this solution has not been tested with the
+ * unit test service from the course yet.
+ */
+
 #define _GNU_SOURCE
+#include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
 #include <netdb.h>
+#include <netinet/in.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -11,6 +18,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/mman.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -34,7 +42,7 @@
   } while (0);
 
 typedef struct {
-  char* port;
+  uint16_t port;
   char* defaultFileName;
   char* rootPath;
 } Arguments;
@@ -64,20 +72,6 @@ static void initSignalListener(void) {
 }
 
 static void validateArguments(Arguments args) {
-  if (args.port != NULL) {
-    if (strspn(args.port, "0123456789") != strlen(args.port)) {
-      usage("port contains non digit characters");
-    }
-    errno = 0;
-    long portLong = strtol(args.port, NULL, 10);
-    if (errno != 0) {
-      error("strtoul");
-    }
-    if ((portLong < 0) || (portLong > 65535)) {
-      usage("port not in legal range");
-    }
-  }
-
   const char* illegalDirectoryChars = "/\\:*?\"<>|";
   if (args.defaultFileName != NULL) {
     if (strcspn(args.defaultFileName, illegalDirectoryChars) !=
@@ -109,7 +103,7 @@ static Arguments parseArguments(int argc, char* argv[]) {
   bool optP = false;
   bool optI = false;
 
-  char* port = (char*)"8080";
+  uint16_t port = 8080;
   char* defaultFileName = (char*)"index.html";
   char* rootPath = NULL;
 
@@ -124,7 +118,21 @@ static Arguments parseArguments(int argc, char* argv[]) {
         if (optarg[0] == '-') {
           usage("missing option p argument or negative argument");
         }
-        port = optarg;
+        if (strspn(optarg, "0123456789") != strlen(optarg)) {
+          usage("port contains non digit characters");
+        }
+        errno = 0;
+        unsigned long portLong = strtoul(optarg, NULL, 10);
+        if (errno != 0) {
+          error("strtoul");
+        }
+        if (portLong > 65535) {
+          usage("port not in legal range");
+        }
+        if (portLong > INT16_MAX) {
+          usage("port out of range for uint16_t on this machine");
+        }
+        port = (uint16_t)portLong;
         break;
 
       case 'i':
@@ -355,40 +363,27 @@ int main(int argc, char* argv[]) {
 
   Arguments args = parseArguments(argc, argv);
 
-  // get socket list and store in &result
-  struct addrinfo* result;
-  struct addrinfo hints;
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_INET;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_PASSIVE;
-  int s;
-  if ((s = getaddrinfo(NULL, args.port, &hints, &result)) != 0) {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
-    error("getaddrinfo");
+  struct sockaddr_in addr;
+
+  int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (sockfd == -1) {
+    error("socket");
   }
 
-  // iterate through results until a connection succeeds
-  int sockfd;
-  struct addrinfo* rp;
-  for (rp = result; rp != NULL; rp = rp->ai_next) {
-    sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-    if (sockfd == -1) {
-      continue;
-    }
-    if (bind(sockfd, rp->ai_addr, rp->ai_addrlen) == 0) {
-      break;  // success
-    }
+  // makes port reusable before 1min passes
+  int yes = 1;
+  if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
     close(sockfd);
-  }
-  freeaddrinfo(result);
-  if (rp == NULL) {
-    error("no connection could be established");
+    error("setsockopt");
   }
 
-  // set socket to be immediately reusable
-  const int optval = 1;
-  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_port = htons(args.port);
+  addr.sin_family = AF_INET;
+  if (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+    close(sockfd);
+    error("bind");
+  }
 
   const int queueLen = 1 << 4;
   if (listen(sockfd, queueLen) == -1) {

@@ -225,6 +225,10 @@ static Arguments parseArguments(int argc, char* argv[]) {
   return args;
 }
 
+/**
+ * Don't refactor by removing getaddrinfo() because the argument is a hostname
+ * and not a IPv4 with the numbers-and-dots notation.
+ */
 int main(int argc, char* argv[]) {
   Arguments args = parseArguments(argc, argv);
 
