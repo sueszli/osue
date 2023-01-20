@@ -1,23 +1,25 @@
-# Tip: You should probably compile these exams on the inflab server
+## Read me if the executables you found didn't run 🤖
 
-If you try to run some of the exams that depend on a pre-compiled object file with `make all` on your local machine, then you might get an error message like I did.
+Some previous exams come with an executable that you might not be able to / might not want to run on your machine because of security concerns.
 
-Check out your architecture with `uname -a`.
+Last time I tried, I was able to run them on the Inflab server running "Red Hat 7. x, CentOS 7." on a 64-bit x86 processor.
 
-I ran the Makefiles on `<...> 5.10.102.1-microsoft-standard-WSL2 <...> x86_64 x86_64 x86_64 GNU/Linux` and then got the following error messages:
-```
-gcc -fPIE -fPIC -c -o listtool.o listtool.c 
-gcc -o listtool list.o listtool.o -lcrypt
-/usr/bin/ld: list.o: relocation R_X86_64_32 against `.rodata' can not be used when making a PIE object; recompile with -fPIE
-/usr/bin/ld: failed to set dynamic section sizes: bad value
-collect2: error: ld returned 1 exit status
-make: *** [Makefile:10: listtool] Error 1
+``` bash
+$ uname -a 
+# Linux apps1.inflab.tuwien.ac.at 3.10.0-1160.81.1.el7.x86_64 #1 SMP Fri Dec 16 17:29:43 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
 ```
 
-I also did some research and used the `-fPIE` flag for compilation but it didn't make any difference.
+The executables themselves are also compiled for 64-bit x86 processors and GNU/Linux 2.6.18.
+
+``` bash
+$ file ./server 
+# ./server: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.18, BuildID[sha1]=f54643b8a73b54d90d7bf6bcdebfc92f80e2aa5a, not stripped
+```
 
 ---
 
-Conclusion: You can reverse-engineer the code by using Ghidra or your favorite disassembler and rewriting the source code, use a virtual machine, or just run them via ssh on your Inflab account, which would be a lot easier (+ I tried it out and it worked fine).
+If you can't run the executables from the previous exams on your own machine you can:
 
-This is the architecture used on the inflab servers that I could get the executables to run with: ``<...> 3.10.0-1160.80.1.el7.x86_64 <...> x86_64 x86_64 x86_64 GNU/Linux`.
+- reverse-engineer the code by using Ghidra or your favorite disassembler and rewriting the source code
+- use a virtual machine
+- or just run them via ssh on your Inflab account

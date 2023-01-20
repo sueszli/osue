@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# IMPORTANT: the given test does not run `make all` and `make clean` - I added them to this version
+
+make all
+
 SERVER=./server
 CLIENT=./client
 
@@ -31,6 +36,8 @@ function ret_check() {
    fi
 }
 
+
+# start runnning the servers on some arbitrary legal port
 function start_server() {
     info "Starting Server $1, with sequence number $2"
     ${SERVER} -p 0 -n $1 -s $2 >$1.log &
@@ -54,6 +61,8 @@ else
     ok "Server server-2 listening on port ${PORT2}"
 fi
 
+
+# run unit tests
 testinfo "Argument handling: neither -r nor -s"
 ${CLIENT} -p $PORT1
 ret_check $? 1 "missing option -r or -s, but program returned EXIT_SUCCESS"
@@ -89,3 +98,5 @@ ${CLIENT} -p $PORT1 -b $PORT2 -r
 ret_check $? 1 "Request should fail (both servers down)"
 
 info "Test finished"
+
+make clean

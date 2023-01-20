@@ -55,6 +55,7 @@ static int connectToPort(uint16_t connect_port) {
     return -1;
   }
 
+  
   memset(&addr, 0, sizeof(addr));
   addr.sin_port = htons(connect_port);
   addr.sin_family = AF_INET;
@@ -66,6 +67,7 @@ static int connectToPort(uint16_t connect_port) {
     return -1;
   }
 
+  
   if (connect(cfd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
     shutdown(cfd, SHUT_RDWR);
     close(cfd);
@@ -77,7 +79,8 @@ static int connectToPort(uint16_t connect_port) {
 }
 
 static void communicate(int sockfd, mode_t mode) {
-  // send request message
+
+  // send request
   msg_t request;
   memset(request, 0, sizeof(request));
   if (mode == mode_request) {
@@ -85,20 +88,19 @@ static void communicate(int sockfd, mode_t mode) {
   } else {
     strcpy(request, "shutdown");
   }
-  if (write(sockfd, request, strlen(request)) == -1) {
+  if (write(sockfd, request, sizeof(request)) == -1) {
     close(sockfd);
     error("write");
   }
 
-  // receive response message
+  // print response
   if (mode == mode_request) {
     msg_t response;
-    memset(response, 0, sizeof(response));
     if (read(sockfd, response, sizeof(response)) == -1) {
       close(sockfd);
       error("read");
     }
-    printf("%s\n", response);
+    printf(response);
   }
 
   // clean
@@ -157,10 +159,6 @@ int main(int argc, char **argv) {
   if (optind < argc) {
     usage("illegal positional arguments");
   }
-
-  fprintf(stdout, "-p %d\n", server_port);
-  fprintf(stdout, "-b %d\n", backup_port);
-  fprintf(stdout, "%s\n", (mode == mode_request ? "-request" : "-shutdown"));
 
   // try connecting to primary socket
   int psockfd = connectToPort(server_port);
