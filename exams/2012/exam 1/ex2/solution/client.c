@@ -46,7 +46,7 @@ static uint16_t parse_port_number(char *str) {
   return (uint16_t)val;
 }
 
-static int getSocketFd(uint16_t connect_port) {
+static int connectToPort(uint16_t connect_port) {
   struct sockaddr_in addr;
 
   int cfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -163,13 +163,13 @@ int main(int argc, char **argv) {
   fprintf(stdout, "%s\n", (mode == mode_request ? "-request" : "-shutdown"));
 
   // try connecting to primary socket
-  int psockfd = getSocketFd(server_port);
+  int psockfd = connectToPort(server_port);
   if (psockfd != -1) {
     communicate(psockfd, mode);
   }
 
   // try connecting to backup socket
-  int bsockfd = getSocketFd(backup_port);
+  int bsockfd = connectToPort(backup_port);
   if ((backup_port != 0) && (bsockfd != -1)) {
     communicate(bsockfd, mode);
   }
