@@ -25,8 +25,6 @@ static void usage(void) {
   exit(EXIT_FAILURE);
 }
 
-// Client either sends a status request or a shutdown command.
-// If communication with main server fails, retry with the backup server.
 enum mode_t { mode_unset, mode_request, mode_shutdown };
 
 static uint16_t parse_port_number(char *str) {
@@ -87,23 +85,18 @@ int main(int argc, char **argv) {
     }
   }
 
-  /* Check that there are no additional (superfluous) arguments and
-     that all required options (-r or -s, and -p) are present. */
   if (optind < argc) {
     usage();
   }
-
   if (server_port == 0) {
     usage();
   }
-
   if (mode == mode_unset) {
     usage();
   }
 
   // create socket
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
   if (sockfd < 0) {
     fprintf(stderr, "socket error");
     exit(EXIT_FAILURE);
