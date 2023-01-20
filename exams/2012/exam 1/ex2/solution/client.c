@@ -28,9 +28,8 @@
   } while (0)
 
 #define SERVER_IPADDR_STR "127.0.0.1"
+#define BUFFER_SIZE (1 << 4)
 
-// Client either sends a status request or a shutdown command.
-// If communication with main server fails, retry with the backup server.
 enum mode_t { mode_unset, mode_request, mode_shutdown };
 
 static uint16_t parse_port_number(char *str) {
@@ -45,6 +44,66 @@ static uint16_t parse_port_number(char *str) {
     usage("port number out of range");
   }
   return (uint16_t)val;
+}
+
+static int getSocketFd(uint16_t connect_port) {
+  struct sockaddr_in addr;
+
+  int cfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (cfd == -1) {
+    perror("socket");
+    return -1;
+  }
+
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_port = htons(connect_port);
+  addr.sin_family = AF_INET;
+
+  if (!inet_aton(SERVER_IPADDR_STR, (struct in_addr *)&addr.sin_addr.s_addr)) {
+    shutdown(cfd, SHUT_RDWR);
+    close(cfd);
+    perror("inet_aton");
+    return -1;
+  }
+
+  if (connect(cfd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+    shutdown(cfd, SHUT_RDWR);
+    close(cfd);
+    perror("connect");
+    return -1;
+  }
+
+  return cfd;
+}
+
+static void communicate(int sockfd, mode_t mode) {
+  // send request message
+  msg_t request;
+  memset(request, 0, sizeof(request));
+  if (mode == mode_request) {
+    strcpy(request, "request");
+  } else {
+    strcpy(request, "shutdown");
+  }
+  if (write(sockfd, request, strlen(request)) == -1) {
+    close(sockfd);
+    error("write");
+  }
+
+  // receive response message
+  if (mode == mode_request) {
+    msg_t response;
+    memset(response, 0, sizeof(response));
+    if (read(sockfd, response, sizeof(response)) == -1) {
+      close(sockfd);
+      error("read");
+    }
+    printf("%s\n", response);
+  }
+
+  // clean
+  close(sockfd);
+  exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char **argv) {
@@ -103,8 +162,17 @@ int main(int argc, char **argv) {
   fprintf(stdout, "-b %d\n", backup_port);
   fprintf(stdout, "%s\n", (mode == mode_request ? "-request" : "-shutdown"));
 
-  // continue
-  msg_t message;
+  // try connecting to primary socket
+  int psockfd = getSocketFd(server_port);
+  if (psockfd != -1) {
+    communicate(psockfd, mode);
+  }
 
-  return EXIT_SUCCESS;
+  // try connecting to backup socket
+  int bsockfd = getSocketFd(backup_port);
+  if ((backup_port != 0) && (bsockfd != -1)) {
+    communicate(bsockfd, mode);
+  }
+
+  exit(EXIT_FAILURE);
 }

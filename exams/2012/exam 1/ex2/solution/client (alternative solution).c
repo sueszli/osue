@@ -126,12 +126,10 @@ int main(int argc, char **argv) {
   int error = connect(sockfd, (struct sockaddr *)&serv, sizeof(serv));
 
   /* On error, try to connect to backup_port (if specified) */
-
   if (error < 0 && backup_port > 0) {
     serv.sin_port = htons(backup_port);
     error = connect(sockfd, (struct sockaddr *)&serv, sizeof(serv));
   }
-
   if (error < 0) {
     fprintf(stderr, "connect failed");
     exit(EXIT_FAILURE);
