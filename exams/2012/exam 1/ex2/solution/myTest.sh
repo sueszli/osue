@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# -p PORT [-b PORT] [-r|-s]
 ARGS=""
 
 # -------

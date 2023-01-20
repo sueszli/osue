@@ -51,7 +51,6 @@ int main(int argc, char **argv) {
   uint16_t server_port = 0;
   uint16_t backup_port = 0;
   enum mode_t mode = mode_unset;
-  msg_t message;
 
   int opt;
   while ((opt = getopt(argc, argv, "p:b:rs")) != -1) {
@@ -100,11 +99,12 @@ int main(int argc, char **argv) {
     usage("illegal positional arguments");
   }
 
-  fprintf(stdout, "-p %d", server_port);
-  fprintf(stdout, "-b %d", backup_port);
-  fprintf(stdout, "mode: %s", (mode == mode_request ? "request" : "shutdown"));
+  fprintf(stdout, "-p %d\n", server_port);
+  fprintf(stdout, "-b %d\n", backup_port);
+  fprintf(stdout, "%s\n", (mode == mode_request ? "-request" : "-shutdown"));
 
   // continue
+  msg_t message;
 
   return EXIT_SUCCESS;
 }
