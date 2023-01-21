@@ -3,7 +3,7 @@
 <<tests
 
 compile and run server:
-  make all && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./server
+  make all && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./server && make clean
 
 run client based on `./client [-p PORT] {-g|-s VALUE} ID`
   valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./client -s 50 24

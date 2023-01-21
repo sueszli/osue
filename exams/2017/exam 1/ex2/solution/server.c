@@ -13,6 +13,8 @@ bool task_3_demo(device_t *, uint8_t, uint8_t);
 
 
 /*
+// server.h:
+
 enum devicekind {
   D_LIGHT = 0,
   D_POWER,

@@ -9,17 +9,47 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
+#include <limits.h>
 
 #include "client.h"
 #include "common.h"
 
-/** name of the executable (for printing messages) */
 char *program_name = (char *)"client";
+
+static int connectSocket(int connect_port, const char *address)
+{
+    struct sockaddr_in addr;
+    int cfd;
+
+    cfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (cfd == -1) {
+        error_exit("socket");
+    }
+
+    if ((connect_port < 0) || (connect_port < USHRT_MAX)) {
+        error_exit("illegal socket");
+    }
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_port = htons(connect_port);
+    addr.sin_family = AF_INET;
+
+    if (!inet_aton(address, (struct in_addr *) &addr.sin_addr.s_addr)) {
+        close(cfd);
+        error_exit("inet_aton");
+    }
+
+    if (connect(cfd, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
+        shutdown(cfd, SHUT_RDWR);
+        close(cfd);
+        error_exit("connect");
+    }
+    return cfd;
+}
 
 int main(int argc, char **argv) {
     struct args arguments;
     parse_arguments(argc, argv, &arguments); // given
-
 
     /*******************************************************************
      * Task 1
@@ -36,9 +66,7 @@ int main(int argc, char **argv) {
      * error_exit (common.h)
      *******************************************************************/
 
-    int sockfd;
-    task_1_demo(&sockfd, &arguments);
-
+    int sockfd = connectSocket(DEFAULT_PORTNUM, SERVER_IPADDR_STR);
 
     /*******************************************************************
      * Task 2
