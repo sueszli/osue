@@ -16,7 +16,7 @@
 
 char *program_name = (char *)"client";
 
-static int connectSocket(int connect_port, const char *address)
+static int connect_socket(int connect_port, const char *address)
 {
     struct sockaddr_in addr;
     int cfd;
@@ -26,7 +26,7 @@ static int connectSocket(int connect_port, const char *address)
         error_exit("socket");
     }
 
-    if ((connect_port < 0) || (connect_port < USHRT_MAX)) {
+    if ((connect_port < 0) || (connect_port > USHRT_MAX)) {
         error_exit("illegal socket");
     }
 
@@ -49,7 +49,7 @@ static int connectSocket(int connect_port, const char *address)
 
 int main(int argc, char **argv) {
     struct args arguments;
-    parse_arguments(argc, argv, &arguments); // given
+    parse_arguments(argc, argv, &arguments);
 
     /*******************************************************************
      * Task 1
@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
      * error_exit (common.h)
      *******************************************************************/
 
-    int sockfd = connectSocket(DEFAULT_PORTNUM, SERVER_IPADDR_STR);
+    int sockfd = connect_socket(DEFAULT_PORTNUM, SERVER_IPADDR_STR);
 
     /*******************************************************************
      * Task 2
@@ -81,21 +81,18 @@ int main(int argc, char **argv) {
      * See also: send(2), recv(2)
      *******************************************************************/
 
+    // send request to server
     uint8_t nok;
     uint8_t value;
 
     task_2_demo(&sockfd, &arguments, &nok, &value);
 
-
-    /* DO NOT CHANGE THE FOLLOWING LINES */
-    /* print server response */
+    // print server response
     puts((nok) ? "NOK" : "OK");
-
-    if (arguments.cmd == GET && !nok)
+    if (arguments.cmd == GET && !nok) {
         printf("%d\n", value);
+    }
 
-    /* cleanup: close socket */
     close(sockfd);
-
     exit(EXIT_SUCCESS);
 }
