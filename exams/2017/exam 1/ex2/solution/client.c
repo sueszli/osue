@@ -1,4 +1,3 @@
-
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -48,6 +47,43 @@ static int connectSocket(int connect_port, const char *address)
     return cfd;
 }
 
+static void printArguments(struct args arguments) {
+    printf("parsed arguments:\n");
+    printf("\tportnum: %d\n", arguments.portnum);
+    printf("\tportstr: %s\n", arguments.portstr);
+    printf("\tcmd: %d\n", arguments.cmd & 1);
+    printf("\tid: ");
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (arguments.id >> i) & 1);
+    }
+    printf("\n");
+    printf("\tvalue: ");
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (arguments.value >> i) & 1);
+    }
+    printf("\n");
+}
+
+static void print8bits(const char* name, uint8_t bits) {
+    printf("%s: ", name);
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (bits >> i) & 1);
+    }
+    printf("\n");
+}
+
+static void print16bits(const char* name, uint16_t bits) {
+    printf("%s: ", name);
+    for (int i = 15; i >= 0; i--) {
+        if (i == 7) {
+            printf(" ");
+        }
+        printf("%d", (bits >> i) & 1);
+    }
+    printf("\n");
+}
+
+
 int main(int argc, char **argv) {
     struct args arguments;
     parse_arguments(argc, argv, &arguments);
@@ -82,34 +118,15 @@ int main(int argc, char **argv) {
      * See also: send(2), recv(2)
      *******************************************************************/
 
-    // uint8_t value = 0x0;
-    // uint8_t nok = 0x0;
-    // task_2_demo(&sockfd, &arguments, &nok, &value);
-    
-    // print arguments
-    printf("arguments: ");
-    for (int i = 0; i < argc; i++) {
-        printf("%s ", argv[i]);
-    }
-    printf("\n");
+    uint8_t value = 0x0;
+    uint8_t nok = 0x0;
+    task_2_demo(&sockfd, &arguments, &nok, &value);
 
+    /*
     // print parsed arguments
-    printf("parsed arguments:\n");
-    printf("\tportnum: %d\n", arguments.portnum);
-    printf("\tportstr: %s\n", arguments.portstr);
-    printf("\tcmd: %d\n", arguments.cmd & 1);
-    printf("\tid: ");
-    for (int i = 7; i >= 0; i--) {
-        printf("%d", (arguments.id >> i) & 1);
-    }
-    printf("\n");
-    printf("\tvalue: ");
-    for (int i = 7; i >= 0; i--) {
-        printf("%d", (arguments.value >> i) & 1);
-    }
-    printf("\n");
+    printArguments(arguments);
 
-    // create request bytes (in host order)
+    // create request
     union {
         struct {
             unsigned cmd : 2;
@@ -119,6 +136,7 @@ int main(int argc, char **argv) {
     } fst;
     fst.fields.cmd = arguments.cmd;
     fst.fields.id = arguments.id;
+    print8bits("fst", fst.all);
 
     union {
         struct {
@@ -128,48 +146,54 @@ int main(int argc, char **argv) {
         uint8_t all;
     } snd;
     snd.fields.value = arguments.value;
-
-    printf("request before merge:\n");
-    printf("\tfst: ");
-    for (int i = 7; i >= 0; i--) {
-        if (i == 1) {
-            printf(" ");
-        }
-        printf("%d", (fst.all >> i) & 1);
-    }
-    printf("\n");
-    printf("\tsnd: ");
-    for (int i = 7; i >= 0; i--) {
-        if (i == 6) {
-            printf(" ");
-        }
-        printf("%d", (snd.all >> i) & 1);
-    }
-    printf("\n");
+    print8bits("snd", snd.all);
 
     union {
         struct {
-            uint8_t fst : 8;
-            uint8_t snd : 8;
+            unsigned snd : 8;
+            unsigned fst : 8;
         } fields;
         uint16_t all;
     } request;
     request.fields.fst = fst.all;
     request.fields.snd = snd.all;
+    print16bits("all", request.all);
 
-    printf("request after merge:\n\t");
-    for (int i = 15; i >= 0; i--) {
-        if (i == 7) {
+    // send request to server
+    if (send(sockfd, &request.all, sizeof(request.all), 0) == -1) {
+        error_exit("write");
+    }
+
+    // read response
+    uint8_t response = 0x0;
+    if (recv(sockfd, &response, sizeof(response), 0) == -1) {
+        error_exit("read");
+    }
+    printf("response: ");
+    for (int i = 7; i >= 0; i--) {
+        if (i == 6) {
             printf(" ");
         }
-        printf("%d", (request.all >> i) & 1);
+        printf("%d", (response >> i) & 1);
     }
     printf("\n");
 
 
+    uint8_t nok = response >> 7; // get first but
+    uint8_t value = (response << 1) >> 1; // remove last bit
+    
+    printf("nok: ");
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (nok >> i) & 1);
+    }
+    printf("\n");
 
-    uint8_t value = 0x0;
-    uint8_t nok = 0x0;
+    printf("value: ");
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (value >> i) & 1);
+    }
+    printf("\n");
+    */
 
     // ----------------------
 
