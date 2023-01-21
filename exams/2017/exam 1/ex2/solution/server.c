@@ -1,6 +1,7 @@
 
 #include "server.h"
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,29 +36,6 @@ typedef struct device device_t;
 
 */
 
-static void printBinary(const char *name, int num) {
-  printf("%s: ", name);
-  if (num == 0) {
-    printf("0");
-    return;
-  }
-
-  // Stores binary representation of number.
-  int binaryNum[32];  // Assuming 32 bit integer.
-  int i = 0;
-
-  for (; num > 0;) {
-    binaryNum[i++] = num % 2;
-    num /= 2;
-  }
-
-  // Printing array in reverse order.
-  for (int j = i - 1; j >= 0; j--) {
-    printf("%d", binaryNum[j]);
-  }
-  printf("\n");
-}
-
 bool update_device_status(device_t *list, uint8_t id, uint8_t value) {
   /*******************************************************************
    * Task 3
@@ -70,11 +48,59 @@ bool update_device_status(device_t *list, uint8_t id, uint8_t value) {
    *   (device with id not existing, value out of range).
    *******************************************************************/
 
-  printf("ID: %d\n", id);
-  // printBinary("ID", id);
-  printf("value: %d\n", value);
-  // printBinary("value", value);
+  printf("[server] ID: %d\n", id);
+  printf("[server] value: %d\n", value);
 
-  /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
-  return task_3_demo(list, id, value);
+  while (list != NULL) {
+    if (list->id == id) {
+      switch (list->kind) {
+        case D_LIGHT:
+          if (value < 0 || value > 100) {
+            return false;
+          }
+          break;
+
+        case D_POWER:
+          if (value < 0 || value > 1) {
+            return false;
+          }
+          break;
+
+        case D_SUNBLIND:
+          if (value < 0 || value > 100) {
+            return false;
+          }
+          break;
+
+        case D_LOCK:
+          if (value < 0 || value > 1) {
+            return false;
+          }
+          break;
+
+        case D_ALARM:
+          if (value < 0 || value > 1) {
+            return false;
+          }
+          break;
+
+        case NUM_DEVICEKIND:
+          if (value < 0 || value > 1) {
+            return false;
+          }
+          break;
+
+        default:
+          assert(false);
+          break;
+      }
+
+       * (list->statep) = value;
+      printf("[server] update successful!\n");
+      return true;
+    }
+    list = list->next;
+  }
+
+  return false;
 }
