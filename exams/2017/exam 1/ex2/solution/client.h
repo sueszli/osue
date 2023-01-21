@@ -5,13 +5,13 @@
 
 #include "common.h"
 
-// arguments
 struct args {
   uint16_t portnum;    // < port number
   const char *portstr; // < port number as string
-  cmd_t cmd;           // < command (GET, SET)
-  uint8_t value;       // < set value
-  uint8_t id;          // < device id
+
+  uint8_t id;          // < device id           [6 bit]
+  cmd_t cmd;           // < command (GET, SET)  [2 bit]
+  uint8_t value;       // < set value           [7 bit]
 };
 
 void parse_arguments(int argc, char **argv, struct args *res);

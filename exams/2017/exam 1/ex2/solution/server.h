@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-// kinds of devices
 enum devicekind {
   D_LIGHT = 0,
   D_POWER,
@@ -20,7 +19,6 @@ struct device {
   enum devicekind kind;
   uint8_t *statep;
 };
-
 typedef struct device device_t;
 
 

@@ -14,7 +14,7 @@
 #include "common.h"
 
 /** name of the executable (for printing messages) */
-char *program_name = "client";
+char *program_name = (char *)"client";
 
 int main(int argc, char **argv) {
     struct args arguments;
@@ -36,10 +36,7 @@ int main(int argc, char **argv) {
      * error_exit (common.h)
      *******************************************************************/
 
-    /* file descriptor of socket */
     int sockfd;
-
-    /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
     task_1_demo(&sockfd, &arguments);
 
 
@@ -59,7 +56,6 @@ int main(int argc, char **argv) {
     uint8_t nok;
     uint8_t value;
 
-    /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
     task_2_demo(&sockfd, &arguments, &nok, &value);
 
 

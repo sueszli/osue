@@ -1,19 +1,21 @@
 #!/bin/sh
 
-# first run server:
+<<tests
 
+compile and run server:
+  make all && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./server
 
-# then run client:
-# ./client [-p PORT] {-g|-s VALUE} I
+run client based on `./client [-p PORT] {-g|-s VALUE} ID`
+  ./client -s 50 24
+  ./client -g 31
 
-ARGS=""
 
 # -------
 
 clear
 
-make all
-
 valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./client $ARGS
 
 make clean
+
+tests
