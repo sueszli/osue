@@ -48,6 +48,9 @@ bool update_device_status(device_t * list, uint8_t id, uint8_t value)
      *   (device with id not existing, value out of range).
      *******************************************************************/
 
+    printf("ID: %d\n", id);
+    printf("VALUE: %d\n", id);
+
     /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
     return task_3_demo(list, id, value);
 }
