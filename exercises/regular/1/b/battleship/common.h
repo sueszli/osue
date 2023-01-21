@@ -11,30 +11,28 @@
 #define COMMON_H
 
 // default hostname and port:
-#define DEFAULT_HOST    "localhost"
-#define DEFAULT_PORT    "1280"
+#define DEFAULT_HOST "localhost"
+#define DEFAULT_PORT "1280"
 
 // Length of each side of the map:
-#define MAP_SIZE        10
+#define MAP_SIZE 10
 
 // Minimum and maximum length of the ships:
-#define MIN_SHIP_LEN    2
-#define MAX_SHIP_LEN    4
+#define MIN_SHIP_LEN 2
+#define MAX_SHIP_LEN 4
 
 // Number of ships of each length:
-#define SHIP_CNT_LEN2   2   // 2 ships of length 2
-#define SHIP_CNT_LEN3   3   // 3 ships of length 3
-#define SHIP_CNT_LEN4   1   // 1 ship of length 4
+#define SHIP_CNT_LEN2 2  // 2 ships of length 2
+#define SHIP_CNT_LEN3 3  // 3 ships of length 3
+#define SHIP_CNT_LEN4 1  // 1 ship of length 4
 
 // Maximum number of rounds after which the client loses the game:
-#define MAX_ROUNDS      80
+#define MAX_ROUNDS 80
 
 // Suggested values to save information about the squares of the map:
-#define SQUARE_UNKNOWN  0 // the square has not been targeted yet
-#define SQUARE_HIT      1 // a shot at the square hit a ship
-#define SQUARE_EMPTY    2 // a shot at the square was a miss (thus it is empty)
-
-#include <stdint.h>
+#define SQUARE_UNKNOWN 0  // the square has not been targeted yet
+#define SQUARE_HIT 1      // a shot at the square hit a ship
+#define SQUARE_EMPTY 2    // a shot at the square was a miss (thus it is empty)
 
 /**
  * @brief Print a map showing the squares where ships have been hit.
@@ -55,21 +53,19 @@
  *  print_map(map);
  * @endcode
  */
-static inline void print_map(uint8_t map[MAP_SIZE][MAP_SIZE])
-{
-    int x, y;
+static inline void print_map(uint8_t map[MAP_SIZE][MAP_SIZE]) {
+  int x, y;
 
-    printf("  ");
+  printf("  ");
+  for (x = 0; x < MAP_SIZE; x++) printf("%c ", 'A' + x);
+  printf("\n");
+
+  for (y = 0; y < MAP_SIZE; y++) {
+    printf("%c ", '0' + y);
     for (x = 0; x < MAP_SIZE; x++)
-        printf("%c ", 'A' + x);
+      printf("%c ", map[x][y] ? ((map[x][y] == 1) ? 'x' : 'o') : ' ');
     printf("\n");
-
-    for (y = 0; y < MAP_SIZE; y++) {
-        printf("%c ", '0' + y);
-        for (x = 0; x < MAP_SIZE; x++)
-            printf("%c ", map[x][y] ? ((map[x][y] == 1) ? 'x' : 'o') : ' ');
-        printf("\n");
-    }
+  }
 }
 
-#endif // COMMON_H
+#endif  // COMMON_H
