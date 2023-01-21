@@ -179,14 +179,14 @@ int main(int argc, char *argv[]) {
   char hash[SHM_SIZE] = {0};
   initialize_names();
 
+  // first exercise
   parse_arguments(argc, argv, &args);
-  // DEMO_parse_arguments(argc, argv, &args);
 
+  // second exercise
   allocate_resources();
-  // DEMO_allocate_resources();
 
+  // third exercise
   process_password(args.password, hash);
-  // DEMO_process_password(args.password, hash);
 
   printf("Hash: %s\n", hash);
 

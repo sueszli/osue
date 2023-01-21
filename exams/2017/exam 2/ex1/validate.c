@@ -1,14 +1,14 @@
+#include "validate.h"
+
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <ctype.h>
-
-#include "validate.h"
+#include <unistd.h>
 
 /******************************************************************************
  * Function declarations
@@ -21,41 +21,38 @@ void task_3(int fd[2], char expr[MAX_TEXTLEN]);
 
 /******************************************************************************/
 
-int main(int argc, char *argv[])
-{
-    // reads the arguments
-    char *iban; /**< Pointer to the IBAN given as positional argument. */
-    read_arguments(argc, argv, &iban);
+int main(int argc, char *argv[]) {
+  // reads the arguments
+  char *iban; /**< Pointer to the IBAN given as positional argument. */
+  read_arguments(argc, argv, &iban);
 
-    // prepare expression (convert IBAN to integer)
-    char expr[MAX_TEXTLEN]; /**< Expression for `./calc`. */
-    task_1(iban, expr);
+  // prepare expression (convert IBAN to integer)
+  char expr[MAX_TEXTLEN]; /**< Expression for `./calc`. */
+  task_1(iban, expr);
 
-    // setup pipe to communicate with the child process
-    int fd[2];
-    if (pipe(fd) < 0) {
-        error_exit("Creating pipe failed.");
-    }
-    // fork a child process (calls task_3)
-    char result[MAX_TEXTLEN]; /**< Result from the child process. */
-    task_2(fd, expr, result);
+  // setup pipe to communicate with the child process
+  int fd[2];
+  if (pipe(fd) < 0) {
+    error_exit("Creating pipe failed.");
+  }
+  // fork a child process (calls task_3)
+  char result[MAX_TEXTLEN]; /**< Result from the child process. */
+  task_2(fd, expr, result);
 
-    wait_for_child();
+  wait_for_child();
 
-    // print result
-    result[2] = '\0';
-    if ((strcmp(result, "1\n") == 0) || (strcmp(result, "1") == 0)) {
-        printf("valid\n");
-        exit(EXIT_SUCCESS);
-    }
+  // print result
+  result[2] = '\0';
+  if ((strcmp(result, "1\n") == 0) || (strcmp(result, "1") == 0)) {
+    printf("valid\n");
+    exit(EXIT_SUCCESS);
+  }
 
-    printf("invalid\n");
-    exit(EXIT_FAILURE);
+  printf("invalid\n");
+  exit(EXIT_FAILURE);
 }
 
 /******************************************************************************/
-
-
 
 /***************************************************************************
  * Task 1
@@ -78,12 +75,10 @@ int main(int argc, char *argv[])
  * @param iban The pointer to the IBAN.
  * @param expr The expression for `./calc`.
  */
-void task_1(char *iban, char expr[MAX_TEXTLEN])
-{
-    /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
-    task_1_DEMO(iban, expr);
+void task_1(char *iban, char expr[MAX_TEXTLEN]) {
+  /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
+  task_1_DEMO(iban, expr);
 }
-
 
 /***************************************************************************
  * Task 2
@@ -104,12 +99,10 @@ void task_1(char *iban, char expr[MAX_TEXTLEN])
  * @param expr The expression for the child `./calc`.
  * @param result The result received from the child `./calc`.
  */
-void task_2(int fd[2], char expr[MAX_TEXTLEN], char result[MAX_TEXTLEN])
-{
-    /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
-    task_2_DEMO(fd, expr, result);
+void task_2(int fd[2], char expr[MAX_TEXTLEN], char result[MAX_TEXTLEN]) {
+  /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
+  task_2_DEMO(fd, expr, result);
 }
-
 
 /****************************************************************************
  * Task 3
@@ -130,8 +123,7 @@ void task_2(int fd[2], char expr[MAX_TEXTLEN], char result[MAX_TEXTLEN])
  * @param fd Pipe for parent/child communication.
  * @param expr Prepared expression for `./calc`, the child program.
  */
-void task_3(int fd[2], char expr[MAX_TEXTLEN])
-{
-    /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
-    task_3_DEMO(fd, expr);
+void task_3(int fd[2], char expr[MAX_TEXTLEN]) {
+  /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
+  task_3_DEMO(fd, expr);
 }

@@ -139,7 +139,7 @@ void task_2(int fd[2], char expr[MAX_TEXTLEN], char result[MAX_TEXTLEN]) {
     // run calc in child
     task_3(fd, expr);
   }
-  
+
   // wait for child to exit
   int wstatus;
   if (waitpid(cpid, &wstatus, 0) == -1) {
@@ -177,10 +177,10 @@ void task_2(int fd[2], char expr[MAX_TEXTLEN], char result[MAX_TEXTLEN]) {
 void task_3(int fd[2], char expr[MAX_TEXTLEN]) {
   // print to write end
   close(fd[READ_END]);
-  dup2(fd[WRITE_END], fileno(stdout));  
+  dup2(fd[WRITE_END], fileno(stdout));
   close(fd[WRITE_END]);
 
   // run ./calc as this process
   execl("./calc", "./calc", expr, (char *)NULL);
-  error_exit("execl");
+  error_exit("execl");  // should not be reached
 }

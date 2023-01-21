@@ -5,8 +5,8 @@
 
 /** A bank account. */
 typedef struct {
-    char iban[LEN_IBAN];
-    int  balance;
+  char iban[LEN_IBAN];
+  int balance;
 } bank_account_t;
 
 /** Number of accounts in the array `bank_accounts`. */
@@ -28,7 +28,7 @@ void error_exit(const char *msg);
 void task_1a_DEMO(int *shmfd, shm_data_t **shmp);
 void task_1b_DEMO(sem_t **sem_server, sem_t **sem_ready, sem_t **sem_client);
 void task_2_DEMO(sem_t *sem_server, sem_t *sem_ready, sem_t *sem_client,
-    shm_data_t *shmp);
+                 shm_data_t *shmp);
 void task_3_DEMO(shm_data_t *shmp);
 
 #endif /* _SERVER_H_ */

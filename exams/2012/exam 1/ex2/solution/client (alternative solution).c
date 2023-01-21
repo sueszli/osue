@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
     strcpy(message, "shutdown");
   }
 
-  if (write(sockfd, message, sizeof(message)) < 0) {
+  if (write(sockfd, message, sizeof(message)) == -1) {
     fprintf(stderr, "write error");
     exit(EXIT_FAILURE);
   }
@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
   // print response
   if (mode == mode_request) {
     msg_t response;
-    if (read(sockfd, response, sizeof(msg_t)) < 0) {
+    if (read(sockfd, response, sizeof(msg_t)) == -1) {
       fprintf(stderr, "read error");
       exit(EXIT_FAILURE);
     }
