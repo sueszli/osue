@@ -10,8 +10,8 @@ struct args {
   const char *portstr; // < port number as string
 
   cmd_t cmd;           // < command (GET, SET)  [2 bit]
-  uint8_t id;          // < device id           [6 bit]
   uint8_t value;       // < set value           [7 bit]
+  uint8_t id;          // < device id           [6 bit]
 };
 
 void parse_arguments(int argc, char **argv, struct args *res);
