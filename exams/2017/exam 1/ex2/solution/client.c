@@ -51,25 +51,6 @@ static int connectSocket(int connect_port, const char *address) {
   return cfd;
 }
 
-static void print8bits(const char *name, uint8_t bits) {
-  printf("%s: ", name);
-  for (int i = 7; i >= 0; i--) {
-    printf("%d", (bits >> i) & 1);
-  }
-  printf("\n");
-}
-
-static void print16bits(const char *name, uint16_t bits) {
-  printf("%s: ", name);
-  for (int i = 15; i >= 0; i--) {
-    if (i == 7) {
-      printf(" ");
-    }
-    printf("%d", (bits >> i) & 1);
-  }
-  printf("\n");
-}
-
 int main(int argc, char **argv) {
   struct args arguments;
   parse_arguments(argc, argv, &arguments);
@@ -104,31 +85,6 @@ int main(int argc, char **argv) {
    * See also: send(2), recv(2)
    *******************************************************************/
 
-  // uint8_t value = 0x0;
-  // uint8_t nok = 0x0;
-  // task_2_demo(&sockfd, &arguments, &nok, &value);
-
-  /*
-  You can test either through:
-    nc 127.0.0.1 8080
-    "01"
-  or:
-    uint16_t r = 0x3031;
-    write(sockfd, &r, 2);
-
-  leads to:
-    [server] Received 0x31 0x30.  --> 00110001 - 00110000
-    [server] Device ID 12, SET 48
-    [server] Device: <unknown>
-    SET: 01
-    ID: 001100
-    value: 110000
-  */
-
-  // create request
-  // 0x01 = 00000001
-  // 0x17 =
-  // --> ID 0, SET 23
   union {
     struct {
       uint8_t cmd : 2;
@@ -148,7 +104,7 @@ int main(int argc, char **argv) {
     uint8_t all;
   } snd;
   snd.fields.value = arguments.value;
-  printf("second byte: 0x%x\n", snd.all);
+  printf("second byte: 0x%x\n\n", snd.all);
 
   union {
     struct {
@@ -160,7 +116,7 @@ int main(int argc, char **argv) {
   request.fields.fst = fst.all;
   request.fields.snd = snd.all;
 
-  // send request to server
+  // send request to server (the server will show you which bytes it received)
   assert(sizeof(request.all) == REQUEST_SIZE);
   if (write(sockfd, &request.all, sizeof(request.all)) == -1) {
     error_exit("write");
