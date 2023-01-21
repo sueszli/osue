@@ -48,25 +48,6 @@ static int connectSocket(int connect_port, const char *address)
     return cfd;
 }
 
-static void printArgs(struct args arguments) {
-    printf("\n");
-    printf("arguments:\n");
-    printf("\tportnum: %d\n", arguments.portnum);
-    printf("\tportstr: %s\n", arguments.portstr);
-    printf("\tcmd (binary): %d\n", arguments.cmd & 1);
-    printf("\tid (binary): ");
-    for (int i = 7; i >= 0; i--) {
-        printf("%d", (arguments.id >> i) & 1);
-    }
-    printf("\n");
-    printf("\tvalue (binary): ");
-    for (int i = 7; i >= 0; i--) {
-        printf("%d", (arguments.value >> i) & 1);
-    }
-    printf("\n");
-    printf("\n");
-}
-
 int main(int argc, char **argv) {
     struct args arguments;
     parse_arguments(argc, argv, &arguments);
@@ -101,13 +82,94 @@ int main(int argc, char **argv) {
      * See also: send(2), recv(2)
      *******************************************************************/
 
+    // uint8_t value = 0x0;
+    // uint8_t nok = 0x0;
+    // task_2_demo(&sockfd, &arguments, &nok, &value);
+    
+    // print arguments
+    printf("arguments: ");
+    for (int i = 0; i < argc; i++) {
+        printf("%s ", argv[i]);
+    }
+    printf("\n");
+
+    // print parsed arguments
+    printf("parsed arguments:\n");
+    printf("\tportnum: %d\n", arguments.portnum);
+    printf("\tportstr: %s\n", arguments.portstr);
+    printf("\tcmd: %d\n", arguments.cmd & 1);
+    printf("\tid: ");
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (arguments.id >> i) & 1);
+    }
+    printf("\n");
+    printf("\tvalue: ");
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (arguments.value >> i) & 1);
+    }
+    printf("\n");
+
+    // create request bytes (in host order)
+    union {
+        struct {
+            unsigned cmd : 2;
+            unsigned id : 6;
+        } fields;
+        uint8_t all;
+    } fst;
+    fst.fields.cmd = arguments.cmd;
+    fst.fields.id = arguments.id;
+
+    union {
+        struct {
+            unsigned value : 7;
+            unsigned : 1;
+        } fields;
+        uint8_t all;
+    } snd;
+    snd.fields.value = arguments.value;
+
+    printf("request before merge:\n");
+    printf("\tfst: ");
+    for (int i = 7; i >= 0; i--) {
+        if (i == 1) {
+            printf(" ");
+        }
+        printf("%d", (fst.all >> i) & 1);
+    }
+    printf("\n");
+    printf("\tsnd: ");
+    for (int i = 7; i >= 0; i--) {
+        if (i == 6) {
+            printf(" ");
+        }
+        printf("%d", (snd.all >> i) & 1);
+    }
+    printf("\n");
+
+    union {
+        struct {
+            uint8_t fst : 8;
+            uint8_t snd : 8;
+        } fields;
+        uint16_t all;
+    } request;
+    request.fields.fst = fst.all;
+    request.fields.snd = snd.all;
+
+    printf("request after merge:\n\t");
+    for (int i = 15; i >= 0; i--) {
+        if (i == 7) {
+            printf(" ");
+        }
+        printf("%d", (request.all >> i) & 1);
+    }
+    printf("\n");
+
+
+
     uint8_t value = 0x0;
     uint8_t nok = 0x0;
-    // task_2_demo(&sockfd, &arguments, &nok, &value);
-
-    printArgs(arguments);
-
-    // send request to server
 
     // ----------------------
 
