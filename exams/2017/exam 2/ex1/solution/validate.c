@@ -128,8 +128,31 @@ void task_1(char *iban, char expr[MAX_TEXTLEN]) {
  * @param result The result received from the child `./calc`.
  */
 void task_2(int fd[2], char expr[MAX_TEXTLEN], char result[MAX_TEXTLEN]) {
-  /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
   task_2_DEMO(fd, expr, result);
+
+  pid_t cpid = fork();
+  if (cpid == -1) {
+    perror("fork");
+    exit(EXIT_EFORK);
+  }
+  if (cpid == 0) {
+    // run calc in child
+    task_3(fd, expr);
+  }
+  
+  // wait for child to exit
+  int wstatus;
+  if (waitpid(cpid, &wstatus, 0) == -1) {
+    error_exit("waitpid");
+  }
+  if (WEXITSTATUS(wstatus) == EXIT_FAILURE) {
+    error_exit("./calc in child failed");
+  }
+
+  // read result from child into result variable
+  close(fd[READ_END]);
+  read(fd[READ_END], result, MAX_TEXTLEN);
+  close(fd[WRITE_END]);
 }
 
 /****************************************************************************
@@ -152,6 +175,12 @@ void task_2(int fd[2], char expr[MAX_TEXTLEN], char result[MAX_TEXTLEN]) {
  * @param expr Prepared expression for `./calc`, the child program.
  */
 void task_3(int fd[2], char expr[MAX_TEXTLEN]) {
-  /* REPLACE FOLLOWING LINE WITH YOUR SOLUTION */
-  task_3_DEMO(fd, expr);
+  // print to write end
+  close(fd[READ_END]);
+  dup2(fd[WRITE_END], fileno(stdout));  
+  close(fd[WRITE_END]);
+
+  // run ./calc as this process
+  execl("./calc", "./calc", expr, (char *)NULL);
+  error_exit("execl");
 }
