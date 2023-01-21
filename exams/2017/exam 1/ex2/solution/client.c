@@ -99,11 +99,12 @@ int main(int argc, char **argv) {
   union {
     struct {
       uint8_t value : 7;
-      uint8_t : 1;
+      uint8_t empty : 1;
     } fields;
     uint8_t all;
   } snd;
   snd.fields.value = arguments.value;
+  snd.fields.empty = 0x00;
   printf("second byte: 0x%x\n\n", snd.all);
 
   union {
@@ -128,6 +129,7 @@ int main(int argc, char **argv) {
   if (read(sockfd, &response, sizeof(response)) == -1) {
     error_exit("read");
   }
+
   uint8_t nok = response >> 7;           // get MSB
   uint8_t value = (response << 1) >> 1;  // remove MSB
 
