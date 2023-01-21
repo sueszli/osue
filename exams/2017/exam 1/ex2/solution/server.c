@@ -48,8 +48,8 @@ bool update_device_status(device_t *list, uint8_t id, uint8_t value) {
    *   (device with id not existing, value out of range).
    *******************************************************************/
 
-  printf("[server] ID: %d\n", id);
-  printf("[server] value: %d\n", value);
+  printf("ID: %d\n", id);
+  printf("value: %d\n", value);
 
   while (list != NULL) {
     if (list->id == id) {
@@ -95,8 +95,8 @@ bool update_device_status(device_t *list, uint8_t id, uint8_t value) {
           break;
       }
 
-       * (list->statep) = value;
-      printf("[server] update successful!\n");
+      *(list->statep) = value;
+      printf("update successful!\n");
       return true;
     }
     list = list->next;
