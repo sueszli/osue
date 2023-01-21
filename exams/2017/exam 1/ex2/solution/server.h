@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-/* kinds of devices */
+// kinds of devices
 enum devicekind {
   D_LIGHT = 0,
   D_POWER,
@@ -13,7 +13,7 @@ enum devicekind {
   NUM_DEVICEKIND
 };
 
-/* device list element */
+// device list element
 struct device {
   struct device *next;
   uint8_t id;
@@ -24,4 +24,4 @@ struct device {
 typedef struct device device_t;
 
 
-#endif /* _SERVER_H_ */
+#endif

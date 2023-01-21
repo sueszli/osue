@@ -12,7 +12,7 @@ $ uname -a
 The executables themselves are also compiled for 64-bit x86 processors and GNU/Linux 2.6.18.
 
 ``` bash
-$ file ./server 
+$ file ./executableFile 
 # ./server: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.18, BuildID[sha1]=f54643b8a73b54d90d7bf6bcdebfc92f80e2aa5a, not stripped
 ```
 

@@ -16,13 +16,9 @@
 /** name of the executable (for printing messages) */
 char *program_name = "client";
 
-/** program entry point */
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     struct args arguments;
-
-    /* parse program arguments and fill 'arguments' [given] */
-    parse_arguments(argc, argv, &arguments);
+    parse_arguments(argc, argv, &arguments); // given
 
 
     /*******************************************************************

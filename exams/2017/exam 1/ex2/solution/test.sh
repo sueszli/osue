@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# first run server:
+
+
+# then run client:
+# ./client [-p PORT] {-g|-s VALUE} I
+
 ARGS=""
 
 # -------
