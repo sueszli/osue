@@ -16,7 +16,7 @@
 
 char *program_name = (char *)"client";
 
-static int connect_socket(int connect_port, const char *address)
+static int connectSocket(int connect_port, const char *address)
 {
     struct sockaddr_in addr;
     int cfd;
@@ -44,7 +44,27 @@ static int connect_socket(int connect_port, const char *address)
         close(cfd);
         error_exit("connect");
     }
+
     return cfd;
+}
+
+static void printArgs(struct args arguments) {
+    printf("\n");
+    printf("arguments:\n");
+    printf("\tportnum: %d\n", arguments.portnum);
+    printf("\tportstr: %s\n", arguments.portstr);
+    printf("\tcmd (binary): %d\n", arguments.cmd & 1);
+    printf("\tid (binary): ");
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (arguments.id >> i) & 1);
+    }
+    printf("\n");
+    printf("\tvalue (binary): ");
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (arguments.value >> i) & 1);
+    }
+    printf("\n");
+    printf("\n");
 }
 
 int main(int argc, char **argv) {
@@ -66,7 +86,7 @@ int main(int argc, char **argv) {
      * error_exit (common.h)
      *******************************************************************/
 
-    int sockfd = connect_socket(DEFAULT_PORTNUM, SERVER_IPADDR_STR);
+    int sockfd = connectSocket(DEFAULT_PORTNUM, SERVER_IPADDR_STR);
 
     /*******************************************************************
      * Task 2
@@ -81,13 +101,17 @@ int main(int argc, char **argv) {
      * See also: send(2), recv(2)
      *******************************************************************/
 
+    uint8_t value = 0x0;
+    uint8_t nok = 0x0;
+    // task_2_demo(&sockfd, &arguments, &nok, &value);
+
+    printArgs(arguments);
+
     // send request to server
-    uint8_t nok;
-    uint8_t value;
 
-    task_2_demo(&sockfd, &arguments, &nok, &value);
+    // ----------------------
 
-    // print server response
+    // print server response (don't modify code below)
     puts((nok) ? "NOK" : "OK");
     if (arguments.cmd == GET && !nok) {
         printf("%d\n", value);

@@ -9,8 +9,8 @@ struct args {
   uint16_t portnum;    // < port number
   const char *portstr; // < port number as string
 
-  uint8_t id;          // < device id           [6 bit]
   cmd_t cmd;           // < command (GET, SET)  [2 bit]
+  uint8_t id;          // < device id           [6 bit]
   uint8_t value;       // < set value           [7 bit]
 };
 
