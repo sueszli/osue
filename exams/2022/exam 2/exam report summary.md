@@ -121,21 +121,6 @@ Then you should read the content from the file stream and send it to the client 
 
 (tip: use `fileno(FILE* f)` to read and write using the underlying file descriptors, when things don't work as expected. Another advantage is that you won't have to call `fflush`.)
 
-`man 2 pipe`
-
-`man 2 dup2`
-
-`man 2 wait`
-
-`man 3 system`
-
-`man 2 select_tut` - also has sigaction
-
-`man 7 unix` - has overview
-
-`man 3 getaddrinfo` - fallback, if no ipv4 given
-
-
 ```c
 #define MAX_ARGUMENT_LEN 100
 
