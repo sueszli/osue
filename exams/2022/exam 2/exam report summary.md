@@ -94,13 +94,13 @@ int setup_connection(const char *port_str) {
   errno = 0;
   int port = strtoul(port_str, NULL, 10);
   if (errno != 0) {
-    error_exit("strtoul");
+    error_exit("");
   }
 
   // create socket (see: `man select_tut`)
   int sockfd = listen_socket(port);
   if (sockfd == -1) {
-    error_exit("listen_socket");
+    error_exit("");
   }
   return sockfd;
 }
@@ -141,7 +141,7 @@ void task2(int sockfd) {
   if(childResult == NULL) {
     fprintf(clientStream, "ERROR_MESSAGE");
     fflush(clientStream);
-    error_exit("child failed");
+    error_exit("");
   }
 
   // send response to client (see: `man pipe`)
