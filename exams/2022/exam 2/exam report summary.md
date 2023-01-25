@@ -3,7 +3,7 @@
 80 points are acheivable in total consisting of:
 
 - 30 points for the theoretical questions
-- 50 points for the coding exercise (10 + 20 + 20 for each question)
+- 50 points for the coding exercise (10 + 20 + 20 for each question) - CONFIRMED
 
 Point deductions for wrong answers on theoretical questions:
 
@@ -11,7 +11,7 @@ Point deductions for wrong answers on theoretical questions:
 - for each wrong answer on an individual question, points are deducted from the theoretical part only but not from the coding exercise
 - you can't get less than 0 points for the theoretical questions in total
 
-Total number of theoretical questions: 15
+Total number of theoretical questions: 15 - CONFIRMED
 
 <br><br><br>
 
@@ -20,8 +20,11 @@ Total number of theoretical questions: 15
 - What is the difference between UDP and TCP? 
 - Strings in C end with null characters?
 - Initial value of local and global variables?
-- How preprocessing works?
+- How do preprocessor macros work? (#ifdef, #define, #import, ...)
 - Are arrays and pointers the same?
+- What are modules used for in C? (and c files vs. h files)
+- How do options work based on the unix conventions?
+- 
 
 <br><br><br>
 
@@ -94,36 +97,6 @@ Then you should read the content from the file that the received file descriptor
 ```c
 #define MAX_ARGUMENT_LEN 100
 
-/** @see `man select_tut`*/
-int connect_socket(int connect_port, char *address) {
-  struct sockaddr_in addr;
-  int cfd;
-
-  cfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (cfd == -1) {
-      perror("socket");
-      return -1;
-  }
-
-  memset(&addr, 0, sizeof(addr));
-  addr.sin_port = htons(connect_port);
-  addr.sin_family = AF_INET;
-
-  if (!inet_aton(address, (struct in_addr *) &addr.sin_addr.s_addr)) {
-      fprintf(stderr, "inet_aton(): bad IP address format\n");
-      close(cfd);
-      return -1;
-  }
-
-  if (connect(cfd, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
-      perror("connect()");
-      shutdown(cfd, SHUT_RDWR);
-      close(cfd);
-      return -1;
-  }
-  return cfd;
-}
-
 void task2(int sockfd, char* address) {
   // accept connection and open stream
   int connectionFd = connect_socket(sockfd, address);
@@ -132,7 +105,6 @@ void task2(int sockfd, char* address) {
   // read arguments from connection into buffer
   char buffer[MAX_ARGUMENT_LEN + 1]; // +1 for '\0'
   memset(buffer, 0, sizeof(buffer));
-
 
   int fd = execute_command(buffer);
   FILE* responseStream = fopen(fd, "r");
