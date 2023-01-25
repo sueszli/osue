@@ -121,22 +121,23 @@ Then you should read the content from the file stream and send it to the client 
 ```c
 #define MAX_ARGUMENT_LEN 100
 
+/**
+ * TODO!!!!!
+ */
+
 void task2(int sockfd) {
   // accept
   int fd = accept(sockfd, NULL, NULL);
 
-  // read request
-  FILE *f = fdopen(fd, "r+");
+  // read request into buffer
+  FILE *requestFile = fdopen(fd, "r+");
+  char buf[MAX_ARGUMENT_LEN + 1];
+  memset(buf, 0, sizeof(buf));
+  fgets(buf, MAX_ARGUMENT_LEN + 1, requestFile);
 
-  // read arguments from connection into buffer
-  char buffer[MAX_ARGUMENT_LEN + 1]; // +1 for '\0'
-  memset(buffer, 0, sizeof(buffer));
+  // run child process with content of request
+  FILE *responseFile = execute_command(buf);
 
-  int fd = execute_command(buffer);
-  FILE* responseStream = fopen(fd, "r");
-
-  fprintf(sockfd, ...);
-  fclose(responseStream);
 }
 ```
 
