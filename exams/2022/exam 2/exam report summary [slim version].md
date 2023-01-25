@@ -49,8 +49,7 @@ int task1(const char *port_str) {
     error_exit("");
   }
 
-  // create socket (see: `man select_tut`)
-  int sockfd = listen_socket(port);
+  int sockfd = listen_socket(port); // see: `select_tut`
   if (sockfd == -1) {
     error_exit("");
   }
@@ -60,16 +59,15 @@ int task1(const char *port_str) {
 
 
 void task2(int sockfd) {
-  // accept (see: `man unix`)
-  int fd = accept(sockfd, NULL, NULL);
+  int fd = accept(sockfd, NULL, NULL); // see: `unix`
 
-  // read request
+  // read
   FILE *clientStream = fdopen(fd, "r+");
   char buf[MAX_ARGUMENT_LEN + 1];
   memset(buf, 0, sizeof(buf));
   fgets(buf, MAX_ARGUMENT_LEN + 1, clientStream);
 
-  // run child to generate response
+  // get response from child
   FILE *childResult = task3(COMMAND, buf);
   if(childResult == NULL) {
     fprintf(clientStream, "ERROR_MESSAGE");
@@ -77,13 +75,12 @@ void task2(int sockfd) {
     error_exit("");
   }
 
-  // send response to client (see: `man pipe`)
-  char c;
+  // write response
+  char c; // see: `pipe`
   while (read(fileno(childResult), &c, 1) > 0) {
     write(fileno(clientStream), &c, 1);
   }
 
-  // clean up
   fclose(childResult);
   fclose(clientStream);
 }
@@ -91,7 +88,7 @@ void task2(int sockfd) {
 
 
 FILE* task3(char* command, char* argument) {
-  // fork (see: `man pipe`)
+  // see: `pipe`
   int pipefd[2];
   pid_t cpid;
 
@@ -104,13 +101,11 @@ FILE* task3(char* command, char* argument) {
   }
   
   if (cpid == 0) {
-    // redirect (see: `man dup2`)
     close(pipefd[READ]);
     dup2(pipefd[WRITE], fileno(stdout));
     close(pipefd[WRITE]);
     
-    // run command (see: `man system`)
-    execl(command, command, argument, (char *) NULL);
+    execl(command, command, argument, (char *) NULL); // see: `system`
     error_exit("");
   }
 
