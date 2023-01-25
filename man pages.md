@@ -1,5 +1,7 @@
 Here is a short list of the man pages I found most helpful in this course:
 
+<br><br>
+
 **getopt**
 
 `man 3 getopt`
