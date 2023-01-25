@@ -47,18 +47,25 @@ Wait for connections on the received socket file descriptor and accept them.
 
 Read the arguments transmitted by the client from the connection and save them in a buffer that can hold a C-string with the size `MAX_ARGUMENT_LEN`.
 
-Then you should call `execute_command()` with the argument received by the client.
+Then you should call `execute_command()` with the argument received by the client and read the file descriptor returned by this function.
 
+The execution of the command should be done in a forked child process.
+
+Then you should read the content from the file that the received file descriptor points to and send it to the client.
 
 ```c
 #define MAX_ARGUMENT_LEN 100
 
 function() {
-  char buffer[MAX_ARGUMENT_LEN];
-  execute_command(buffer);
-  ...
-}
+  int sockfd = setup_connection(...);
 
+  char buffer[MAX_ARGUMENT_LEN];
+  int fd = execute_command(buffer);
+  
+  FILE* responseStream = fopen(fd, "r");
+  fprintf(sockfd, ...);
+  fclose(responseStream);
+}
 ```
 
 
@@ -67,6 +74,7 @@ function() {
 ### 3. send around files with a forked child
 
 ```c
-execute_command()
-
+int execute_command(char* arg) {
+  ...
+}
 ```
