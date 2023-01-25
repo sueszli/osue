@@ -6,7 +6,9 @@ Here is a short list of the man pages I found most helpful in this course:
 
 `man 3 string`
 
-***shared memory**
+<br><br>
+
+**shared memory**
 
 `man 3 shm_open`
 
@@ -14,15 +16,19 @@ Here is a short list of the man pages I found most helpful in this course:
 
 `man 7 shm_overview`
 
+<br><br>
+
 **fork, pipe, execle**
 
-`man 2 pipe`
+`man 2 pipe` - also has fork
 
 `man 2 dup2`
 
 `man 2 wait`
 
 `man 3 system`
+
+<br><br>
 
 **socket**
 
