@@ -36,8 +36,12 @@ You can run a script to update your man pages based on a tutorial in `manpages.t
 - How is the development of unix kernel libraries different from the development of user space libraries? (you can't access extrenal libraries in the kernel)
 - What things are considered a file in unix?
 - What are unix drivers for? (hardware)
+- What kind of unix devices are there? (block devices, network devices, ...)
 - What kind of floating point number types are there in C? (float, double, long double - single precision, double precision, extended precision - they are always signed)
 - Which ways of inter process communication exist? (pipes, sockets, shared memory, ...)
+- What is a `FILE` in C?
+- What is the internal represenation of arrays in C? How do arrays get stored in C?
+- What is the difference between passing a variable by reference / passing by value to a function?
 
 <br><br><br>
 
