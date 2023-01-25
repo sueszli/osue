@@ -21,6 +21,7 @@ Total number of theoretical questions: 15
 - Strings in C end with null characters?
 - Initial value of local and global variables?
 - How preprocessing works?
+- Are arrays and pointers the same?
 
 <br><br><br>
 
@@ -35,8 +36,45 @@ Return the file descriptor of the communication socket `int setup_connection(con
 The file descriptor will be used in the next step!
 
 ```c
+/** @see `man select_tut`*/
+static int listen_socket(int listen_port) {
+  struct sockaddr_in addr;
+  int lfd;
+  int yes;
+
+  lfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (lfd == -1) {
+      perror("socket");
+      return -1;
+  }
+
+  yes = 1;
+  if (setsockopt(lfd, SOL_SOCKET, SO_REUSEADDR,
+          &yes, sizeof(yes)) == -1) {
+      perror("setsockopt");
+      close(lfd);
+      return -1;
+  }
+
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_port = htons(listen_port);
+  addr.sin_family = AF_INET;
+  if (bind(lfd, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
+      perror("bind");
+      close(lfd);
+      return -1;
+  }
+
+  printf("accepting connections on port %d\n", listen_port);
+  listen(lfd, 10);
+  return lfd;
+}
+
 int setup_connection(const char *port_str) {
-  ...
+  int port = strtoul(port_str);
+  // ... check for strtoul errors
+  int sockfd = listen_socket(port);
+  return sockfd;
 }
 ```
 
@@ -51,12 +89,14 @@ Then you should call `execute_command()` with the argument received by the clien
 
 The execution of the command should be done in a forked child process.
 
-Then you should read the content from the file that the received file descriptor points to and send it to the client.
+Then you should read the content from the file that the received file descriptor points to and send it to the client waiting on the accepted connection.
 
 ```c
 #define MAX_ARGUMENT_LEN 100
 
 function() {
+  // accept
+
   int sockfd = setup_connection(...);
 
   char buffer[MAX_ARGUMENT_LEN];
