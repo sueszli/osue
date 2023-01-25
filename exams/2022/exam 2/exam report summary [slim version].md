@@ -5,7 +5,6 @@ Relevant man pages:
 - unix
 - pipe
 - system
-
 ```
 
 
