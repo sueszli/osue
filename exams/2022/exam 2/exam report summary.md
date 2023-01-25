@@ -45,7 +45,7 @@ You can run a script to update your man pages based on a tutorial in `manpages.t
 
 <br><br><br>
 
-## Coding exercise
+## Coding exercise [WORK IN PROGRESS]
 
 ### Task 1: create a socket as a server
 
@@ -118,6 +118,10 @@ Then you should read the content from the file stream and send it to the client 
 ```c
 #define MAX_ARGUMENT_LEN 100
 
+/**
+ * TODO!!
+ */
+
 void task2(int sockfd, char* address) {
   // accept connection and open stream
   int connectionFd = connect_socket(sockfd, address);
@@ -140,6 +144,10 @@ void task2(int sockfd, char* address) {
 (You can use anything for executing the command, e.g. `system()` or `execvp()`)
 
 ```c
+/**
+ * TODO!!
+ */
+
 FILE* execute_command(char* arg) {
   ...
 }
