@@ -198,6 +198,7 @@ FILE* execute_command(char* command, char* argument) {
     // run command (see: `man system`)
     execl(commans, command, argument, (char *) NULL);
     error_exit("");
+
   }
 
   close(pipefd[WRITE]);

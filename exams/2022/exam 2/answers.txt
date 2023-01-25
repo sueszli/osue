@@ -2,70 +2,70 @@ What is the difference between UDP and TCP sockets and when should they be used?
 	TCP = slower, reliable, connection oriented, checks more stuff
 	UDP = faster, less reliable, connectionless, does not enforce checks
 
-    What are strings in C? (end with null characters)
+What are strings in C? (end with null characters)
 	pointer to char, read from there until \0
 
-    What is the initial value of local and global variables?
+What is the initial value of local and global variables?
 	If only declared, local variables get whatever was stored at that address before
 	Same for globals
 
-    How do preprocessor macros work and which macros exist? (#ifdef, #define, #import, ...)
+How do preprocessor macros work and which macros exist? (#ifdef, #define, #import, ...)
 	#define: used to define a macro or a constant
-    	#include: used to include header files
-    	#ifdef, #ifndef, #else, #endif: used for conditional compilation
-    	#pragma: used to issue implementation-specific commands to the compiler
-    	#error: used to generate a compile-time error
-    	#line: used to change the current line number and filename used by the compiler for error reporting
+	#include: used to include header files
+	#ifdef, #ifndef, #else, #endif: used for conditional compilation
+	#pragma: used to issue implementation-specific commands to the compiler
+	#error: used to generate a compile-time error
+	#line: used to change the current line number and filename used by the compiler for error reporting
 
-    Are arrays and pointers the same?
+Are arrays and pointers the same?
 	No
 
-    What are modules used for in C? (and c files vs. h files)
+What are modules used for in C? (and c files vs. h files)
 	Increase readability and maintainability
 	.h -> prototypes, constants
 	.c -> sourcecode, actual implementation
 
-    How do options work based on the unix conventions?
+How do options work based on the unix conventions?
 	[optional], -x is x-option, -x <value> is x-option with value (required), posargs after options
 	=> - followed by char or -- followed by string
 
-    How do you synchronize a shared resource?
+How do you synchronize a shared resource?
 	semaphores, before acces use sem_wait, process stuff, use sem_post
 
-    How does mutual exclusion work? (1, 2, 3 semaphores vs. local variables)
+How does mutual exclusion work? (1, 2, 3 semaphores vs. local variables)
 	semaphores or local variables with busy waiting (bad)
 
-    How do POSIX semaphores work? (create, open, close, wait, post, unlink, ...)
+How do POSIX semaphores work? (create, open, close, wait, post, unlink, ...)
 	sem_create, sem_open, sem_wait, sem_post, sem_unlick, sem_close
 
-    Understand static C code and determine the output of a function with nested loops.
+Understand static C code and determine the output of a function with nested loops.
 	ok buddy
 
-    How is the development of unix kernel libraries different from the development of user space libraries? (you can't access extrenal libraries in the kernel)
-    	External Libraries can not be accessed
+How is the development of unix kernel libraries different from the development of user space libraries? (you can't access extrenal libraries in the kernel)
+	External Libraries can not be accessed
     
-    What things are considered a file in unix?
+What things are considered a file in unix?
 	directories, sockets, symbolic links, bsc, bsf
 
-    What are unix drivers for? (hardware)
+What are unix drivers for? (hardware)
 	interaction with external hardware devices -> translate high level system commands to low level instructions the hardware can work with
 
-    What kind of unix devices are there? (block devices, network devices, ...)
+What kind of unix devices are there? (block devices, network devices, ...)
 	hard drives, keyboards, printers
 
-    What kind of floating point number types are there in C? (float, double, long double - single precision, double precision, extended precision - they are always signed)
+What kind of floating point number types are there in C? (float, double, long double - single precision, double precision, extended precision - they are always signed)
 	float, double, long double (always signed)
 
-    Which ways of inter process communication exist? (pipes, sockets, shared memory, ...)
+Which ways of inter process communication exist? (pipes, sockets, shared memory, ...)
 	shared memory, pipes, sockets
 
-    What is a FILE in C?
+What is a FILE in C?
 	documents, directories, csf, bsf, named pipes, sockets, symbolic links
 
-    What is the internal represenation of arrays in C? How do arrays get stored in C?
+What is the internal represenation of arrays in C? How do arrays get stored in C?
 	memory area, pointer to first address of that area (end is not null terminated)
 
-    What is the difference between passing a variable by reference / passing by value to a function?
+What is the difference between passing a variable by reference / passing by value to a function?
 	pass by value -> value can not be altered, no sideeffects outside of function
 	pass by variable -> value can be altered and this can have side effects on the function, for example:
 	int mul(int a, int b){
