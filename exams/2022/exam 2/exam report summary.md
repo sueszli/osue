@@ -90,9 +90,16 @@ static int listen_socket(int listen_port) {
   return lfd;
 }
 
-int task1(const char *port_str) { // maybe called "setup_connection()" ?
-  int port = strtoul(port_str);
-  // TODO: check for strtoul errors: error_exit(...);
+
+int task1(const char *port_str) {
+  // parse port
+  errno = 0;
+  int port = strtoul(port_str, NULL, 10);
+  if (errno != 0) {
+    error_exit("strtoul");
+  }
+
+  // create socket
   int sockfd = listen_socket(port);
   return sockfd; // will be used as the argument of task2() in main
 }
