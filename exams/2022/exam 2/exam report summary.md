@@ -141,14 +141,26 @@ void task2(int sockfd, char* address) {
 
 ### Task 3: send around files with a forked child
 
-(You can use anything for executing the command, e.g. `system()` or `execvp()`)
+Create a child process through forking.
+
+Then redirect the childs `fileno(stdout)` to the parents `fileno(stdin)` by using pipes.
+
+Then wait for the child to exit in the parent process and read its output.
+
+Don't forket to close unused file descriptors.
+
+(You are free to use anything to execute the command, e.g. `system()` or `execvp()`)
 
 ```c
 /**
  * TODO!!
  */
 
-FILE* execute_command(char* arg) {
+FILE* execute_command(char* command, char* argument) {
+
+
+  /** @see `man system`*/
+   execl(command, argument, (char *) NULL);
   ...
 }
 ```
