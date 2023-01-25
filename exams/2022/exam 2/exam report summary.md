@@ -30,7 +30,7 @@ The last run of the unit tests determines the total number of points you get for
 - How do options work based on the unix conventions?
 - How does mutual exclusion work? (1, 2, 3 semaphores vs. local variables)
 - How do POSIX semaphores work? (create, open, close, wait, post, unlink, ...)
-- Static code that contains an off-by-one error that you should notice when reading the code
+- Understand static C code and determine the output of a function with nested loops.
 - How is the development of unix kernel libraries different from the development of user space libraries? (you can't access extrenal libraries in the kernel)
 
 <br><br><br>
