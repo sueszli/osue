@@ -1,6 +1,7 @@
 ## Task 1: create a socket
 
 ```c
+/*
 static int listen_socket(int listen_port) {
   struct sockaddr_in addr;
   int lfd;
@@ -32,9 +33,9 @@ static int listen_socket(int listen_port) {
   listen(lfd, 10);
   return lfd;
 }
+*/
 
 int setup_connection(const char *port_str) {
-  // parse port
   errno = 0;
   int port = strtoul(port_str, NULL, 10);
   if (errno != 0) {
