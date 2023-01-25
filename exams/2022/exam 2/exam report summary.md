@@ -29,6 +29,7 @@ You can run a script to update your man pages based on a tutorial in `manpages.t
 - Are arrays and pointers the same?
 - What are modules used for in C? (and c files vs. h files)
 - How do options work based on the unix conventions?
+- How do you synchronize a shared resource?
 - How does mutual exclusion work? (1, 2, 3 semaphores vs. local variables)
 - How do POSIX semaphores work? (create, open, close, wait, post, unlink, ...)
 - Understand static C code and determine the output of a function with nested loops.
