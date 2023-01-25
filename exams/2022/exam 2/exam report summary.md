@@ -145,7 +145,9 @@ Create a child process through forking.
 
 Then redirect the childs `fileno(stdout)` to the parents `fileno(stdin)` by using pipes.
 
-Then wait for the child to exit in the parent process and read its output.
+Then wait for the child to exit in the parent process with exit status `0`.
+
+Then read the childs output written into the pipe and use that to create a `FILE*` to return from this function.
 
 Don't forket to close unused file descriptors.
 
@@ -158,9 +160,14 @@ Don't forket to close unused file descriptors.
 
 FILE* execute_command(char* command, char* argument) {
 
+  // fork
+
+  // pipe
 
   /** @see `man system`*/
-   execl(command, argument, (char *) NULL);
-  ...
+  execl(command, argument, (char *) NULL);
+  
+
+  // create FILE pointer
 }
 ```
