@@ -122,7 +122,8 @@ Then you should read the content from the file stream and send it to the client 
 (tip: use `fileno(FILE* f)` to read and write using the underlying file descriptors, when things don't work as expected. Another advantage is that you won't have to call `fflush`.)
 
 ```c
-#define MAX_ARGUMENT_LEN 100
+#define COMMAND ("./doStuff")
+#define MAX_ARGUMENT_LEN (100)
 
 void task2(int sockfd) {
   // accept (see: `man unix`)
@@ -135,7 +136,7 @@ void task2(int sockfd) {
   fgets(buf, MAX_ARGUMENT_LEN + 1, clientStream);
 
   // run child to generate response
-  FILE *childResult = execute_command(buf);
+  FILE *childResult = execute_command(COMMAND, buf);
 
   if(childResult == NULL) {
     // send error to client
