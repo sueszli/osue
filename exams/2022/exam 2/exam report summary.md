@@ -138,19 +138,16 @@ void task2(int sockfd) {
 
   // run child to generate response
   FILE *childResult = execute_command(COMMAND, buf);
-
   if(childResult == NULL) {
-    // send error to client
     fprintf(clientStream, "ERROR_MESSAGE");
     fflush(clientStream);
-    error_exit("");
+    error_exit("child failed");
+  }
 
-  } else {
-    // send response to client (see: `man pipe`)
-    char c;
-    while (read(fileno(childResult), &c, 1) > 0) {
-        write(fileno(clientStream), &c, 1);
-    }
+  // send response to client (see: `man pipe`)
+  char c;
+  while (read(fileno(childResult), &c, 1) > 0) {
+      write(fileno(clientStream), &c, 1);
   }
 
   // clean up
