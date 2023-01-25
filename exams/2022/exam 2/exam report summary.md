@@ -11,6 +11,8 @@ Point deductions for wrong answers on theoretical questions:
 - for each wrong answer on an individual question, points are deducted from the theoretical part only but not from the coding exercise
 - you can't get less than 0 points for the theoretical questions in total
 
+Total number of theoretical questions: 15
+
 <br><br><br>
 
 ## Theoretical questions
@@ -19,6 +21,7 @@ Point deductions for wrong answers on theoretical questions:
 - Strings in C end with null characters?
 - Initial value of local and global variables?
 - How preprocessing works?
+- 
 
 <br><br><br>
 
