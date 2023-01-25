@@ -90,7 +90,7 @@ static int listen_socket(int listen_port) {
 }
 
 int setup_connection(const char *port_str) {
-  // parse port (see: `man strtol`)
+  // parse port
   errno = 0;
   int port = strtoul(port_str, NULL, 10);
   if (errno != 0) {
