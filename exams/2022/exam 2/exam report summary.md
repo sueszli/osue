@@ -70,11 +70,11 @@ static int listen_socket(int listen_port) {
   return lfd;
 }
 
-int setup_connection(const char *port_str) {
+int task1(const char *port_str) { // maybe called "setup_connection()" ?
   int port = strtoul(port_str);
-  // ... check for strtoul errors
+  // TODO: check for strtoul errors: error_exit(...);
   int sockfd = listen_socket(port);
-  return sockfd;
+  return sockfd; // will be used as the argument of task2() in main
 }
 ```
 
@@ -94,22 +94,54 @@ Then you should read the content from the file that the received file descriptor
 ```c
 #define MAX_ARGUMENT_LEN 100
 
-function() {
-  // accept
+/** @see `man select_tut`*/
+int connect_socket(int connect_port, char *address) {
+  struct sockaddr_in addr;
+  int cfd;
 
-  int sockfd = setup_connection(...);
+  cfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (cfd == -1) {
+      perror("socket");
+      return -1;
+  }
 
-  char buffer[MAX_ARGUMENT_LEN];
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_port = htons(connect_port);
+  addr.sin_family = AF_INET;
+
+  if (!inet_aton(address, (struct in_addr *) &addr.sin_addr.s_addr)) {
+      fprintf(stderr, "inet_aton(): bad IP address format\n");
+      close(cfd);
+      return -1;
+  }
+
+  if (connect(cfd, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
+      perror("connect()");
+      shutdown(cfd, SHUT_RDWR);
+      close(cfd);
+      return -1;
+  }
+  return cfd;
+}
+
+void task2(int sockfd, char* address) {
+  // accept connection and open stream
+  int connectionFd = connect_socket(sockfd, address);
+  FILE* connectionStream = fopen(connectionFd, "r+");  
+
+  // read arguments from connection into buffer
+  char buffer[MAX_ARGUMENT_LEN + 1]; // +1 for '\0'
+  memset(buffer, 0, sizeof(buffer));
+
+
   int fd = execute_command(buffer);
-  
   FILE* responseStream = fopen(fd, "r");
+
+
   fprintf(sockfd, ...);
   fclose(responseStream);
 }
 ```
-
-
-
 
 ### 3. send around files with a forked child
 
