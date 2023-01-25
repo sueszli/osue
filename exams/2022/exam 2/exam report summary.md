@@ -47,9 +47,17 @@ Wait for connections on the received socket file descriptor and accept them.
 
 Read the arguments transmitted by the client from the connection and save them in a buffer that can hold a C-string with the size `MAX_ARGUMENT_LEN`.
 
+Then you should call `execute_command()` with the argument received by the client.
+
 
 ```c
 #define MAX_ARGUMENT_LEN 100
+
+function() {
+  char buffer[MAX_ARGUMENT_LEN];
+  execute_command(buffer);
+  ...
+}
 
 ```
 
