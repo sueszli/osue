@@ -1,4 +1,4 @@
-## Task 1: create a socket as a server
+## Task 1: create a socket
 
 ```c
 static int listen_socket(int listen_port) {
@@ -52,7 +52,7 @@ int setup_connection(const char *port_str) {
 
 <br><br>
 
-## Task 2: accept connections from the created socket as a server
+## Task 2: read request, run child, send response
 
 ```c
 #define COMMAND ("./doStuff")
@@ -90,7 +90,7 @@ void task2(int sockfd) {
 
 <br><br>
 
-## Task 3: send around files with a forked child
+## Task 3: run child
 
 ```c
 #define READ  (0)
