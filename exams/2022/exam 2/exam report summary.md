@@ -17,14 +17,15 @@ Total number of theoretical questions: 15 - CONFIRMED
 
 ## Theoretical questions
 
-- What is the difference between UDP and TCP? 
-- Strings in C end with null characters?
-- Initial value of local and global variables?
+- What is the difference between UDP and TCP sockets and when should they be used? (connection oriented vs. connectionless, ... reliable vs. unreliable, ...)
+- What are strings in C? (end with null characters)
+- What is the initial value of local and global variables?
 - How do preprocessor macros work? (#ifdef, #define, #import, ...)
 - Are arrays and pointers the same?
 - What are modules used for in C? (and c files vs. h files)
 - How do options work based on the unix conventions?
-- 
+- How does mutual exclusion work? (1, 2, 3 semaphores vs. local variables)
+- Static code that contains an off-by-one error that you should notice when reading the code
 
 <br><br><br>
 
