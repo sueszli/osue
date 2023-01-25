@@ -88,8 +88,7 @@ static int listen_socket(int listen_port) {
   return lfd;
 }
 
-
-int task1(const char *port_str) {
+int setup_connection(const char *port_str) {
   // parse port
   errno = 0;
   int port = strtoul(port_str, NULL, 10);
@@ -108,13 +107,13 @@ int task1(const char *port_str) {
 
 Wait for connections on the received socket file descriptor and accept them.
 
-Read the arguments transmitted by the client from the connection and save them in a buffer that can hold a C-string with the size `MAX_ARGUMENT_LEN`.
+Read the arguments transmitted by the client from the connection and save them in a buffer that can hold a C-string with `MAX_ARGUMENT_LEN` characters (excluding `\0`).
 
-Then you should call `execute_command()` with the argument received by the client and read the file descriptor returned by this function.
+Then you should call `execute_command()` with the content of the clients request and read the `FILE*` returned by this function.
 
 The execution of the command should be done in a forked child process.
 
-Then you should read the content from the file that the received file descriptor points to and send it to the client waiting on the accepted connection.
+Then you should read the content from the file stream and send it to the client waiting on the accepted connection.
 
 ```c
 #define MAX_ARGUMENT_LEN 100
@@ -141,7 +140,7 @@ void task2(int sockfd, char* address) {
 (You can use anything for executing the command, e.g. `system()` or `execvp()`)
 
 ```c
-int execute_command(char* arg) {
+FILE* execute_command(char* arg) {
   ...
 }
 ```
