@@ -1,17 +1,18 @@
 ## About this exam
 
-80 points are acheivable in total consisting of:
+80 points are acheivable in total consisting of: [CONFIRMED]
 
 - 30 points for the theoretical questions
-- 50 points for the coding exercise (10 + 20 + 20 for each question) - CONFIRMED
+- 50 points for the coding exercise (10 + 20 + 20 for each question)
 
-Point deductions for wrong answers on theoretical questions:
+Point deductions for wrong answers on theoretical questions: [CONFIRMED]
 
 - the theoretical questions are asked in a multiple choice format (each question can have one or more correct answers)
-- for each wrong answer on an individual question, points are deducted from the theoretical part only but not from the coding exercise
+- questions have 3-6 possible answers
+- for each wrong answer on an individual question, points are deducted for that individual question only but not from the coding exercise
 - you can't get less than 0 points for the theoretical questions in total
 
-Total number of theoretical questions: 15 - CONFIRMED
+Total number of theoretical questions: 15 [CONFIRMED]
 
 <br><br><br>
 
@@ -26,6 +27,7 @@ Total number of theoretical questions: 15 - CONFIRMED
 - How do options work based on the unix conventions?
 - How does mutual exclusion work? (1, 2, 3 semaphores vs. local variables)
 - Static code that contains an off-by-one error that you should notice when reading the code
+- How is the development of unix kernel libraries different from the development of user space libraries? (you can't access extrenal libraries in the kernel)
 
 <br><br><br>
 
