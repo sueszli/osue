@@ -1,4 +1,4 @@
-## About this exam [CONFIRMED]
+## About this exam
 
 80 points are acheivable in total consisting of:
 
@@ -47,13 +47,12 @@ You can run a script to update your man pages based on a tutorial in `manpages.t
 
 ## Coding exercise
 
-### 1. create a socket as a server
+### Task 1: create a socket as a server
 
 Create a passive socket of domain `AF_INET` and type `SOCK_STREAM`.
 Listen for connections on the port given by the argument `port_str`.
-Return the file descriptor of the communication socket `int setup_connection(const char *port_str)`.
 
-The file descriptor will be used in the next step!
+Return the file descriptor of the created socket so it can be used in the next step!
 
 ```c
 /** @see `man select_tut`*/
@@ -64,25 +63,24 @@ static int listen_socket(int listen_port) {
 
   lfd = socket(AF_INET, SOCK_STREAM, 0);
   if (lfd == -1) {
-      perror("socket");
-      return -1;
+    perror("socket");
+    return -1;
   }
 
   yes = 1;
-  if (setsockopt(lfd, SOL_SOCKET, SO_REUSEADDR,
-          &yes, sizeof(yes)) == -1) {
-      perror("setsockopt");
-      close(lfd);
-      return -1;
+  if (setsockopt(lfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
+    perror("setsockopt");
+    close(lfd);
+    return -1;
   }
 
   memset(&addr, 0, sizeof(addr));
   addr.sin_port = htons(listen_port);
   addr.sin_family = AF_INET;
   if (bind(lfd, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
-      perror("bind");
-      close(lfd);
-      return -1;
+    perror("bind");
+    close(lfd);
+    return -1;
   }
 
   printf("accepting connections on port %d\n", listen_port);
@@ -106,7 +104,7 @@ int task1(const char *port_str) {
 ```
 
 
-### 2. accept connections from the created socket as a server
+### Task 2: accept connections from the created socket as a server
 
 Wait for connections on the received socket file descriptor and accept them.
 
@@ -133,13 +131,12 @@ void task2(int sockfd, char* address) {
   int fd = execute_command(buffer);
   FILE* responseStream = fopen(fd, "r");
 
-
   fprintf(sockfd, ...);
   fclose(responseStream);
 }
 ```
 
-### 3. send around files with a forked child
+### Task 3: send around files with a forked child
 
 (You can use anything for executing the command, e.g. `system()` or `execvp()`)
 
