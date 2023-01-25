@@ -172,20 +172,37 @@ Don't forket to close unused file descriptors.
 (You are free to use anything to execute the command, e.g. `system()` or `execvp()`)
 
 ```c
-/**
- * TODO!!
- */
+#define READ  (0)
+#define WRITE (1)
 
 FILE* execute_command(char* command, char* argument) {
 
-  // fork
+  // fork (see: `man pipe`)
+  int pipefd[2];
+  pid_t cpid;
 
-  // pipe
-
-  /** @see `man system`*/
-  execl(command, argument, (char *) NULL);
+  if (pipe(pipefd) == -1) {
+    error_exit("");
+  }
+  cpid = fork();
+  if (cpid == -1) {
+    error_exit("");
+  }
   
+  if (cpid == 0) {
+    // redirect (see: `man dup2`)
+    close(pipefd[READ]);
+    dup2(pipefd[WRITE], fileno(stdout));
+    close(pipefd[WRITE]);
+    
+    // run command (see: `man system`)
+    execl(commans, command, argument, (char *) NULL);
+    error_exit("");
+  }
 
-  // create FILE pointer
+  close(pipefd[WRITE]);
+  wait(NULL);
+  FILE *f = fdopen(pipefd[READ], "r");
+  return f;
 }
 ```
