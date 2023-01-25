@@ -11,7 +11,7 @@ Relevant man pages:
 ```c
 
 #define COMMAND ("./doStuff")
-#define MAX_ARGUMENT_LEN (100)
+#define MAX_LEN (100)
 
 #define READ  (0)
 #define WRITE (1)
@@ -71,25 +71,25 @@ int task1(const char *port_str) {
 void task2(int sockfd) {
   int fd = accept(sockfd, NULL, NULL); // ---> unix
 
-  FILE *clientStream = fdopen(fd, "r+");
-  char buf[MAX_ARGUMENT_LEN + 1];
+  FILE *client = fdopen(fd, "r+");
+  char buf[MAX_LEN + 1];
   memset(buf, 0, sizeof(buf));
-  fgets(buf, MAX_ARGUMENT_LEN + 1, clientStream);
+  fgets(buf, MAX_LEN + 1, client);
 
-  FILE *childResult = task3(COMMAND, buf);
-  if(childResult == NULL) {
-    fprintf(clientStream, "ERROR_MESSAGE");
-    fflush(clientStream);
+  FILE *result = task3(COMMAND, buf);
+  if(result == NULL) {
+    fprintf(client, "ERROR_MESSAGE");
+    fflush(client);
     error_exit("");
   }
 
   char c; // ---> pipe
-  while (read(fileno(childResult), &c, 1) > 0) {
-    write(fileno(clientStream), &c, 1);
+  while (read(fileno(result), &c, 1) > 0) {
+    write(fileno(client), &c, 1);
   }
 
-  fclose(childResult);
-  fclose(clientStream);
+  fclose(result);
+  fclose(client);
 }
 
 
