@@ -26,6 +26,7 @@ Total number of theoretical questions: 15 [CONFIRMED]
 - What are modules used for in C? (and c files vs. h files)
 - How do options work based on the unix conventions?
 - How does mutual exclusion work? (1, 2, 3 semaphores vs. local variables)
+- How do POSIX semaphores work? (create, open, close, wait, post, unlink, ...)
 - Static code that contains an off-by-one error that you should notice when reading the code
 - How is the development of unix kernel libraries different from the development of user space libraries? (you can't access extrenal libraries in the kernel)
 
