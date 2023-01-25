@@ -1,6 +1,11 @@
-## Task 1: create a socket
-
 ```c
+
+#define COMMAND ("./doStuff")
+#define MAX_ARGUMENT_LEN (100)
+
+#define READ  (0)
+#define WRITE (1)
+
 /*
 static int listen_socket(int listen_port) {
   struct sockaddr_in addr;
@@ -49,15 +54,8 @@ int task1(const char *port_str) {
   }
   return sockfd;
 }
-```
 
-<br><br>
 
-## Task 2: read request, run child, send response
-
-```c
-#define COMMAND ("./doStuff")
-#define MAX_ARGUMENT_LEN (100)
 
 void task2(int sockfd) {
   // accept (see: `man unix`)
@@ -70,7 +68,7 @@ void task2(int sockfd) {
   fgets(buf, MAX_ARGUMENT_LEN + 1, clientStream);
 
   // run child to generate response
-  FILE *childResult = execute_command(COMMAND, buf);
+  FILE *childResult = task3(COMMAND, buf);
   if(childResult == NULL) {
     fprintf(clientStream, "ERROR_MESSAGE");
     fflush(clientStream);
@@ -87,17 +85,10 @@ void task2(int sockfd) {
   fclose(childResult);
   fclose(clientStream);
 }
-```
 
-<br><br>
 
-## Task 3: run child
 
-```c
-#define READ  (0)
-#define WRITE (1)
-
-FILE* execute_command(char* command, char* argument) {
+FILE* task3(char* command, char* argument) {
 
   // fork (see: `man pipe`)
   int pipefd[2];
