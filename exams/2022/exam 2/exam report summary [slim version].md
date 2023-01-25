@@ -1,3 +1,14 @@
+```
+Relevant man pages:
+
+- select_tut / getaddrinfo
+- unix
+- pipe
+- system
+
+```
+
+
 ```c
 
 #define COMMAND ("./doStuff")
