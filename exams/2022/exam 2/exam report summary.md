@@ -43,6 +43,8 @@ You can run a script to update your man pages based on a tutorial in `manpages.t
 - What is the internal represenation of arrays in C? How do arrays get stored in C?
 - What is the difference between passing a variable by reference / passing by value to a function?
 
+(tip: there is a huge pool of questions and it is very unlikely that you will have any of these)
+
 <br><br><br>
 
 ## Coding exercise
@@ -55,7 +57,6 @@ Listen for connections on the port given by the argument `port_str`.
 Return the file descriptor of the created socket so it can be used in the next step!
 
 ```c
-/** @see `man select_tut`*/
 static int listen_socket(int listen_port) {
   struct sockaddr_in addr;
   int lfd;
@@ -89,14 +90,14 @@ static int listen_socket(int listen_port) {
 }
 
 int setup_connection(const char *port_str) {
-  // parse port
+  // parse port (see: `man strtol`)
   errno = 0;
   int port = strtoul(port_str, NULL, 10);
   if (errno != 0) {
     error_exit("strtoul");
   }
 
-  // create socket
+  // create socket (see: `man select_tut`)
   int sockfd = listen_socket(port);
   if (sockfd == -1) {
     error_exit("listen_socket");
@@ -118,26 +119,56 @@ The execution of the command should be done in a forked child process.
 
 Then you should read the content from the file stream and send it to the client waiting on the accepted connection.
 
+(tip: use `fileno(FILE* f)` to read and write using the underlying file descriptors, when things don't work as expected. Another advantage is that you won't have to call `fflush`.)
+
+`man 2 pipe`
+
+`man 2 dup2`
+
+`man 2 wait`
+
+`man 3 system`
+
+`man 2 select_tut` - also has sigaction
+
+`man 7 unix` - has overview
+
+`man 3 getaddrinfo` - fallback, if no ipv4 given
+
+
 ```c
 #define MAX_ARGUMENT_LEN 100
 
-/**
- * TODO!!!!!
- */
-
 void task2(int sockfd) {
-  // accept
+  // accept (see: `man unix`)
   int fd = accept(sockfd, NULL, NULL);
 
-  // read request into buffer
-  FILE *requestFile = fdopen(fd, "r+");
+  // read request
+  FILE *clientStream = fdopen(fd, "r+");
   char buf[MAX_ARGUMENT_LEN + 1];
   memset(buf, 0, sizeof(buf));
-  fgets(buf, MAX_ARGUMENT_LEN + 1, requestFile);
+  fgets(buf, MAX_ARGUMENT_LEN + 1, clientStream);
 
-  // run child process with content of request
-  FILE *responseFile = execute_command(buf);
+  // run child to generate response
+  FILE *childResult = execute_command(buf);
 
+  if(childResult == NULL) {
+    // send error to client
+    fprintf(clientStream, "ERROR_MESSAGE");
+    fflush(clientStream);
+    error_exit("");
+
+  } else {
+    // send response to client (see: `man pipe`)
+    char c;
+    while (read(fileno(childResult), &c, 1) > 0) {
+        write(fileno(clientStream), &c, 1);
+    }
+  }
+
+  // clean up
+  fclose(childResult);
+  fclose(clientStream);
 }
 ```
 
