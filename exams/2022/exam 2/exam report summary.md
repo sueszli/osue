@@ -101,7 +101,7 @@ int setup_connection(const char *port_str) {
   if (sockfd == -1) {
     error_exit("listen_socket");
   }
-  return sockfd; // will be used as the argument of task2() in main
+  return sockfd;
 }
 ```
 
@@ -121,14 +121,12 @@ Then you should read the content from the file stream and send it to the client 
 ```c
 #define MAX_ARGUMENT_LEN 100
 
-/**
- * TODO!!
- */
+void task2(int sockfd) {
+  // accept
+  int fd = accept(sockfd, NULL, NULL);
 
-void task2(int sockfd, char* address) {
-  // accept connection and open stream
-  int connectionFd = connect_socket(sockfd, address);
-  FILE* connectionStream = fopen(connectionFd, "r+");  
+  // read request
+  FILE *f = fdopen(fd, "r+");
 
   // read arguments from connection into buffer
   char buffer[MAX_ARGUMENT_LEN + 1]; // +1 for '\0'
