@@ -89,7 +89,6 @@ void task2(int sockfd) {
 
 
 FILE* task3(char* command, char* argument) {
-
   // fork (see: `man pipe`)
   int pipefd[2];
   pid_t cpid;
