@@ -1,18 +1,21 @@
-## About this exam
+## About this exam [CONFIRMED]
 
-80 points are acheivable in total consisting of: [CONFIRMED]
+80 points are acheivable in total consisting of:
 
 - 30 points for the theoretical questions
 - 50 points for the coding exercise (10 + 20 + 20 for each question)
 
-Point deductions for wrong answers on theoretical questions: [CONFIRMED]
+Point deductions for wrong answers on theoretical questions:
 
 - the theoretical questions are asked in a multiple choice format (each question can have one or more correct answers)
 - questions have 3-6 possible answers
 - for each wrong answer on an individual question, points are deducted for that individual question only but not from the coding exercise
 - you can't get less than 0 points for the theoretical questions in total
 
-Total number of theoretical questions: 15 [CONFIRMED]
+Total number of theoretical questions: 15
+
+You can fetch the exam content with `fetch` and run the unit tests with `delivery`.
+The last run of the unit tests determines the total number of points you get for the coding exercise.
 
 <br><br><br>
 
