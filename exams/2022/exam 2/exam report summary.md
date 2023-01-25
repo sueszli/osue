@@ -45,7 +45,7 @@ You can run a script to update your man pages based on a tutorial in `manpages.t
 
 <br><br><br>
 
-## Coding exercise [WORK IN PROGRESS]
+## Coding exercise
 
 ### Task 1: create a socket as a server
 
@@ -98,6 +98,9 @@ int setup_connection(const char *port_str) {
 
   // create socket
   int sockfd = listen_socket(port);
+  if (sockfd == -1) {
+    error_exit("listen_socket");
+  }
   return sockfd; // will be used as the argument of task2() in main
 }
 ```
