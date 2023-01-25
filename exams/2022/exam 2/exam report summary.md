@@ -21,7 +21,7 @@ Total number of theoretical questions: 15 [CONFIRMED]
 - What is the difference between UDP and TCP sockets and when should they be used? (connection oriented vs. connectionless, ... reliable vs. unreliable, ...)
 - What are strings in C? (end with null characters)
 - What is the initial value of local and global variables?
-- How do preprocessor macros work? (#ifdef, #define, #import, ...)
+- How do preprocessor macros work and which macros exist? (#ifdef, #define, #import, ...)
 - Are arrays and pointers the same?
 - What are modules used for in C? (and c files vs. h files)
 - How do options work based on the unix conventions?
@@ -120,6 +120,8 @@ void task2(int sockfd, char* address) {
 ```
 
 ### 3. send around files with a forked child
+
+(You can use anything for executing the command, e.g. `system()` or `execvp()`)
 
 ```c
 int execute_command(char* arg) {
