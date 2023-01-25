@@ -106,6 +106,7 @@ int setup_connection(const char *port_str) {
 }
 ```
 
+<br><br>
 
 ### Task 2: accept connections from the created socket as a server
 
@@ -157,6 +158,8 @@ void task2(int sockfd) {
   fclose(clientStream);
 }
 ```
+
+<br><br>
 
 ### Task 3: send around files with a forked child
 
