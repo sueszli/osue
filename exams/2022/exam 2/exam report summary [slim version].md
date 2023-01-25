@@ -49,7 +49,7 @@ int task1(const char *port_str) {
     error_exit("");
   }
 
-  int sockfd = listen_socket(port); // see: `select_tut`
+  int sockfd = listen_socket(port); // ---> select_tut
   if (sockfd == -1) {
     error_exit("");
   }
@@ -59,7 +59,7 @@ int task1(const char *port_str) {
 
 
 void task2(int sockfd) {
-  int fd = accept(sockfd, NULL, NULL); // see: `unix`
+  int fd = accept(sockfd, NULL, NULL); // ---> unix
 
   FILE *clientStream = fdopen(fd, "r+");
   char buf[MAX_ARGUMENT_LEN + 1];
@@ -73,7 +73,7 @@ void task2(int sockfd) {
     error_exit("");
   }
 
-  char c; // see: `pipe`
+  char c; // ---> pipe
   while (read(fileno(childResult), &c, 1) > 0) {
     write(fileno(clientStream), &c, 1);
   }
@@ -85,14 +85,13 @@ void task2(int sockfd) {
 
 
 FILE* task3(char* command, char* argument) {
-  // see: `pipe`
   int pipefd[2];
   pid_t cpid;
 
   if (pipe(pipefd) == -1) {
     error_exit("");
   }
-  cpid = fork();
+  cpid = fork(); // ---> pipe
   if (cpid == -1) {
     error_exit("");
   }
@@ -102,7 +101,7 @@ FILE* task3(char* command, char* argument) {
     dup2(pipefd[WRITE], fileno(stdout));
     close(pipefd[WRITE]);
     
-    execl(command, command, argument, (char *) NULL); // see: `system`
+    execl(command, command, argument, (char *) NULL); // ---> system
     error_exit("");
   }
 
