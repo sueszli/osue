@@ -12,7 +12,7 @@ Point deductions for wrong answers on theoretical questions:
 - for each wrong answer on an individual question, points are deducted for that individual question only but not from the coding exercise
 - you can't get less than 0 points for the theoretical questions in total
 
-Total number of theoretical questions: 15
+Total number of theoretical questions: 15 (from a huge pool of questions - so they aren't the same for every slot / group)
 
 You can fetch the exam content with `fetch` and run the unit tests with `delivery`.
 The last run of the unit tests determines the total number of points you get for the coding exercise.
@@ -32,6 +32,8 @@ The last run of the unit tests determines the total number of points you get for
 - How do POSIX semaphores work? (create, open, close, wait, post, unlink, ...)
 - Understand static C code and determine the output of a function with nested loops.
 - How is the development of unix kernel libraries different from the development of user space libraries? (you can't access extrenal libraries in the kernel)
+- What things are considered a file in unix?
+- What are unix drivers for? (hardware)
 
 <br><br><br>
 
