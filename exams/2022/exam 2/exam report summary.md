@@ -34,12 +34,31 @@ Return the file descriptor of the communication socket `int setup_connection(con
 
 The file descriptor will be used in the next step!
 
+```c
+int setup_connection(const char *port_str) {
+  ...
+}
+```
+
+
 ### 2. accept connections from the created socket as a server
 
-Wait for connections on the received socket file descriptor.
+Wait for connections on the received socket file descriptor and accept them.
 
-Read the argument transmitted by the client from the connection and sav
+Read the arguments transmitted by the client from the connection and save them in a buffer that can hold a C-string with the size `MAX_ARGUMENT_LEN`.
+
+
+```c
+#define MAX_ARGUMENT_LEN 100
+
+```
+
 
 
 
 ### 3. send around files with a forked child
+
+```c
+execute_command()
+
+```
