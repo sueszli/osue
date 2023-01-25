@@ -8,6 +8,8 @@ Also check the solutions from my fellow colleagues:
 
 The exercises "ispalindrome," "fb_arc_set," and "http" received the maximum number of points and passed all unit tests successfully in 2022.
 
+![Screenshot 2023-01-25 211427](https://user-images.githubusercontent.com/61852663/214679631-67a6afc8-c333-4996-b490-4abba8e56a7d.png)
+
 <br><br><br>
 
 ## Progress
