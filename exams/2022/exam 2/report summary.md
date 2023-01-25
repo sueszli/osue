@@ -1,5 +1,0 @@
-# Theoretical Part
-
-- 
-
-# Practical Part
