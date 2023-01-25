@@ -61,13 +61,11 @@ int task1(const char *port_str) {
 void task2(int sockfd) {
   int fd = accept(sockfd, NULL, NULL); // see: `unix`
 
-  // read
   FILE *clientStream = fdopen(fd, "r+");
   char buf[MAX_ARGUMENT_LEN + 1];
   memset(buf, 0, sizeof(buf));
   fgets(buf, MAX_ARGUMENT_LEN + 1, clientStream);
 
-  // get response from child
   FILE *childResult = task3(COMMAND, buf);
   if(childResult == NULL) {
     fprintf(clientStream, "ERROR_MESSAGE");
@@ -75,7 +73,6 @@ void task2(int sockfd) {
     error_exit("");
   }
 
-  // write response
   char c; // see: `pipe`
   while (read(fileno(childResult), &c, 1) > 0) {
     write(fileno(clientStream), &c, 1);
