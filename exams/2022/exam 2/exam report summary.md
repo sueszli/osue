@@ -147,7 +147,7 @@ void task2(int sockfd) {
   // send response to client (see: `man pipe`)
   char c;
   while (read(fileno(childResult), &c, 1) > 0) {
-      write(fileno(clientStream), &c, 1);
+    write(fileno(clientStream), &c, 1);
   }
 
   // clean up
