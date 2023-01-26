@@ -14,9 +14,16 @@ What sets this project apart from the others is the comprehensive exam collectio
 
 <br><br><br>
 
-## Progress
+## Overview
 
-Here is how far I have come so far with the this repository:
+Topics include (but are not limited to):
+- Sockets
+- Process creation (fork, exec)
+- Pipes
+- Semaphores
+- Shared memory
+
+Here is which examples I've solved additionally to the exams:
 
 ```
 $ tree
@@ -31,7 +38,7 @@ $ tree
 └── exercises
     └── regular
         ├── 1
-        │   ├── a
+        │   ├── a [getopt]
         │   │   ├── binary-digits ✅
         │   │   ├── ispalindrom ✅
         │   │   ├── mycompress
@@ -42,16 +49,16 @@ $ tree
         │   │   ├── postfixcalc
         │   │   └── stegit
         │   │
-        │   └── b
+        │   └── b [tcp]
         │       ├── battleship
         │       ├── coffeemaker
         │       ├── mastermind
         │       │
-        │       └── random_np
+        │       └── random_np [shared memory]
         │           ├── 3coloring ✅
         │           └── fb_arc_set ✅
         │
-        ├── 2
+        ├── 2 [pipe/fork]
         │   ├── calc
         │   ├── cpair
         │   ├── dsort
@@ -66,7 +73,7 @@ $ tree
         │   ├── stillepost
         │   └── websh
         │
-        └── 3
+        └── 3 [shared memory]
             ├── 2048
             ├── 4wins
             ├── auth
@@ -76,7 +83,7 @@ $ tree
             ├── calendar
             ├── chstat
             ├── hangman
-            ├── http ✅
+            ├── http ✅ [exception: tcp]
             ├── integrate
             ├── lastmsg
             ├── mrna
