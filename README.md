@@ -10,7 +10,7 @@ Also check the solutions from my fellow colleagues:
 
 What sets this project apart from the others is the comprehensive exam collection, particularly the 2022 exam that was reconstructed on the day of the exam and attracted a lot of attention:
 
-![Screenshot 2023-01-25 211427](https://user-images.githubusercontent.com/61852663/214798477-5f57061f-2f67-49ca-a1d7-d6a9e562bcbc.png){ style="display: block; margin: 0 auto" }
+![Screenshot 2023-01-25 211427](https://user-images.githubusercontent.com/61852663/214799331-991ec7f6-a881-4857-9159-30f3cc0ac52d.png)
 
 <br><br><br>
 
