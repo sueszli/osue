@@ -1,8 +1,8 @@
-This repository contains some previous exams and all exercises provided by the operating systems (C programming) course at the TU Wien up until the 2022 Winter Semester aswell as my solutions to them.
+This repository contains some previous exams and all exercises provided by the Operating Systems (C Programming) course at the TU Wien up until the 2022 Winter Semester, as well as my solutions to them.
 
-The exercises "ispalindrome," "fb_arc_set," and "http" received all points and passed all unit tests successfully in 2022.
+The exercises "ispalindrome," "fb_arc_set," and "http" all received full points and passed all unit tests successfully in 2022.
 
-Also check the solutions from my fellow colleagues:
+Also, check out the solutions from my fellow colleagues:
 
 - [@flofriday's solutions](https://github.com/flofriday/OSUE-2020)
 - [@filipppp's solutions](https://github.com/filipppp/OSUE-2021)
