@@ -1,4 +1,4 @@
-Here is a short list of the man pages I found most helpful in this course (I found them through the python script "manExamples.py" that I've written).
+Here is a short list of the man pages I found most helpful in this course (check out the `manExamples.py` script in this directory to find more of them for yourself!):
 
 <br><br>
 
