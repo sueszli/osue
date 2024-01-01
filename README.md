@@ -6,7 +6,7 @@ It garnered significant attention during the 2022 exam as it was successfully so
 
 Also the exercises "ispalindrome," "fb_arc_set," and "http" received full points and passed all unit tests in 2022.
 
-<br><br><br>
+<br>
 
 ## Overview
 
@@ -86,8 +86,6 @@ $ tree
             ├── storetool
             └── tictactoe
 ```
-
-<br><br><br>
 
 Also, check out the solutions from my fellow colleagues:
 
