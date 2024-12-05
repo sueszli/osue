@@ -1,12 +1,10 @@
-This repository contains some previous exams and all exercises provided by the Operating Systems (C Programming) course at the TU Wien up until the 2022 Winter Semester, as well as my solutions to them.
+This repository contains some previous exams and all exercises provided by the Operating Systems course at the TU Wien up until the 2022 Winter Semester, as well as my solutions to them.
 
 It garnered significant attention during the 2022 exam as it was successfully solved on the very same day.
 
 ![Screenshot 2023-01-25 211427](https://user-images.githubusercontent.com/61852663/214799331-991ec7f6-a881-4857-9159-30f3cc0ac52d.png)
 
-Also the exercises "ispalindrome," "fb_arc_set," and "http" received full points and passed all unit tests in 2022.
-
-<br>
+Also the exercises "ispalindrome", "fb_arc_set" and "http" received full points and passed all unit tests in 2022.
 
 ## Overview
 
