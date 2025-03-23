@@ -4,9 +4,7 @@ It garnered a lot of attention during the 2022 exam as it was successfully solve
 
 ![Screenshot 2023-01-25 211427](https://user-images.githubusercontent.com/61852663/214799331-991ec7f6-a881-4857-9159-30f3cc0ac52d.png)
 
-Also the exercises "ispalindrome", "fb_arc_set" and "http" received full points and passed all unit tests in 2022.
-
-# Overview
+Also the exercises `ispalindrome`, `fb_arc_set` and `http` received full points and passed all unit tests in 2022.
 
 Topics include (but are not limited to):
 
