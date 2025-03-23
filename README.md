@@ -6,16 +6,15 @@ It garnered a lot of attention during the 2022 exam as it was successfully solve
 
 Also the exercises "ispalindrome", "fb_arc_set" and "http" received full points and passed all unit tests in 2022.
 
-## Overview
+# Overview
 
 Topics include (but are not limited to):
+
 - Sockets
 - Process creation (fork, exec)
 - Pipes
 - Semaphores
 - Shared memory
-
-Here is which examples I've solved additionally to the exams:
 
 ```
 $ tree
