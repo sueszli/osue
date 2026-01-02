@@ -1,0 +1,65 @@
+$ tree
+.
+├── exams
+│   ├── 2006 ✅
+│   ├── 2012 ✅
+│   ├── 2017 ✅
+│   ├── 2020 ✅
+│   └── 2022 ✅
+│
+└── exercises
+    └── regular
+        ├── 1
+        │   ├── a [getopt]
+        │   │   ├── binary-digits ✅
+        │   │   ├── ispalindrom ✅
+        │   │   ├── mycompress
+        │   │   ├── mydiff
+        │   │   ├── myexpand
+        │   │   ├── mygrep ✅
+        │   │   ├── mysort
+        │   │   ├── postfixcalc
+        │   │   └── stegit
+        │   │
+        │   └── b [tcp]
+        │       ├── battleship
+        │       ├── coffeemaker
+        │       ├── mastermind
+        │       │
+        │       └── random_np [shared memory]
+        │           ├── 3coloring ✅
+        │           └── fb_arc_set ✅
+        │
+        ├── 2 [pipe/fork]
+        │   ├── calc
+        │   ├── cpair
+        │   ├── dsort
+        │   ├── encr
+        │   ├── forkFFT
+        │   ├── forksort
+        │   ├── hashsum
+        │   ├── intmul ✅
+        │   ├── mygzip
+        │   ├── proxy
+        │   ├── randsched
+        │   ├── stillepost
+        │   └── websh
+        │
+        └── 3 [shared memory]
+            ├── 2048
+            ├── 4wins
+            ├── auth
+            ├── banking
+            ├── battleships
+            ├── caesar
+            ├── calendar
+            ├── chstat
+            ├── hangman
+            ├── http ✅ [exception: tcp]
+            ├── integrate
+            ├── lastmsg
+            ├── mrna
+            ├── procdb
+            ├── sortserver
+            ├── storetool
+            └── tictactoe
