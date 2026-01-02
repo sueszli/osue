@@ -13,7 +13,8 @@
 TU Wien Operating Systems exams and exercises through WS2022,
 covering sockets, process creation, pipes, semaphores and shared memory.
 
-It features a same-day solution for the 2022 exam and verified solutions for `ispalindrome`, `fb_arc_set` and `http`.
+It features a same-day solution for the 2022 exam
+and verified solutions (full marks) for `ispalindrome`, `fb_arc_set` and `http`.
 
 For alternative solutions check out:
 
